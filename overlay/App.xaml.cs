@@ -173,6 +173,8 @@ public partial class App : System.Windows.Application
                 lock (state.Lock) AddEvent(new EventItem { Time = DateTime.UtcNow, Label = "You: " + text, Category = "voice", Angle = 0, Conf = 0, Score = 1f });
             };
             win.SayRequested += (l, t, r, b, game) => say.ShowOver(l, t, r, b, game);
+            win.TeachRequested += (l, t, r, b, game) => { if (helper != null) say.ShowOver(l, t, r, b, game, teachMode: true); };
+            say.Taught += text => helper?.Learn(text);
             win.PresetRequested += (n, game) =>
             {
                 say.SetGame(game);

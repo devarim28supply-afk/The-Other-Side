@@ -13,6 +13,11 @@ public partial class SayWindow : Window
     readonly Speaker speaker;
     readonly Config cfg;
     public event Action<string>? Spoken;
+    /// Teach mode (End key): Enter hands the text to the game helper as a correction instead of speaking it.
+    public event Action<string>? Taught;
+    bool teach;
+    const string SayHint = "Type what to say.  Enter = speak to players near you   Shift+Enter = speak on the radio   Esc = close";
+    const string TeachHint = "TEACH THE HELPER: type what it got wrong or what it should know.  Enter = save   Esc = close";
     IntPtr gameHwnd;
 
     public SayWindow(Config cfg, Speaker speaker)
@@ -25,9 +30,12 @@ public partial class SayWindow : Window
     }
 
     /// Show centred near the bottom of the given (physical pixel) game rectangle and focus the box.
-    public void ShowOver(int left, int top, int right, int bottom, IntPtr game)
+    public void ShowOver(int left, int top, int right, int bottom, IntPtr game, bool teachMode = false)
     {
         gameHwnd = game;
+        teach = teachMode;
+        Hint.Text = teach ? TeachHint : SayHint;
+        Hint.Foreground = new System.Windows.Media.SolidColorBrush(teach ? System.Windows.Media.Color.FromRgb(190, 150, 255) : System.Windows.Media.Color.FromRgb(176, 200, 255));
         Status.Text = "";
         ClipCursor(IntPtr.Zero);   // the game confines the mouse to its window; release it while the box is open
         Show();
@@ -52,6 +60,7 @@ public partial class SayWindow : Window
         Input.Clear();
         Hide();
         BackToGame();
+        if (teach) { Taught?.Invoke(text); return; }
         await SpeakLine(text, radio);
     }
 

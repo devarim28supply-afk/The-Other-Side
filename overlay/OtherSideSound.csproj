@@ -16,5 +16,9 @@
     <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.20.1" />
     <PackageReference Include="System.Speech" Version="9.0.0" />
   </ItemGroup>
+  <ItemGroup>
+    <!-- game helper's cheat sheet; helper\learned.txt (Kaalob's corrections) is written at runtime and never overwritten -->
+    <None Include="helper\knowledge.md" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
   <!-- model\ (yamnet + the trained head) lives in the live app folder, D:\Tools\tos-sound-overlay\app\model -->
 </Project>

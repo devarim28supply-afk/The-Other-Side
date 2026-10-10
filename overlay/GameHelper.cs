@@ -36,6 +36,40 @@ public sealed class GameHelper : IDisposable
         "Do not just repeat a single sound name; the player already sees those. Do not repeat your previous note unless something changed. " +
         "If there is nothing useful to add, reply with exactly: -";
 
+    // helper\knowledge.md = game cheat sheet (shipped); helper\learned.txt = the player's corrections (End key), one per line
+    static string HelperDir => Path.Combine(AppContext.BaseDirectory, "helper");
+    static string LearnedPath => Path.Combine(HelperDir, "learned.txt");
+
+    /// Base rules + game knowledge + everything the player taught. Rebuilt whenever a session starts.
+    static string FullPrompt()
+    {
+        var sb = new StringBuilder(SystemPrompt);
+        string know = Path.Combine(HelperDir, "knowledge.md");
+        if (File.Exists(know)) sb.Append("\n\nGAME KNOWLEDGE:\n").Append(File.ReadAllText(know));
+        if (File.Exists(LearnedPath))
+        {
+            var rules = File.ReadAllLines(LearnedPath).Where(l => l.Trim().Length > 0).ToList();
+            if (rules.Count > 0)
+                sb.Append("\n\nTHE PLAYER TAUGHT YOU THESE (they know the game and their own setup; these override everything above):\n- ")
+                  .Append(string.Join("\n- ", rules));
+        }
+        return sb.ToString();
+    }
+
+    /// End key: the player corrects or teaches the helper. Saved for good, and the session restarts so it applies now.
+    public void Learn(string text)
+    {
+        text = text.Trim();
+        if (text.Length == 0) return;
+        string last = lastNotes.Count > 0 ? lastNotes[^1] : "";
+        string line = last.Length > 0 ? $"{text} (said after your note \"{last}\")" : text;
+        Directory.CreateDirectory(HelperDir);
+        File.AppendAllText(LearnedPath, line + Environment.NewLine);
+        Log.Write("helper learned: " + line);
+        callsThisProc = int.MaxValue;   // next question starts a fresh session with the new rule
+        lock (state.Lock) { state.HelperNote = "Got it, I will remember that."; state.HelperUntil = DateTime.UtcNow.AddSeconds(4); }
+    }
+
     public GameHelper(Config cfg, OverlayState state)
     {
         this.cfg = cfg; this.state = state;
@@ -119,7 +153,7 @@ public sealed class GameHelper : IDisposable
         };
         foreach (var a in new[] { "-p", "--input-format", "stream-json", "--output-format", "stream-json", "--verbose",
                                   "--model", cfg.HelperModel, "--effort", cfg.HelperEffort, "--tools", "", "--strict-mcp-config",
-                                  "--disable-slash-commands", "--no-session-persistence", "--system-prompt", SystemPrompt })
+                                  "--disable-slash-commands", "--no-session-persistence", "--system-prompt", FullPrompt() })
             psi.ArgumentList.Add(a);
         proc = Process.Start(psi)!;
         ChildJob.Add(proc);
