@@ -14,6 +14,8 @@ cfg.GroupOutline = ["Voice", "Physical"];
 cfg.SoundOpacity = 0.4;
 cfg.GroupOpacity = { Ghost: 0.7 };
 cfg.CaptionOpacity = 0.7;
+// Kaalob: no "Voice" sound rows, people talking is the yellow caption instead (ghost lines are pink captions)
+cfg.HideGroups = ["Voice"];
 
 // general sound detector categories
 cfg.CategoryGroups = {

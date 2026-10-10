@@ -313,6 +313,12 @@ public sealed class RadarElement : FrameworkElement
                     double maxW = cw - cpad * 2;
                     if (FT(line, cfs, Colors.White, false).Width > maxW) { while (line.Length > 10 && FT("…" + line, cfs, Colors.White, false).Width > maxW) line = line[1..]; line = "…" + line; }
                     var col = i == live.Count - 1 ? Colors.White : Color.FromArgb(200, 220, 224, 232);
+                    if (cfg.GroupColors.Count > 0)
+                    {
+                        // ghost lines in the Ghost color, people talking in the Voice color; older lines a bit dimmer
+                        var gc = ColorOf(live[i].Text.StartsWith("GHOST") ? "Ghost" : "Voice");
+                        col = Color.FromArgb(i == live.Count - 1 ? (byte)255 : (byte)200, gc.R, gc.G, gc.B);
+                    }
                     Text(dc, line, w / 2, cy0 + cpad + i * crow, cfs, col, i == live.Count - 1, 1);
                 }
                 dc.Pop();

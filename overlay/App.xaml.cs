@@ -441,6 +441,13 @@ public partial class App : System.Windows.Application
                 if (cfg.LabelGroups.Count > 0 || cfg.CategoryGroups.Count > 0)
                     dets = dets.Select(d => cfg.LabelGroups.TryGetValue(d.Label, out var g) ? d with { Category = g }
                                           : cfg.CategoryGroups.TryGetValue(d.Category, out var g2) ? d with { Category = g2 } : d).ToList();
+                // e.g. "Voice": talking already shows as a caption, so it gets no sound row
+                bool hiddenTop = false;
+                if (cfg.HideGroups.Length > 0)
+                {
+                    hiddenTop = dets.Count > 0 && cfg.HideGroups.Contains(dets[0].Category, StringComparer.OrdinalIgnoreCase);
+                    dets = dets.Where(d => !cfg.HideGroups.Contains(d.Category, StringComparer.OrdinalIgnoreCase)).ToList();
+                }
                 lock (state.Lock)
                 {
                     state.Current = dets.Take(4).ToList();
@@ -457,6 +464,12 @@ public partial class App : System.Windows.Application
                     // a row that appeared the instant the sound hit: give it its name now
                     var pending = state.Events.FirstOrDefault(e => e.Pending && (now - e.Time).TotalSeconds < 1.5);
                     var top = dets.FirstOrDefault(d => d.Score >= cfg.ClassifyThreshold * 0.7f);
+                    if (pending != null && hiddenTop && (top == null || top.Score < 0.5f))
+                    {
+                        // the sudden sound was someone talking: the caption covers it, drop its row
+                        state.Events.Remove(pending);
+                        pending = null;
+                    }
                     if (pending != null)
                     {
                         if (top != null)

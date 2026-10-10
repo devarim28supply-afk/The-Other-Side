@@ -75,7 +75,18 @@ def match_ghost(text: str):
     for who, exact, w in GHOST:
         if len(w) < 3:
             continue
-        r = difflib.SequenceMatcher(None, words, w).ratio()
+        sm = difflib.SequenceMatcher(None, words, w)
+        r = sm.ratio()
+        # Players say things like "I'm going to get the EMF" (vs "I'm going to get you"): a loose match only
+        # counts when the caption ends the way the ghost line ends. A near-exact match always counts.
+        tail_ok = words[-2:] == w[-2:]
+        if r < 0.9 and not tail_ok:
+            r = 0.0
+        # a loud sound right before a ghost line can garble its start ("Crash or not help you here"):
+        # 4+ words in a row up to the line's end, covering most of it, also counts
+        m = sm.find_longest_match(0, len(words), 0, len(w))
+        if tail_ok and m.size >= 4 and m.size >= 0.55 * len(w) and m.b + m.size == len(w):
+            r = max(r, 0.8)
         if r > score:
             best, score = (who, exact), r
     return best if score >= 0.72 else None
