@@ -23,11 +23,15 @@ with open(os.path.join(out, "clips.bin"), "wb") as bin_:
             pcm = subprocess.run(["ffmpeg", "-v", "error", "-i", os.path.join(dirpath, f), "-ac", "1", "-ar", str(SR), "-f", "s16le", "-"],
                                  capture_output=True, check=True).stdout
             w = np.frombuffer(pcm, np.int16)
-            if label != "_background" and len(w) > SR * 6: w = w[: SR * 6]   # the overlay never hears more than 1.5 s of one sound
-            if len(w) < 400 or np.abs(w).max() < 4: continue
-            bin_.write(w.tobytes())
-            items.append({"Label": label, "Clip": rel, "Group": re.sub(r"[\s_\-.]*(\d+|[A-Za-z])$", "", f[:-4]).lower(), "Offset": off, "Length": len(w)})
-            off += len(w); counts[label] = counts.get(label, 0) + 1
+            # the overlay never hears more than 1.5 s of one sound; long normal talking is cut into 6 s pieces instead
+            pieces = [w[i: i + SR * 6] for i in range(0, len(w), SR * 6)] if label == "Voice" else \
+                     [w if label == "_background" else w[: SR * 6]]
+            for k, piece in enumerate(pieces):
+                if len(piece) < 400 or np.abs(piece).max() < 4: continue
+                bin_.write(piece.tobytes())
+                items.append({"Label": label, "Clip": rel + (f"#{k}" if k else ""),
+                              "Group": re.sub(r"[\s_\-.]*(\d+|[A-Za-z])$", "", f[:-4]).lower(), "Offset": off, "Length": len(piece)})
+                off += len(piece); counts[label] = counts.get(label, 0) + 1
 
 json.dump(items, open(os.path.join(out, "clips.json"), "w"))
 json.dump([], open(os.path.join(out, "real_waves.json"), "w"))   # no in-game recordings yet

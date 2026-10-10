@@ -25,8 +25,10 @@ cfg.CategoryGroups = {
 
 const groups = {
   Ghost: ["GHOST HUNTING", "HEARTBEAT", "GHOST ATTACK", "BANSHEE SCREAM", "SCREAM", "Laugh", "WHISPER", "GROWL",
-          "GHOST VOICE", "Crying", "Humming", "EATING / CUTTING", "GUNSHOT"],
-  Voice: ["Voice"],   // players talking: never ghost-colored
+          "Crying", "Humming", "EATING / CUTTING", "GUNSHOT"],
+  // players talking: never ghost-colored. "GHOST VOICE" sits here too until the model is retrained with normal
+  // speech (the first model called a YouTube video "GHOST VOICE"); ghost lines still show as pink captions.
+  Voice: ["Voice", "GHOST VOICE"],
   Physical: ["Floor creak", "Footsteps", "Door close", "Door rattle", "Door open / creak", "KNOCK", "CABINETS BANGING",
              "Crash / clatter", "Scratching", "Item thrown / dropped", "BOOM", "Boom", "Bang", "Explosion"],
   Device: ["Switch / breaker", "PHONE RINGING", "CAR ALARM", "ALARM", "Radio / TV", "Microwave", "Camera", "Typing", "Blender"],
