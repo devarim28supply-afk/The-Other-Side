@@ -143,8 +143,8 @@ public sealed class Config
     public bool MouseWheelMenu { get; set; } = true;
     public int WheelHoldMs { get; set; } = 0;
     public bool WheelNeedsCtrl { get; set; } = false;
-    // Kaalob 2026-10-10: the wheel opens with Alt + Down arrow instead of (Ctrl +) middle click.
-    public bool WheelAltDown { get; set; } = true;
+    // Kaalob 2026-10-10: the wheel opens with the Home key (was Alt + Down, before that Ctrl + middle click).
+    public bool WheelHomeKey { get; set; } = true;
     public bool WheelMiddleClick { get; set; } = false;
     // Say box (type to talk): mouse thumb button 2 = forward/upper, 1 = back/lower, 0 = off. F6 off by Kaalob's choice.
     public int SayMouseButton { get; set; } = 2;

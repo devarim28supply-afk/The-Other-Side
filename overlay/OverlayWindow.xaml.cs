@@ -137,7 +137,7 @@ public partial class OverlayWindow : Window
         Log.Write($"source init: hotkeys {sw.ElapsedMilliseconds} ms");
         PlaceOverGame();
         Log.Write($"source init: placed {sw.ElapsedMilliseconds} ms");
-        if (cfg.MouseWheelMenu && cfg.WheelAltDown && !RegisterHotKey(hwnd, 30, MOD_ALT, VK_DOWN)) Log.Write("hotkey Alt+Down not registered");
+        if (cfg.MouseWheelMenu && cfg.WheelHomeKey && !RegisterHotKey(hwnd, 30, 0, VK_HOME)) Log.Write("hotkey Home not registered");
         bool middle = cfg.MouseWheelMenu && cfg.WheelMiddleClick;
         if (middle || cfg.SayMouseButton > 0)
         {
@@ -426,7 +426,7 @@ public partial class OverlayWindow : Window
     const int GWL_EXSTYLE = -20;
     const long WS_EX_TRANSPARENT = 0x20, WS_EX_LAYERED = 0x80000, WS_EX_TOOLWINDOW = 0x80, WS_EX_NOACTIVATE = 0x08000000;
     const int WM_HOTKEY = 0x0312;
-    const uint MOD_ALT = 0x1, VK_DOWN = 0x28;
+    const uint VK_HOME = 0x24;
     const uint MOD_CONTROL = 0x2,VK_F8 = 0x77, VK_F7 = 0x76, VK_F9 = 0x78, VK_F6 = 0x75, VK_F10 = 0x79, VK_F5 = 0x74, VK_ESCAPE = 0x1B;
     const long WS_OVERLAPPEDWINDOW = 0x00CF0000;
     delegate bool MonitorEnumProc(IntPtr mon, IntPtr hdc, ref RECT r, IntPtr data);
