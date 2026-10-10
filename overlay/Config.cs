@@ -139,6 +139,7 @@ public sealed class Config
     public bool SayCloseOnFocusLoss { get; set; } = true;
     // Middle mouse click opens the phrase wheel; scroll wheel rotates the category; 1..9 says a line; middle click / Esc closes.
     public bool MouseWheelMenu { get; set; } = true;
+    public int WheelHoldMs { get; set; } = 0;   // > 0: the middle button must be HELD this long; a quick click goes to the game
     public string[] PageNames { get; set; } = { "Quick", "Evidence", "Ghost did", "Where", "Doing", "Status", "Ghost type" };
     public int EventLifetimeSec { get; set; } = 10;
     public int MaxEvents { get; set; } = 8;

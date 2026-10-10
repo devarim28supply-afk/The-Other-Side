@@ -9,12 +9,19 @@ namespace PhasmoSound;
 public sealed class MouseHook : IDisposable
 {
     public event Action? MiddleClick;
+    /// HoldMs > 0: only HOLDING the middle button this long fires MiddleHold; a quick click is passed on to the
+    /// game (replayed, since the press had to be held back while we waited). Kaalob 2026-10-10: "hold wheel to open".
+    public event Action? MiddleHold;
+    public int HoldMs;
     /// +1 = wheel up, -1 = wheel down. Return true from WheelActive to swallow wheel events.
     public event Action<int>? Wheel;
     public Func<bool>? WheelActive;
 
     readonly LowLevelMouseProc proc;
     IntPtr hook;
+    readonly object holdLock = new();
+    bool downPending, holdFired;
+    System.Threading.Timer? holdTimer;
 
     public MouseHook()
     {
@@ -29,6 +36,31 @@ public sealed class MouseHook : IDisposable
         if (code >= 0)
         {
             int msg = wParam.ToInt32();
+            // our own replayed click: let it through to the game
+            if ((msg == WM_MBUTTONDOWN || msg == WM_MBUTTONUP) && (Marshal.ReadInt32(lParam, 12) & LLMHF_INJECTED) != 0)
+                return CallNextHookEx(hook, code, wParam, lParam);
+            if (msg == WM_MBUTTONDOWN && HoldMs > 0)
+            {
+                lock (holdLock)
+                {
+                    downPending = true; holdFired = false;
+                    holdTimer?.Dispose();
+                    holdTimer = new System.Threading.Timer(_ =>
+                    {
+                        bool fire;
+                        lock (holdLock) { fire = downPending && !holdFired; if (fire) holdFired = true; }
+                        if (fire) MiddleHold?.Invoke();
+                    }, null, HoldMs, System.Threading.Timeout.Infinite);
+                }
+                return new IntPtr(1);
+            }
+            if (msg == WM_MBUTTONUP && HoldMs > 0)
+            {
+                bool replay, ours;
+                lock (holdLock) { ours = downPending; replay = downPending && !holdFired; downPending = false; holdTimer?.Dispose(); holdTimer = null; }
+                if (replay) System.Threading.ThreadPool.QueueUserWorkItem(_ => ReplayMiddleClick());
+                if (ours) return new IntPtr(1);
+            }
             if (msg == WM_MBUTTONDOWN) { MiddleClick?.Invoke(); return new IntPtr(1); }
             if (msg == WM_MBUTTONUP && (WheelActive?.Invoke() ?? false)) return new IntPtr(1);
             if (msg == WM_MOUSEWHEEL && (WheelActive?.Invoke() ?? false))
@@ -42,10 +74,30 @@ public sealed class MouseHook : IDisposable
         return CallNextHookEx(hook, code, wParam, lParam);
     }
 
+    /// A quick middle click that was held back: give it to the game after all.
+    static void ReplayMiddleClick()
+    {
+        var inputs = new[]
+        {
+            new INPUT { type = INPUT_MOUSE, mi = new MOUSEINPUT { dwFlags = MOUSEEVENTF_MIDDLEDOWN } },
+            new INPUT { type = INPUT_MOUSE, mi = new MOUSEINPUT { dwFlags = MOUSEEVENTF_MIDDLEUP } },
+        };
+        if (SendInput((uint)inputs.Length, inputs, Marshal.SizeOf<INPUT>()) != inputs.Length) Log.Write("middle click replay failed");
+    }
+
     public void Dispose()
     {
+        lock (holdLock) { holdTimer?.Dispose(); holdTimer = null; }
         if (hook != IntPtr.Zero) { UnhookWindowsHookEx(hook); hook = IntPtr.Zero; }
     }
+
+    [StructLayout(LayoutKind.Sequential)]
+    struct MOUSEINPUT { public int dx, dy; public uint mouseData, dwFlags, time; public IntPtr dwExtraInfo; }
+    [StructLayout(LayoutKind.Sequential)]
+    struct INPUT { public int type; public MOUSEINPUT mi; }
+    const int INPUT_MOUSE = 0, LLMHF_INJECTED = 0x1;
+    const uint MOUSEEVENTF_MIDDLEDOWN = 0x20, MOUSEEVENTF_MIDDLEUP = 0x40;
+    [DllImport("user32.dll", SetLastError = true)] static extern uint SendInput(uint count, INPUT[] inputs, int size);
 
     delegate IntPtr LowLevelMouseProc(int nCode, IntPtr wParam, IntPtr lParam);
     const int WH_MOUSE_LL = 14, WM_MBUTTONDOWN = 0x0207, WM_MBUTTONUP = 0x0208, WM_MOUSEWHEEL = 0x020A;
