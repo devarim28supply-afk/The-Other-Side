@@ -498,7 +498,7 @@ public sealed class RadarElement : FrameworkElement
 
         // --- header
         string mode = surround ? $"{(ch == 8 ? "7.1" : ch == 6 ? "5.1" : ch + "ch")} SURROUND" : "STEREO (left / right only)";
-        string hint = string.IsNullOrEmpty(status) ? "middle click = phrase wheel  ·  F6 type to speak  ·  F10 free mouse  ·  F9 window/full  ·  F8 hide  ·  Ctrl+F8 quit" : status;
+        string hint = string.IsNullOrEmpty(status) ? (cfg.MouseWheelMenu ? "middle click = phrase wheel  ·  " : "") + "F6 type to speak  ·  F10 free mouse  ·  F9 window/full  ·  F8 hide  ·  Ctrl+F8 quit" : status;
         if (!ring && surround) hint = "top = front   bottom = back   ·   " + hint;
         Text(dc, $"PhasmoSound  ·  {mode}  ·  {dev}", cx, 10 * s, 13 * s, Color.FromArgb(150, 255, 255, 255), true, 1);
         Text(dc, hint, cx, 28 * s, 11 * s, Color.FromArgb(120, 255, 255, 255), false, 1);

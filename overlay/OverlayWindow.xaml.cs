@@ -129,7 +129,8 @@ public partial class OverlayWindow : Window
         if (!RegisterHotKey(hwnd, 4, 0, VK_F9)) Log.Write("hotkey F9 not registered");
         if (!RegisterHotKey(hwnd, 5, 0, VK_F6)) Log.Write("hotkey F6 not registered");
         if (!RegisterHotKey(hwnd, 6, 0, VK_F10)) Log.Write("hotkey F10 not registered");
-        if (!RegisterHotKey(hwnd, 7, 0, VK_F5)) Log.Write("hotkey F5 not registered");
+        // MouseWheelMenu off (Kaalob 2026-10-10: "remove it for now") also frees F5, which opens the same wheel
+        if (cfg.MouseWheelMenu && !RegisterHotKey(hwnd, 7, 0, VK_F5)) Log.Write("hotkey F5 not registered");
         if (!RegisterHotKey(hwnd, 8, MOD_CONTROL, VK_F5)) Log.Write("hotkey Ctrl+F5 not registered");
         for (int i = 0; i < 9; i++)
             if (i != 4 && !RegisterHotKey(hwnd, 10 + i, MOD_CONTROL, (uint)(0x31 + i)))   // Ctrl+5 (Ghost footsteps) removed, hunts record themselves Log.Write($"hotkey Ctrl+{i + 1} not registered");
