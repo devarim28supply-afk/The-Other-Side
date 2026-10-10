@@ -44,6 +44,9 @@ public partial class App : System.Windows.Application
         base.OnStartup(e);
         Log.Write("---- Other Side Sound starting ----");
         cfg = Config.Load(Path.Combine(AppContext.BaseDirectory, "config.json"));
+        // The game keeps the GPU ~99% busy, and WPF's GPU drawing of this transparent full-screen window queued behind it (~3 s late).
+        if (cfg.SoftwareRender) System.Windows.Media.RenderOptions.ProcessRenderMode = System.Windows.Interop.RenderMode.SoftwareOnly;
+        Log.Write("render mode: " + (cfg.SoftwareRender ? "software (CPU)" : "GPU"));
         try
         {
             if (cfg.HideOwnSounds) input = new InputWatch(cfg);

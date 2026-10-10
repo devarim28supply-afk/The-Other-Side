@@ -180,6 +180,8 @@ public sealed class Config
     public double SoundTextScale { get; set; } = 1.0;
     // On-screen SPEAKING sign while the voice talks. Off: Kaalob 2026-10-10 "keep it simple, I will know when it speaks by caption".
     public bool SpeakingSign { get; set; } = false;
+    public bool DebugClock { get; set; } = false;
+    public bool SoftwareRender { get; set; } = true;
 
     public static Config Load(string path)
     {

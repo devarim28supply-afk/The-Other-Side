@@ -521,6 +521,8 @@ public sealed class RadarElement : FrameworkElement
         if (!ring && surround) hint = "top = front   bottom = back   ·   " + hint;
         Text(dc, $"Other Side Sound  ·  {mode}  ·  {dev}", cx, 10 * s, 13 * s, Color.FromArgb(150, 255, 255, 255), true, 1);
         Text(dc, hint, cx, 28 * s, 11 * s, Color.FromArgb(120, 255, 255, 255), false, 1);
+        // DebugClock: draw time of this frame, to measure how late the overlay reaches the screen against a screenshot's time
+        if (cfg.DebugClock) Text(dc, DateTime.Now.ToString("HH:mm:ss.f"), cx, 44 * s, 14 * s, Colors.Yellow, true, 1);
     }
 
     /// A pair of footprints centred on (x, y); size = height of one foot.
