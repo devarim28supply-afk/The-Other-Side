@@ -137,7 +137,7 @@ public partial class OverlayWindow : Window
         Log.Write($"source init: hotkeys {sw.ElapsedMilliseconds} ms");
         PlaceOverGame();
         Log.Write($"source init: placed {sw.ElapsedMilliseconds} ms");
-        if (cfg.MouseWheelMenu && cfg.WheelHomeKey && !RegisterHotKey(hwnd, 30, 0, VK_HOME)) Log.Write("hotkey Home not registered");
+        if (cfg.SayHomeKey && !RegisterHotKey(hwnd, 30, 0, VK_HOME)) Log.Write("hotkey Home not registered");
         bool middle = cfg.MouseWheelMenu && cfg.WheelMiddleClick;
         if (middle || cfg.SayMouseButton > 0)
         {
@@ -311,11 +311,11 @@ public partial class OverlayWindow : Window
             else if (id == 9) SaveLastRequested?.Invoke();
             else if (id == 4) ToggleBorderless();
             else if (id == 6) FreeMouse();
-            else if (id == 7 || id == 30) ToggleBoard();
+            else if (id == 7) ToggleBoard();
             else if (id == 8) PresetRequested?.Invoke(2, lastGameHwnd);
             else if (id == 19) ToggleBoard(false);
             else if (id >= 20 && id < 29) { int idx = boardPage * 9 + (id - 20); ToggleBoard(false); PhraseChosen?.Invoke(idx, lastGameHwnd); }
-            else if (id == 5) SayRequested?.Invoke(lastRect.Left, lastRect.Top, lastRect.Right, lastRect.Bottom, lastGameHwnd);
+            else if (id == 5 || id == 30) SayRequested?.Invoke(lastRect.Left, lastRect.Top, lastRect.Right, lastRect.Bottom, lastGameHwnd);
             else if (id == 10 && cfg.Stopwatch) StopwatchKey?.Invoke(false);
             else if (id == 11 && cfg.Stopwatch) StopwatchKey?.Invoke(true);
             else if (id == 12) HuntKey?.Invoke();
