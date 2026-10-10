@@ -48,20 +48,28 @@ public partial class SayWindow : Window
         e.Handled = true;
         string text = Input.Text.Trim();
         if (text.Length == 0) { Hide(); BackToGame(); return; }
+        bool radio = (Keyboard.Modifiers & ModifierKeys.Shift) != 0;
         Input.Clear();
         Hide();
         BackToGame();
-        await SpeakLine(text);
+        await SpeakLine(text, radio);
     }
 
-    /// Speak a line into the game mic (used by Enter in the box and by the F5 preset lines).
-    public async Task SpeakLine(string text)
+    /// Speak a line into the game mic (used by Enter in the box, the wheel and the F5 preset lines).
+    /// The game only sends the mic while its talk key is held, so the key is held for the whole line.
+    public async Task SpeakLine(string text, bool radio = false)
     {
         Spoken?.Invoke(text);
-        bool walkie = cfg.SpeakOverWalkie && !string.IsNullOrEmpty(cfg.PushToTalkKey);
-        if (walkie) HoldKey(true);
+        string key = radio ? cfg.RadioKey : (cfg.SpeakOverWalkie ? cfg.PushToTalkKey : "");
+        bool hold = !string.IsNullOrEmpty(key);
+        if (hold)
+        {
+            await Task.Delay(120);   // let the game take focus back first, or the key goes to the closed box
+            HoldKey(key, true);
+            Log.Write($"talk key {key} down");
+        }
         try { await speaker.SayAsync(text); }
-        finally { if (walkie) HoldKey(false); }
+        finally { if (hold) { HoldKey(key, false); Log.Write($"talk key {key} up"); } }
     }
 
     public void SetGame(IntPtr game) => gameHwnd = game;
@@ -71,12 +79,15 @@ public partial class SayWindow : Window
         if (gameHwnd != IntPtr.Zero) SetForegroundWindow(gameHwnd);
     }
 
-    void HoldKey(bool down)
+    static void HoldKey(string key, bool down)
     {
-        byte vk = KeyCode(cfg.PushToTalkKey);
+        byte vk = KeyCode(key);
         if (vk == 0) return;
-        keybd_event(vk, 0, down ? 0u : 2u, UIntPtr.Zero);
+        byte sc = (byte)MapVirtualKey(vk, 0);   // games read the scan code too
+        keybd_event(vk, sc, down ? 0u : 2u, UIntPtr.Zero);
     }
+
+    [DllImport("user32.dll")] static extern uint MapVirtualKey(uint code, uint mapType);
 
     static byte KeyCode(string k)
     {

@@ -133,6 +133,8 @@ public sealed class Config
     public bool SpeakOverWalkie { get; set; } = false;
     public string EdgeTtsPython { get; set; } = @"D:\Tools\type-to-speak\venv\Scripts\python.exe";
     public string PushToTalkKey { get; set; } = "";       // e.g. "V" to hold the game's radio key while speaking; empty = none
+    // The Other Side: V = Proximity Voice (players near you), B = Radio Voice (whole team). Shift+Enter in the say box uses this key.
+    public string RadioKey { get; set; } = "B";
     // Make the virtual mic the Windows default recording device at startup (the game's voice engine follows that, not its own dropdown).
     public bool SetDefaultMic { get; set; } = true;
     public int DefaultMicVolume { get; set; } = 70;
