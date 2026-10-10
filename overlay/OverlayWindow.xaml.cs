@@ -127,7 +127,7 @@ public partial class OverlayWindow : Window
         if (!RegisterHotKey(hwnd, 9, MOD_CONTROL, 0x30)) Log.Write("hotkey Ctrl+0 not registered");
         if (!RegisterHotKey(hwnd, 3, 0, VK_F7)) Log.Write("hotkey F7 not registered");
         if (!RegisterHotKey(hwnd, 4, 0, VK_F9)) Log.Write("hotkey F9 not registered");
-        if (!RegisterHotKey(hwnd, 5, 0, VK_F6)) Log.Write("hotkey F6 not registered");
+        if (cfg.SayF6 && !RegisterHotKey(hwnd, 5, 0, VK_F6)) Log.Write("hotkey F6 not registered");
         if (!RegisterHotKey(hwnd, 6, 0, VK_F10)) Log.Write("hotkey F10 not registered");
         // MouseWheelMenu off (Kaalob 2026-10-10: "remove it for now") also frees F5, which opens the same wheel
         if (cfg.MouseWheelMenu && !RegisterHotKey(hwnd, 7, 0, VK_F5)) Log.Write("hotkey F5 not registered");
@@ -138,9 +138,12 @@ public partial class OverlayWindow : Window
         PlaceOverGame();
         Log.Write($"source init: placed {sw.ElapsedMilliseconds} ms");
         if (cfg.MouseWheelMenu && cfg.WheelAltDown && !RegisterHotKey(hwnd, 30, MOD_ALT, VK_DOWN)) Log.Write("hotkey Alt+Down not registered");
-        if (cfg.MouseWheelMenu && cfg.WheelMiddleClick)
+        bool middle = cfg.MouseWheelMenu && cfg.WheelMiddleClick;
+        if (middle || cfg.SayMouseButton > 0)
         {
-            mouse = new MouseHook { HoldMs = cfg.WheelHoldMs, NeedCtrl = cfg.WheelNeedsCtrl };
+            mouse = new MouseHook { HoldMs = cfg.WheelHoldMs, NeedCtrl = cfg.WheelNeedsCtrl, HandleMiddle = middle, ThumbButton = cfg.SayMouseButton };
+            // thumb button = the say box (Kaalob 2026-10-10: "instead of F6 ... my mouse thumb up button")
+            mouse.ThumbClick += () => Dispatcher.BeginInvoke(new Action(() => SayRequested?.Invoke(lastRect.Left, lastRect.Top, lastRect.Right, lastRect.Bottom, lastGameHwnd)));
             mouse.MiddleClick += () => Dispatcher.BeginInvoke(new Action(() => ToggleBoard()));
             mouse.MiddleHold += () => Dispatcher.BeginInvoke(new Action(() => ToggleBoard()));
             mouse.WheelActive = () => false;   // the wheel window handles scrolling itself while it has focus

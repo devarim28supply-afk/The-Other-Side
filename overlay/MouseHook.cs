@@ -14,6 +14,11 @@ public sealed class MouseHook : IDisposable
     public event Action? MiddleHold;
     public int HoldMs;
     public bool NeedCtrl;
+    /// false = middle clicks always go to the game (wheel opens from a key instead)
+    public bool HandleMiddle = true;
+    /// Mouse thumb button that opens the say box: 1 = back (XButton1), 2 = forward (XButton2), 0 = none. Swallowed.
+    public int ThumbButton;
+    public event Action? ThumbClick;
     bool ctrlDown;
     /// +1 = wheel up, -1 = wheel down. Return true from WheelActive to swallow wheel events.
     public event Action<int>? Wheel;
@@ -38,6 +43,18 @@ public sealed class MouseHook : IDisposable
         if (code >= 0)
         {
             int msg = wParam.ToInt32();
+            if (msg == WM_XBUTTONDOWN || msg == WM_XBUTTONUP)
+            {
+                int which = (Marshal.ReadInt32(lParam, 8) >> 16) & 0xFFFF;   // mouseData high word: 1 or 2
+                if (msg == WM_XBUTTONDOWN) Log.Write($"thumb button {which} pressed");
+                if (which == ThumbButton)
+                {
+                    if (msg == WM_XBUTTONDOWN) ThumbClick?.Invoke();
+                    return new IntPtr(1);
+                }
+                return CallNextHookEx(hook, code, wParam, lParam);
+            }
+            if (!HandleMiddle && (msg == WM_MBUTTONDOWN || msg == WM_MBUTTONUP)) return CallNextHookEx(hook, code, wParam, lParam);
             // our own replayed click: let it through to the game
             if ((msg == WM_MBUTTONDOWN || msg == WM_MBUTTONUP) && (Marshal.ReadInt32(lParam, 12) & LLMHF_INJECTED) != 0)
                 return CallNextHookEx(hook, code, wParam, lParam);
@@ -112,7 +129,7 @@ public sealed class MouseHook : IDisposable
     const int VK_CONTROL = 0x11;
 
     delegate IntPtr LowLevelMouseProc(int nCode, IntPtr wParam, IntPtr lParam);
-    const int WH_MOUSE_LL = 14, WM_MBUTTONDOWN = 0x0207, WM_MBUTTONUP = 0x0208, WM_MOUSEWHEEL = 0x020A;
+    const int WH_MOUSE_LL = 14, WM_MBUTTONDOWN = 0x0207, WM_MBUTTONUP = 0x0208, WM_MOUSEWHEEL = 0x020A, WM_XBUTTONDOWN = 0x020B, WM_XBUTTONUP = 0x020C;
     [DllImport("user32.dll")] static extern IntPtr SetWindowsHookEx(int id, LowLevelMouseProc proc, IntPtr mod, uint thread);
     [DllImport("user32.dll")] static extern bool UnhookWindowsHookEx(IntPtr hook);
     [DllImport("user32.dll")] static extern IntPtr CallNextHookEx(IntPtr hook, int code, IntPtr wParam, IntPtr lParam);
