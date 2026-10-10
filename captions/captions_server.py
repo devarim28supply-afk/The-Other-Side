@@ -138,6 +138,18 @@ def transcribe(audio: np.ndarray) -> str:
 
 
 BANNED = {"thank you.", "thanks for watching.", "you", "bye.", "thank you for watching."}   # whisper's silence hallucinations
+# Whisper invents these YouTube endings from noise; removed anywhere in a line, whatever the punctuation
+# (it always came as "Thanks for watching!" with "!", which the exact-match list above missed - Kaalob 2026-10-10)
+FAKE = re.compile(r"\b(thanks?( you)? (so much )?for watching|please (like and )?subscribe|see you (in the )?next (time|video)|"
+                  r"don'?t forget to (like and )?subscribe|subtitles? by [^.!?]*|amara\.org[^.!?]*)\b[.!?]*", re.I)
+
+
+def clean(text: str) -> str:
+    text = FAKE.sub("", text).strip(" ,.-")
+    norm = re.sub(r"[^a-z ]", "", text.lower()).strip()
+    if norm in {"thank you", "thanks", "you", "bye", ""}:
+        return ""
+    return text
 
 
 def handle(conn: socket.socket):
@@ -173,6 +185,7 @@ def handle(conn: socket.socket):
             print("transcribe error:", e, flush=True)
             return
         ms = int((time.time() - t) * 1000)
+        text = clean(text)
         if not text or text.lower() in BANNED:
             return
         g = match_ghost(text)
