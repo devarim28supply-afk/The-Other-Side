@@ -127,7 +127,7 @@ public sealed class Config
     public int SpeakTailMs { get; set; } = 400;
     public float SpeakNoiseFloor { get; set; } = 0.004f;  // faint room-noise bed under the voice (keeps the gate open between words)
     // F5 speaks this line (say it when you join a lobby). Ctrl+F5 speaks IntroLine2.
-    public string IntroLine { get; set; } = "Hi everyone. I am deaf, so I talk through a computer voice and I read you with captions. Please just talk normally, I can follow you.";
+    public string IntroLine { get; set; } = "Hey guys! Heads up, I am deaf, so this voice is me typing. Just talk normal, I have captions.";
     public string IntroLine2 { get; set; } = "Sorry, I did not catch that. Could you say it again a bit slower?";
     // Walkie (V) reaches the whole map with a radio filter; local voice reaches players near you and sounds natural.
     public bool SpeakOverWalkie { get; set; } = false;

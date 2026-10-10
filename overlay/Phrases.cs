@@ -41,7 +41,7 @@ public sealed class Phrases
         {
             Items = new()
             {
-                new() { Text = "Hi everyone. I am deaf, so I talk through a computer voice and I read you with captions. Please just talk normally." },
+                new() { Text = "Hey guys! Heads up, I am deaf, so this voice is me typing. Just talk normal, I have captions." },
                 new() { Text = "Sorry, can you say that again, a bit slower?" },
                 new() { Text = "Yes." },
                 new() { Text = "No." },
