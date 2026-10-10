@@ -327,6 +327,22 @@ public sealed class RadarElement : FrameworkElement
             }
         }
 
+        // --- speaking sign: Kaalob cannot hear the computer voice, so show when it is talking (2026-10-10)
+        string speakText; int speakPhase;
+        lock (state.Lock) { speakText = state.SpeakText; speakPhase = state.SpeakPhase; }
+        if (speakPhase > 0)
+        {
+            string line = speakText.Length > 60 ? speakText[..57] + "..." : speakText;
+            string sign = speakPhase == 2 ? "SPEAKING:  " + line : "Getting voice ready...";
+            var you = Color.FromRgb(90, 210, 255);
+            double sfs = 20 * s;
+            var sft = FT(sign, sfs, Colors.White, true);
+            double sx = w / 2 - sft.Width / 2 - 16 * s, sy = h * 0.66;
+            dc.DrawRoundedRectangle(new SolidColorBrush(Color.FromRgb(12, 12, 16)), new Pen(new SolidColorBrush(you), speakPhase == 2 ? 3 : 1.5),
+                new Rect(sx, sy, sft.Width + 32 * s, sfs + 20 * s), 10 * s, 10 * s);
+            Text(dc, sign, w / 2, sy + 9 * s, sfs, speakPhase == 2 ? you : Color.FromRgb(200, 200, 200), true, 1);
+        }
+
         // --- toast (training feedback)
         if (now < toastUntil && !string.IsNullOrEmpty(toast))
         {

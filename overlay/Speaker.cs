@@ -18,6 +18,8 @@ public sealed class Speaker
     public Speaker(Config cfg) { this.cfg = cfg; }
 
     public bool IsSpeaking { get; private set; }
+    /// true when the voice starts playing into the mic, false when the line is over (or failed).
+    public event Action<bool>? Playing;
 
     // ---- Kokoro: local server started with the overlay
     Process? kokoro;
@@ -121,6 +123,7 @@ public sealed class Speaker
                 var shaped = new MicLikeProvider(voice, cfg.SpeakLeadInMs, cfg.SpeakTailMs, cfg.SpeakNoiseFloor);
                 outp.Init(shaped);
                 outp.Play();
+                Playing?.Invoke(true);
                 var tcs = new TaskCompletionSource();
                 outp.PlaybackStopped += (_, _) => tcs.TrySetResult();
                 await Task.WhenAny(tcs.Task, Task.Delay(TimeSpan.FromSeconds(60)));
@@ -131,6 +134,7 @@ public sealed class Speaker
         finally
         {
             IsSpeaking = false;
+            Playing?.Invoke(false);
             try { File.Delete(mp3); } catch { }
         }
     }

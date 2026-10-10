@@ -134,6 +134,7 @@ public partial class App : System.Windows.Application
             var phrases = new Phrases(Path.Combine(AppContext.BaseDirectory, "phrases"));
             speaker.Phrases = phrases;
             say = new SayWindow(cfg, speaker);
+            speaker.Playing += on => { lock (state.Lock) state.SpeakPhase = on ? 2 : 0; win?.RedrawNow(); };
             say.IsVisibleChanged += (_, _) => win?.SetQuiet(say.IsVisible);
             win.BoardPage += page =>
             {
@@ -163,6 +164,7 @@ public partial class App : System.Windows.Application
             win.WheelToggle += (l, t, r, b, game) => { wheelGame = game; wheel.Toggle(l, t, r, b, game); };
             say.Spoken += text =>
             {
+                lock (state.Lock) { state.SpeakText = text; state.SpeakPhase = 1; }
                 lock (state.Lock) AddEvent(new EventItem { Time = DateTime.UtcNow, Label = "You: " + text, Category = "voice", Angle = 0, Conf = 0, Score = 1f });
             };
             win.SayRequested += (l, t, r, b, game) => say.ShowOver(l, t, r, b, game);
