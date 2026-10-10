@@ -140,6 +140,7 @@ public sealed class Config
     // Middle mouse click opens the phrase wheel; scroll wheel rotates the category; 1..9 says a line; middle click / Esc closes.
     public bool MouseWheelMenu { get; set; } = true;
     public int WheelHoldMs { get; set; } = 0;
+    public bool WheelNeedsCtrl { get; set; } = false;   // true: Ctrl + middle click opens the wheel, a plain middle click goes to the game
     // Ctrl+3 hunt over / hunt on, and the red "HUNT · Ctrl+3 = over" box. Off for The Other Side (Kaalob 2026-10-10);
     // hunts are still noticed and recorded automatically.
     public bool HuntKey { get; set; } = true;   // > 0: the middle button must be HELD this long; a quick click goes to the game

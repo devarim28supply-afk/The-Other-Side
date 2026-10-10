@@ -32,6 +32,14 @@ if (mode == "list")
     File.WriteAllLines(args[1], provider.Files.Keys.OrderBy(k => k));
     return;
 }
+if (mode == "raw")
+{
+    // raw <pak path without extension> <out dir>: saves .uasset/.uexp/.ubulk as stored (e.g. to read key mappings)
+    foreach (var ext in new[] { ".uasset", ".uexp", ".ubulk" })
+        if (provider.TrySaveAsset(args[1] + ext, out var bytes))
+            File.WriteAllBytes(Path.Combine(args[2], Path.GetFileName(args[1]) + ext), bytes);
+    return;
+}
 
 var outDir = args[1];
 var filter = args.Length > 2 ? args[2] : null;

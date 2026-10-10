@@ -13,6 +13,8 @@ public sealed class MouseHook : IDisposable
     /// game (replayed, since the press had to be held back while we waited). Kaalob 2026-10-10: "hold wheel to open".
     public event Action? MiddleHold;
     public int HoldMs;
+    public bool NeedCtrl;
+    bool ctrlDown;
     /// +1 = wheel up, -1 = wheel down. Return true from WheelActive to swallow wheel events.
     public event Action<int>? Wheel;
     public Func<bool>? WheelActive;
@@ -39,6 +41,14 @@ public sealed class MouseHook : IDisposable
             // our own replayed click: let it through to the game
             if ((msg == WM_MBUTTONDOWN || msg == WM_MBUTTONUP) && (Marshal.ReadInt32(lParam, 12) & LLMHF_INJECTED) != 0)
                 return CallNextHookEx(hook, code, wParam, lParam);
+            // NeedCtrl (Kaalob 2026-10-10): only Ctrl + middle click opens the wheel; a plain middle click is the game's
+            if (NeedCtrl && (msg == WM_MBUTTONDOWN || msg == WM_MBUTTONUP))
+            {
+                bool ctrl = (GetAsyncKeyState(VK_CONTROL) & 0x8000) != 0;
+                if (msg == WM_MBUTTONDOWN && ctrl) { ctrlDown = true; MiddleClick?.Invoke(); return new IntPtr(1); }
+                if (msg == WM_MBUTTONUP && ctrlDown) { ctrlDown = false; return new IntPtr(1); }
+                return CallNextHookEx(hook, code, wParam, lParam);
+            }
             if (msg == WM_MBUTTONDOWN && HoldMs > 0)
             {
                 lock (holdLock)
@@ -98,6 +108,8 @@ public sealed class MouseHook : IDisposable
     const int INPUT_MOUSE = 0, LLMHF_INJECTED = 0x1;
     const uint MOUSEEVENTF_MIDDLEDOWN = 0x20, MOUSEEVENTF_MIDDLEUP = 0x40;
     [DllImport("user32.dll", SetLastError = true)] static extern uint SendInput(uint count, INPUT[] inputs, int size);
+    [DllImport("user32.dll")] static extern short GetAsyncKeyState(int vKey);
+    const int VK_CONTROL = 0x11;
 
     delegate IntPtr LowLevelMouseProc(int nCode, IntPtr wParam, IntPtr lParam);
     const int WH_MOUSE_LL = 14, WM_MBUTTONDOWN = 0x0207, WM_MBUTTONUP = 0x0208, WM_MOUSEWHEEL = 0x020A;

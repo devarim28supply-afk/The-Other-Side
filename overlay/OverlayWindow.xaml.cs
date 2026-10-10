@@ -139,7 +139,7 @@ public partial class OverlayWindow : Window
         Log.Write($"source init: placed {sw.ElapsedMilliseconds} ms");
         if (cfg.MouseWheelMenu)
         {
-            mouse = new MouseHook { HoldMs = cfg.WheelHoldMs };
+            mouse = new MouseHook { HoldMs = cfg.WheelHoldMs, NeedCtrl = cfg.WheelNeedsCtrl };
             mouse.MiddleClick += () => Dispatcher.BeginInvoke(new Action(() => ToggleBoard()));
             mouse.MiddleHold += () => Dispatcher.BeginInvoke(new Action(() => ToggleBoard()));
             mouse.WheelActive = () => false;   // the wheel window handles scrolling itself while it has focus
