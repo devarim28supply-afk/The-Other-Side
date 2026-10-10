@@ -9,7 +9,8 @@ using System.Threading;
 
 namespace PhasmoSound;
 
-public sealed class CaptionLine { public string Text = ""; public DateTime Time; }
+/// Partial = still being spoken (WhisperLive sends it word by word); it is replaced until the final version arrives.
+public sealed class CaptionLine { public string Text = ""; public DateTime Time; public bool Partial; }
 
 /// Streams the overlay's 16 kHz audio to the local Whisper captioner and collects the captions it returns.
 public sealed class CaptionClient : IDisposable
@@ -30,9 +31,10 @@ public sealed class CaptionClient : IDisposable
         if (!cfg.WhisperCaptions) return;
         try
         {
-            if (File.Exists(cfg.KokoroPython) && File.Exists(cfg.WhisperScript))
+            string py = string.IsNullOrEmpty(cfg.WhisperPython) ? cfg.KokoroPython : cfg.WhisperPython;
+            if (File.Exists(py) && File.Exists(cfg.WhisperScript))
             {
-                var psi = new ProcessStartInfo(cfg.KokoroPython)
+                var psi = new ProcessStartInfo(py)
                 {
                     UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true, RedirectStandardError = true,
                     WorkingDirectory = Path.GetDirectoryName(cfg.WhisperScript)!,
@@ -72,15 +74,19 @@ public sealed class CaptionClient : IDisposable
                 string? line;
                 while ((line = reader.ReadLine()) != null)
                 {
-                    Log.Write("caption rx: " + (line.Length > 70 ? line.Substring(0, 70) : line));
                     try
                     {
                         using var doc = JsonDocument.Parse(line);
                         string text = doc.RootElement.GetProperty("text").GetString() ?? "";
-                        if (text.Length == 0) continue;
+                        bool partial = doc.RootElement.TryGetProperty("partial", out var pp) && pp.GetBoolean();
+                        if (!partial) Log.Write("caption rx: " + (line.Length > 70 ? line.Substring(0, 70) : line));
                         lock (state.Lock)
                         {
-                            state.Captions.Add(new CaptionLine { Text = text, Time = DateTime.UtcNow });
+                            // the line being spoken is replaced by each newer version of itself, then by the final text
+                            int last = state.Captions.Count - 1;
+                            if (last >= 0 && state.Captions[last].Partial) state.Captions.RemoveAt(last);
+                            if (text.Length == 0) continue;
+                            state.Captions.Add(new CaptionLine { Text = text, Time = DateTime.UtcNow, Partial = partial });
                             if (state.Captions.Count > 12) state.Captions.RemoveAt(0);
                         }
                     }

@@ -309,7 +309,7 @@ public sealed class RadarElement : FrameworkElement
                 dc.DrawRoundedRectangle(new SolidColorBrush(Color.FromArgb(190, 12, 12, 16)), null, new Rect(cx0, cy0, cw, chh), 10 * s, 10 * s);
                 for (int i = 0; i < live.Count; i++)
                 {
-                    string line = live[i].Text;
+                    string line = live[i].Partial ? live[i].Text + " …" : live[i].Text;   // still being spoken
                     double maxW = cw - cpad * 2;
                     if (FT(line, cfs, Colors.White, false).Width > maxW) { while (line.Length > 10 && FT("…" + line, cfs, Colors.White, false).Width > maxW) line = line[1..]; line = "…" + line; }
                     var col = i == live.Count - 1 ? Colors.White : Color.FromArgb(200, 220, 224, 232);

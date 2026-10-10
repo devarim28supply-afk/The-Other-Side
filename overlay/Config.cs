@@ -153,7 +153,9 @@ public sealed class Config
     public double SoundOpacity { get; set; } = 1.0;
     public Dictionary<string, double> GroupOpacity { get; set; } = new();
     public double CaptionOpacity { get; set; } = 1.0;
-    public string[] HideGroups { get; set; } = Array.Empty<string>();   // groups never shown as sound rows (their color can still be used)
+    public string[] HideGroups { get; set; } = Array.Empty<string>();
+    // Python that runs WhisperScript; empty = KokoroPython. The Other Side uses WhisperLive's own venv (D:\Tools\whisperlive).
+    public string WhisperPython { get; set; } = "";   // groups never shown as sound rows (their color can still be used)
     // 0 = automatic (scales with screen height so a 4K TV and a 1080p monitor look the same). Or a fixed multiplier.
     public double UiScale { get; set; } = 0;
 
