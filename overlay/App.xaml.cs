@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -110,9 +110,9 @@ public partial class App : System.Windows.Application
             {
                 ghostWatch?.SetActive(false);
                 Log.Write("Ctrl+3: hunt over");
-                Task.Run(() => { var saved = hunts?.End(t); Toast("Hunt over" + (saved != null ? "  ·  " + saved : "")); });
+                Task.Run(() => { var saved = hunts?.End(t); Toast("Hunt over" + (saved != null ? "  Â·  " + saved : "")); });
             }
-            else { Log.Write("Ctrl+3: hunt mode on"); Toast("HUNT mode on  ·  Ctrl+3 = hunt over"); }
+            else { Log.Write("Ctrl+3: hunt mode on"); Toast("HUNT mode on  Â·  Ctrl+3 = hunt over"); }
         };
         win.StopwatchKey += reset =>
         {
@@ -134,6 +134,7 @@ public partial class App : System.Windows.Application
             var phrases = new Phrases(Path.Combine(AppContext.BaseDirectory, "phrases"));
             speaker.Phrases = phrases;
             say = new SayWindow(cfg, speaker);
+            say.IsVisibleChanged += (_, _) => win?.SetQuiet(say.IsVisible);
             win.BoardPage += page =>
             {
                 if (page == 0) phrases.Reload();

@@ -176,6 +176,8 @@ public sealed class Config
     public string WhisperPython { get; set; } = "";   // groups never shown as sound rows (their color can still be used)
     // 0 = automatic (scales with screen height so a 4K TV and a 1080p monitor look the same). Or a fixed multiplier.
     public double UiScale { get; set; } = 0;
+    // Size of sound names (chips, event list, color key) only; live captions use CaptionFontSize. Kaalob 2026-10-10: smaller.
+    public double SoundTextScale { get; set; } = 1.0;
 
     public static Config Load(string path)
     {

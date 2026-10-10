@@ -306,7 +306,7 @@ public sealed class RadarElement : FrameworkElement
                 double chh = cpad * 2 + crow * live.Count;
                 double cx0 = w / 2 - cw / 2, cy0 = h - chh - 34 * s;
                 dc.PushOpacity(Math.Clamp(cfg.CaptionOpacity, 0.05, 1));
-                dc.DrawRoundedRectangle(new SolidColorBrush(Color.FromArgb(190, 12, 12, 16)), null, new Rect(cx0, cy0, cw, chh), 10 * s, 10 * s);
+                dc.DrawRoundedRectangle(new SolidColorBrush(Color.FromRgb(12, 12, 16)), null, new Rect(cx0, cy0, cw, chh), 10 * s, 10 * s);
                 for (int i = 0; i < live.Count; i++)
                 {
                     string line = live[i].Partial ? live[i].Text + " …" : live[i].Text;   // still being spoken
@@ -428,7 +428,8 @@ public sealed class RadarElement : FrameworkElement
 
         // --- current sounds (chips)
         double cx = w / 2;
-        double chipSize = 17 * s;
+        double ss = s * cfg.SoundTextScale;   // sound text only; captions keep CaptionFontSize
+        double chipSize = 17 * ss;
         var chips = cur.Take(4).ToList();
         if (chips.Count > 0)
         {
@@ -440,7 +441,7 @@ public sealed class RadarElement : FrameworkElement
                 var d = chips[i];
                 var col = ColorOf(d.Category);
                 dc.PushOpacity(OpacityOf(d.Category));
-                var bg = Color.FromArgb((byte)(90 + 130 * Math.Min(1f, d.Score * 1.4f)), col.R, col.G, col.B);
+                var bg = Color.FromRgb(col.R, col.G, col.B);   // solid (Kaalob: no see-through)
                 dc.DrawRoundedRectangle(new SolidColorBrush(bg), new Pen(new SolidColorBrush(Color.FromArgb(160, 0, 0, 0)), 1),
                     new Rect(x, chipY, widths[i], chipSize + 12 * s), 8 * s, 8 * s);
                 // white / yellow chips get black writing, darker chips white
@@ -459,7 +460,7 @@ public sealed class RadarElement : FrameworkElement
             dc.DrawRoundedRectangle(new SolidColorBrush(LevelColor(lt)), null, new Rect(cx - barW / 2, barY, barW * lt, barH), 3, 3);
 
         // --- event log (bottom-left)
-        double rowH = 34 * s, ex = 28 * s, ey = h - 46 * s;
+        double rowH = 34 * ss, ex = 28 * s, ey = h - 46 * s;
         if (!ring) { ex += cfg.EdgeThickness * 0.35 * s; ey -= cfg.EdgeThickness * 0.35 * s; }
         int row = 0;
         foreach (var ev in evs)
@@ -473,12 +474,12 @@ public sealed class RadarElement : FrameworkElement
             dc.PushOpacity(OpacityOf(ev.Category));
             var dot = Color.FromArgb((byte)(255 * alpha), col.R, col.G, col.B);
             dc.DrawEllipse(new SolidColorBrush(dot), new Pen(new SolidColorBrush(Color.FromArgb((byte)(200 * alpha), 0, 0, 0)), Outlined(ev.Category) ? 2.5 * s : 1),
-                new Point(ex + 7 * s, y + 14 * s), 7 * s, 7 * s);
-            double x = ex + 24 * s;
-            x += Text(dc, ArrowFor(ev.Angle, surround), x, y - 2 * s, 24 * s, Color.FromArgb((byte)(255 * alpha), 255, 255, 255), true) + 10 * s;
+                new Point(ex + 7 * ss, y + 14 * ss), 7 * ss, 7 * ss);
+            double x = ex + 24 * ss;
+            x += Text(dc, ArrowFor(ev.Angle, surround), x, y - 2 * ss, 24 * ss, Color.FromArgb((byte)(255 * alpha), 255, 255, 255), true) + 10 * s;
             var labelCol = ev.Pending && ev.Label.EndsWith("!") ? Colors.White : col;
-            x += GroupText(dc, ev.Category, ev.Label, x, y + 1 * s, 21 * s, Color.FromArgb((byte)(255 * alpha), labelCol.R, labelCol.G, labelCol.B)) + 12 * s;
-            Text(dc, age < 1 ? "now" : $"{(int)age}s", x, y + 6 * s, 14 * s, Color.FromArgb((byte)(200 * alpha), 220, 220, 220));
+            x += GroupText(dc, ev.Category, ev.Label, x, y + 1 * ss, 21 * ss, Color.FromArgb((byte)(255 * alpha), labelCol.R, labelCol.G, labelCol.B)) + 12 * s;
+            Text(dc, age < 1 ? "now" : $"{(int)age}s", x, y + 6 * ss, 14 * ss, Color.FromArgb((byte)(200 * alpha), 220, 220, 220));
             dc.Pop();
             row++;
         }
@@ -486,7 +487,7 @@ public sealed class RadarElement : FrameworkElement
         // --- color key for the sound groups, under the event log
         if (cfg.GroupColors.Count > 0)
         {
-            double kx = ex, ky = ey + 32 * s, kfs = 13 * s;
+            double kx = ex, ky = ey + 32 * s, kfs = 13 * ss;
             foreach (var g in cfg.GroupColors.Keys)
             {
                 var gc = ColorOf(g);
@@ -500,7 +501,7 @@ public sealed class RadarElement : FrameworkElement
 
         // --- header
         string mode = surround ? $"{(ch == 8 ? "7.1" : ch == 6 ? "5.1" : ch + "ch")} SURROUND" : "STEREO (left / right only)";
-        string hint = string.IsNullOrEmpty(status) ? (cfg.MouseWheelMenu ? (cfg.WheelNeedsCtrl ? "Ctrl + middle click = phrase wheel  ·  " : cfg.WheelHoldMs > 0 ? "hold middle button = phrase wheel  ·  " : "middle click = phrase wheel  ·  ") : "") + "F6 type to speak  ·  F10 free mouse  ·  F9 window/full  ·  F8 hide  ·  Ctrl+F8 quit" : status;
+        string hint = string.IsNullOrEmpty(status) ? (cfg.MouseWheelMenu ? (cfg.WheelAltDown ? "Alt + Down = phrase wheel  ·  " : cfg.WheelNeedsCtrl ? "Ctrl + middle click = phrase wheel  ·  " : "middle click = phrase wheel  ·  ") : "") + (cfg.SayMouseButton > 0 ? "thumb button" : "F6") + " type to speak  ·  F10 free mouse  ·  F9 window/full  ·  F8 hide  ·  Ctrl+F8 quit" : status;
         if (!ring && surround) hint = "top = front   bottom = back   ·   " + hint;
         Text(dc, $"Other Side Sound  ·  {mode}  ·  {dev}", cx, 10 * s, 13 * s, Color.FromArgb(150, 255, 255, 255), true, 1);
         Text(dc, hint, cx, 28 * s, 11 * s, Color.FromArgb(120, 255, 255, 255), false, 1);

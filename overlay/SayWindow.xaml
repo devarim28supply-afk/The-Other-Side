@@ -1,9 +1,9 @@
 <Window x:Class="PhasmoSound.SayWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Say" WindowStyle="None" AllowsTransparency="True" Background="Transparent"
+        Title="Say" WindowStyle="None" AllowsTransparency="False" Background="#FF141414"
         Topmost="True" ShowInTaskbar="False" ResizeMode="NoResize" SizeToContent="Height" Width="900">
-    <Border Background="#E6141414" BorderBrush="#FF7FB3FF" BorderThickness="2" CornerRadius="12" Padding="14">
+    <Border Background="#FF141414" BorderBrush="#FF7FB3FF" BorderThickness="2" Padding="14">
         <StackPanel>
             <TextBlock x:Name="Hint" Foreground="#FFB0C8FF" FontSize="15" Margin="4,0,4,8"
                        Text="Type what to say.  Enter = speak to players near you   Shift+Enter = speak on the radio   Esc = close" />

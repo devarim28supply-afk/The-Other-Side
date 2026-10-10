@@ -87,7 +87,7 @@ public partial class OverlayWindow : Window
         Root.Children.Add(radar);
 
         // redraw at ~60 Hz (a CompositionTarget.Rendering hook stalled window creation for 20+ s here)
-        var draw = new DispatcherTimer(DispatcherPriority.Render) { Interval = TimeSpan.FromMilliseconds(16) };
+        draw = new DispatcherTimer(DispatcherPriority.Render) { Interval = TimeSpan.FromMilliseconds(16) };
         draw.Tick += (_, _) => radar.InvalidateVisual();
         draw.Start();
 
@@ -326,7 +326,17 @@ public partial class OverlayWindow : Window
     }
 
     /// Redraw right now (called from the audio and classifier threads) instead of waiting for the timer.
-    public void RedrawNow() => Dispatcher.BeginInvoke(DispatcherPriority.Send, new Action(() => radar.InvalidateVisual()));
+    public void RedrawNow() { if (!quiet) Dispatcher.BeginInvoke(DispatcherPriority.Send, new Action(() => radar.InvalidateVisual())); }
+
+    /// While the say box is open the full-screen overlay redraws ~6 times a second instead of every sound,
+    /// so typing does not cost the game frames (Kaalob 2026-10-10: "require less rendering when using typing box").
+    public void SetQuiet(bool on)
+    {
+        quiet = on;
+        draw.Interval = TimeSpan.FromMilliseconds(on ? 160 : 16);
+    }
+    bool quiet;
+    readonly DispatcherTimer draw;
 
     public void ToggleOverlay()
     {
