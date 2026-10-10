@@ -24,6 +24,7 @@ public partial class App : System.Windows.Application
     HuntRecorder? hunts;
     GhostWatch? ghostWatch;
     Speaker? speaker;
+    GameHelper? helper;
     SayWindow? say;
     CaptionClient? captions;
     CaptionClient? ownCaptions;      // second stream: your own mic ("YOU: ...")
@@ -132,6 +133,7 @@ public partial class App : System.Windows.Application
         if (cfg.Speak)
         {
             if (cfg.SetDefaultMic) DefaultMic.Ensure(cfg.MicDevice, cfg.DefaultMicVolume, cfg.MicFormatRate, cfg.SpeakDevice, cfg.Device);
+            if (cfg.HelperEnabled) helper = new GameHelper(cfg, state);
             speaker = new Speaker(cfg);
             speaker.StartKokoro();
             var phrases = new Phrases(Path.Combine(AppContext.BaseDirectory, "phrases"));
@@ -527,6 +529,7 @@ public partial class App : System.Windows.Application
         captions?.Dispose();
         ownMic?.Dispose();
         ownCaptions?.Dispose();
+        helper?.Dispose();
         speaker?.StopKokoro();
         if (tray != null) { tray.Visible = false; tray.Dispose(); }
         engine?.Dispose();

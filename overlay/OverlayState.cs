@@ -38,6 +38,8 @@ public sealed class OverlayState
     public string DeviceName = "";
     public string Status = "";
     public string Toast = "";
+    public string HelperNote = "";                     // game helper's latest note
+    public DateTime HelperUntil = DateTime.MinValue;
     public string SpeakText = "";                      // line the computer voice is saying
     public int SpeakPhase;                              // 0 = quiet, 1 = getting the voice ready, 2 = speaking now
     public bool BoardOpen;                              // phrase board (F5) is showing

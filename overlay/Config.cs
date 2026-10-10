@@ -184,6 +184,15 @@ public sealed class Config
     // On-screen SPEAKING sign while the voice talks. Off: Kaalob 2026-10-10 "keep it simple, I will know when it speaks by caption".
     public bool SpeakingSign { get; set; } = false;
     public bool DebugClock { get; set; } = false;
+    // Game helper: Claude reads the sound rows + captions and writes one short note (Kaalob 2026-10-10). Subscription, no tools.
+    public bool HelperEnabled { get; set; } = true;
+    public string HelperClaudePath { get; set; } = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".local", "bin", "claude.exe");
+    public string HelperModel { get; set; } = "claude-opus-5-5";
+    public string HelperEffort { get; set; } = "low";
+    public double HelperIntervalSec { get; set; } = 4;     // look at most this often, and only when something new was heard
+    public double HelperWindowSec { get; set; } = 30;      // how far back it reads
+    public double HelperShowSec { get; set; } = 8;         // how long a note stays on screen
+    public int HelperRestartCalls { get; set; } = 40;      // fresh session after this many notes (keeps it fast)
     public bool SoftwareRender { get; set; } = true;
 
     public static Config Load(string path)

@@ -327,6 +327,21 @@ public sealed class RadarElement : FrameworkElement
             }
         }
 
+        // --- game helper note: top centre under the header, purple border
+        string helperNote; DateTime helperUntil;
+        lock (state.Lock) { helperNote = state.HelperNote; helperUntil = state.HelperUntil; }
+        if (now < helperUntil && helperNote.Length > 0)
+        {
+            var hcol = Color.FromRgb(190, 150, 255);
+            double hfs = 20 * s;
+            string hline = "HELPER:  " + helperNote;
+            var hft = FT(hline, hfs, Colors.White, true);
+            double hx = w / 2 - hft.Width / 2 - 16 * s, hy = 50 * s;
+            dc.DrawRoundedRectangle(new SolidColorBrush(Color.FromRgb(12, 12, 16)), new Pen(new SolidColorBrush(hcol), 2.5),
+                new Rect(hx, hy, hft.Width + 32 * s, hfs + 20 * s), 10 * s, 10 * s);
+            Text(dc, hline, w / 2, hy + 9 * s, hfs, hcol, true, 1);
+        }
+
         // --- speaking sign: Kaalob cannot hear the computer voice, so show when it is talking (2026-10-10)
         string speakText; int speakPhase;
         lock (state.Lock) { speakText = state.SpeakText; speakPhase = state.SpeakPhase; }
