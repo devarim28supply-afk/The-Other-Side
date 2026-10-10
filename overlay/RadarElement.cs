@@ -330,7 +330,7 @@ public sealed class RadarElement : FrameworkElement
         // --- speaking sign: Kaalob cannot hear the computer voice, so show when it is talking (2026-10-10)
         string speakText; int speakPhase;
         lock (state.Lock) { speakText = state.SpeakText; speakPhase = state.SpeakPhase; }
-        if (speakPhase > 0)
+        if (cfg.SpeakingSign && speakPhase > 0)
         {
             string line = speakText.Length > 60 ? speakText[..57] + "..." : speakText;
             string sign = speakPhase == 2 ? "SPEAKING:  " + line : "Getting voice ready...";
