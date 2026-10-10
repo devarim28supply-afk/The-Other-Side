@@ -137,7 +137,8 @@ public partial class OverlayWindow : Window
         Log.Write($"source init: hotkeys {sw.ElapsedMilliseconds} ms");
         PlaceOverGame();
         Log.Write($"source init: placed {sw.ElapsedMilliseconds} ms");
-        if (cfg.MouseWheelMenu)
+        if (cfg.MouseWheelMenu && cfg.WheelAltDown && !RegisterHotKey(hwnd, 30, MOD_ALT, VK_DOWN)) Log.Write("hotkey Alt+Down not registered");
+        if (cfg.MouseWheelMenu && cfg.WheelMiddleClick)
         {
             mouse = new MouseHook { HoldMs = cfg.WheelHoldMs, NeedCtrl = cfg.WheelNeedsCtrl };
             mouse.MiddleClick += () => Dispatcher.BeginInvoke(new Action(() => ToggleBoard()));
@@ -307,7 +308,7 @@ public partial class OverlayWindow : Window
             else if (id == 9) SaveLastRequested?.Invoke();
             else if (id == 4) ToggleBorderless();
             else if (id == 6) FreeMouse();
-            else if (id == 7) ToggleBoard();
+            else if (id == 7 || id == 30) ToggleBoard();
             else if (id == 8) PresetRequested?.Invoke(2, lastGameHwnd);
             else if (id == 19) ToggleBoard(false);
             else if (id >= 20 && id < 29) { int idx = boardPage * 9 + (id - 20); ToggleBoard(false); PhraseChosen?.Invoke(idx, lastGameHwnd); }
@@ -403,6 +404,7 @@ public partial class OverlayWindow : Window
         UnregisterHotKey(hwnd, 6);
         UnregisterHotKey(hwnd, 7);
         UnregisterHotKey(hwnd, 8);
+        UnregisterHotKey(hwnd, 30);
         for (int i = 0; i < 9; i++) UnregisterHotKey(hwnd, 10 + i);
         base.OnClosed(e);
     }
@@ -411,7 +413,8 @@ public partial class OverlayWindow : Window
     const int GWL_EXSTYLE = -20;
     const long WS_EX_TRANSPARENT = 0x20, WS_EX_LAYERED = 0x80000, WS_EX_TOOLWINDOW = 0x80, WS_EX_NOACTIVATE = 0x08000000;
     const int WM_HOTKEY = 0x0312;
-    const uint MOD_CONTROL = 0x2, VK_F8 = 0x77, VK_F7 = 0x76, VK_F9 = 0x78, VK_F6 = 0x75, VK_F10 = 0x79, VK_F5 = 0x74, VK_ESCAPE = 0x1B;
+    const uint MOD_ALT = 0x1, VK_DOWN = 0x28;
+    const uint MOD_CONTROL = 0x2,VK_F8 = 0x77, VK_F7 = 0x76, VK_F9 = 0x78, VK_F6 = 0x75, VK_F10 = 0x79, VK_F5 = 0x74, VK_ESCAPE = 0x1B;
     const long WS_OVERLAPPEDWINDOW = 0x00CF0000;
     delegate bool MonitorEnumProc(IntPtr mon, IntPtr hdc, ref RECT r, IntPtr data);
     [DllImport("user32.dll")] static extern bool EnumDisplayMonitors(IntPtr hdc, IntPtr clip, MonitorEnumProc cb, IntPtr data);

@@ -143,6 +143,9 @@ public sealed class Config
     public bool MouseWheelMenu { get; set; } = true;
     public int WheelHoldMs { get; set; } = 0;
     public bool WheelNeedsCtrl { get; set; } = false;
+    // Kaalob 2026-10-10: the wheel opens with Alt + Down arrow instead of (Ctrl +) middle click.
+    public bool WheelAltDown { get; set; } = true;
+    public bool WheelMiddleClick { get; set; } = false;
     // Caption your own mic too (Kaalob 2026-10-10: "to know if the text to speech is clear enough").
     // OwnVoiceDevice empty = MicDevice. With Voicemeeter Banana it becomes "Voicemeeter Out B2".
     public bool OwnVoiceCaptions { get; set; } = false;
