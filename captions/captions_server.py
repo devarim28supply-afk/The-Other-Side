@@ -57,10 +57,22 @@ print(f"whisper {MODEL} ready on {used} in {time.time() - t0:.1f}s", flush=True)
 import difflib, re  # noqa: E402
 _here = os.path.dirname(os.path.abspath(__file__))
 _lines_path = os.path.join(_here, "ghost_lines.json")
+# "You're never gonna leave here" == "You are never going to leave here"
+_LONG = {"youre": "you are", "im": "i am", "dont": "do not", "wont": "will not", "cant": "can not", "cannot": "can not",
+         "gonna": "going to", "wanna": "want to", "its": "it is", "wasnt": "was not", "shouldnt": "should not",
+         "youll": "you will", "lets": "let us", "whats": "what is", "wouldnt": "would not", "ill": "i will",
+         "isnt": "is not", "didnt": "did not", "theyre": "they are", "thats": "that is"}
+
+
+def norm(text: str):
+    words = re.sub(r"[^a-z0-9 ]", "", text.lower().replace("'", "").replace("’", "")).split()
+    return " ".join(_LONG.get(w, w) for w in words).split()
+
+
 GHOST = []
 if os.path.exists(_lines_path):
     for ln in json.load(open(_lines_path, encoding="utf-8")):
-        GHOST.append((ln["speaker"], ln["text"], re.sub(r"[^a-z0-9 ]", "", ln["text"].lower()).split()))
+        GHOST.append((ln["speaker"], ln["text"], norm(ln["text"])))
 print(f"{len(GHOST)} ghost lines loaded", flush=True)
 NAMES = "Hans, McGavin, Victoria, Skia, Orphan."
 
@@ -68,7 +80,7 @@ NAMES = "Hans, McGavin, Victoria, Skia, Orphan."
 def match_ghost(text: str):
     """Best ghost line for a caption, or None. One- and two-word lines (yes, no, run) are never tagged:
     players say those too."""
-    words = re.sub(r"[^a-z0-9 ]", "", text.lower()).split()
+    words = norm(text)
     if len(words) < 3:
         return None
     best, score = None, 0.0
