@@ -387,7 +387,7 @@ public sealed class RadarElement : FrameworkElement
         }
         // --- hunt indicator (top-right): the overlay thinks a hunt is on; Ctrl+3 tells it the hunt is over
         bool huntOn; lock (state.Lock) huntOn = state.HuntActive;
-        if (huntOn)
+        if (huntOn && cfg.HuntKey)
         {
             string ht = "HUNT  ·  Ctrl+3 = over";
             double hfs = 18 * s; var hft = FT(ht, hfs, Colors.White, true);
