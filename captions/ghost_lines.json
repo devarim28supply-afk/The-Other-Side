@@ -1,0 +1,372 @@
+[
+ {
+  "speaker": "Ghost",
+  "text": "Behind you",
+  "file": "Art/Sound_Of_Horror/SOH_Voice_FX/SOH_Voice_FX_Ghost/AudioWave/Sound_Of_Horror_Voice_FX_Ghost_BehindYou.wav"
+ },
+ {
+  "speaker": "Ghost",
+  "text": "Look at me",
+  "file": "Art/Sound_Of_Horror/SOH_Voice_FX/SOH_Voice_FX_Ghost/AudioWave/Sound_Of_Horror_Voice_FX_Ghost_LookAtMe.wav"
+ },
+ {
+  "speaker": "Hans",
+  "text": "Excuse me",
+  "file": "Audio/Ghosts/Hans/SFX_SpiritBox_Hans_Excuse_Me.wav"
+ },
+ {
+  "speaker": "Hans",
+  "text": "Your prayers shall not help you here",
+  "file": "Audio/Ghosts/Hans/SFX_SpiritBox_Hans_Prays_Wont_Help.wav"
+ },
+ {
+  "speaker": "Hans",
+  "text": "Your suffering sustains me",
+  "file": "Audio/Ghosts/Hans/SFX_SpiritBox_Hans_Suffering_Sustains_Me.wav"
+ },
+ {
+  "speaker": "Hans",
+  "text": "Allow me to end you",
+  "file": "Audio/Ghosts/Hans/SFX_Spiritbox_Hans_Allow_Me_To_End_You.wav"
+ },
+ {
+  "speaker": "Hans",
+  "text": "It's already dead",
+  "file": "Audio/Ghosts/Hans/SFX_Spiritbox_Hans_Already_Dead.wav"
+ },
+ {
+  "speaker": "Hans",
+  "text": "Such an amusing gesture",
+  "file": "Audio/Ghosts/Hans/SFX_Spiritbox_Hans_Amusing_Gesture.wav"
+ },
+ {
+  "speaker": "Hans",
+  "text": "Who dares to awaken me?",
+  "file": "Audio/Ghosts/Hans/SFX_Spiritbox_Hans_Awaken_Me.wav"
+ },
+ {
+  "speaker": "Hans",
+  "text": "You cannot kill what is already dead",
+  "file": "Audio/Ghosts/Hans/SFX_Spiritbox_Hans_Cant_Kill_What_Is_Dead.wav"
+ },
+ {
+  "speaker": "Hans",
+  "text": "Death is all you will find here",
+  "file": "Audio/Ghosts/Hans/SFX_Spiritbox_Hans_Death_Is_All_Youll_Fine.wav"
+ },
+ {
+  "speaker": "Hans",
+  "text": "I shall deliver you to your death",
+  "file": "Audio/Ghosts/Hans/SFX_Spiritbox_Hans_Deliver_To_Death.wav"
+ },
+ {
+  "speaker": "Hans",
+  "text": "It has come to this",
+  "file": "Audio/Ghosts/Hans/SFX_Spiritbox_Hans_It_Has_Come_To_This.wav"
+ },
+ {
+  "speaker": "Hans",
+  "text": "I shall enjoy toying with your lifeless corpse",
+  "file": "Audio/Ghosts/Hans/SFX_Spiritbox_Hans_Lifeless_Corpse.wav"
+ },
+ {
+  "speaker": "Hans",
+  "text": "Nothing will save you",
+  "file": "Audio/Ghosts/Hans/SFX_Spiritbox_Hans_Nothing_Save_you.wav"
+ },
+ {
+  "speaker": "Hans",
+  "text": "You're but a plaything",
+  "file": "Audio/Ghosts/Hans/SFX_Spiritbox_Hans_Play_Thing.wav"
+ },
+ {
+  "speaker": "Hans",
+  "text": "Skia, you shouldn't be here",
+  "file": "Audio/Ghosts/Hans/SFX_Spiritbox_Hans_SKIA_Shouldnt_Be_Here.wav"
+ },
+ {
+  "speaker": "Hans",
+  "text": "I'm warning you",
+  "file": "Audio/Ghosts/Hans/SFX_Spiritbox_Hans_SKIA_Warning_You.wav"
+ },
+ {
+  "speaker": "Hans",
+  "text": "Skia, you shouldn't do that",
+  "file": "Audio/Ghosts/Hans/SFX_Spiritbox_Hans_SKIA_You_Shouldnt_Do_That.wav"
+ },
+ {
+  "speaker": "Hans",
+  "text": "Say no more",
+  "file": "Audio/Ghosts/Hans/SFX_Spiritbox_Hans_Say_No_More.wav"
+ },
+ {
+  "speaker": "Hans",
+  "text": "Take him",
+  "file": "Audio/Ghosts/Hans/SFX_Spiritbox_Hans_Take_Him.wav"
+ },
+ {
+  "speaker": "Hans",
+  "text": "This ends now",
+  "file": "Audio/Ghosts/Hans/SFX_Spiritbox_Hans_This_Ends_Now.wav"
+ },
+ {
+  "speaker": "McGavin",
+  "text": "I was murdered",
+  "file": "Audio/Ghosts/McGavin/SFX_Spiritbox_McGavinI_Was_Murdered.wav"
+ },
+ {
+  "speaker": "McGavin",
+  "text": "Can you hear me",
+  "file": "Audio/Ghosts/McGavin/SFX_Spiritbox_McGavin_Can_You_Hear_Me.wav"
+ },
+ {
+  "speaker": "McGavin",
+  "text": "I hear you",
+  "file": "Audio/Ghosts/McGavin/SFX_Spiritbox_McGavin_I_Hear_You.wav"
+ },
+ {
+  "speaker": "McGavin",
+  "text": "It was her",
+  "file": "Audio/Ghosts/McGavin/SFX_Spiritbox_McGavin_It_Was_Her.wav"
+ },
+ {
+  "speaker": "McGavin",
+  "text": "Please help",
+  "file": "Audio/Ghosts/McGavin/SFX_Spiritbox_McGavin_Please_Help.wav"
+ },
+ {
+  "speaker": "McGavin",
+  "text": "You shouldn't be here",
+  "file": "Audio/Ghosts/McGavin/SFX_Spiritbox_McGavin_Shouldnt_Be_Here.wav"
+ },
+ {
+  "speaker": "McGavin",
+  "text": "Stay away from there",
+  "file": "Audio/Ghosts/McGavin/SFX_Spiritbox_McGavin_Stay_Away_from_There.wav"
+ },
+ {
+  "speaker": "McGavin",
+  "text": "It wasn't an accident",
+  "file": "Audio/Ghosts/McGavin/SFX_Spiritbox_McGavin_Wasnt_An_Accident.wav"
+ },
+ {
+  "speaker": "McGavin",
+  "text": "Where you can't see",
+  "file": "Audio/Ghosts/McGavin/SFX_Spiritbox_McGavin_Where_You_Cant_See.wav"
+ },
+ {
+  "speaker": "McGavin",
+  "text": "You don't belong here",
+  "file": "Audio/Ghosts/McGavin/SFX_Spiritbox_McGavin_You_Dont_belong.wav"
+ },
+ {
+  "speaker": "McGavin",
+  "text": "You shouldn't have done that",
+  "file": "Audio/Ghosts/McGavin/SFX_Spiritbox_McGavin_You_Shouldnt_Have.wav"
+ },
+ {
+  "speaker": "McGavin",
+  "text": "You'll die if you don't leave",
+  "file": "Audio/Ghosts/McGavin/SFX_Spiritbox_McGavin_Youll_Die_If.wav"
+ },
+ {
+  "speaker": "McGavin",
+  "text": "You're next",
+  "file": "Audio/Ghosts/McGavin/SFX_Spiritbox_McGavin_Youre_Next.wav"
+ },
+ {
+  "speaker": "Orphan",
+  "text": "I am here",
+  "file": "Audio/Ghosts/Orphan/SFX_SpiritBox_Orphan_IAmHere_01.wav"
+ },
+ {
+  "speaker": "Orphan",
+  "text": "I don't want to hurt you",
+  "file": "Audio/Ghosts/Orphan/SFX_SpiritBox_Orphan_IDontWantToHurtYou_01.wav"
+ },
+ {
+  "speaker": "Orphan",
+  "text": "I will find you",
+  "file": "Audio/Ghosts/Orphan/SFX_SpiritBox_Orphan_IWillFindYou_01.wav"
+ },
+ {
+  "speaker": "Orphan",
+  "text": "I'm going to get you",
+  "file": "Audio/Ghosts/Orphan/SFX_SpiritBox_Orphan_ImGoingToGetYou_01.wav"
+ },
+ {
+  "speaker": "Orphan",
+  "text": "I'm sorry, she made me like this",
+  "file": "Audio/Ghosts/Orphan/SFX_SpiritBox_Orphan_ImSorry_01.wav"
+ },
+ {
+  "speaker": "Orphan",
+  "text": "I'm sorry",
+  "file": "Audio/Ghosts/Orphan/SFX_SpiritBox_Orphan_ImSorry_02.wav"
+ },
+ {
+  "speaker": "Orphan",
+  "text": "Look at this",
+  "file": "Audio/Ghosts/Orphan/SFX_SpiritBox_Orphan_LookAtThis_01.wav"
+ },
+ {
+  "speaker": "Orphan",
+  "text": "You should leave now",
+  "file": "Audio/Ghosts/Orphan/SFX_SpiritBox_Orphan_YouShouldLeaveNow_01.wav"
+ },
+ {
+  "speaker": "Orphan",
+  "text": "You're going to die here",
+  "file": "Audio/Ghosts/Orphan/SFX_SpiritBox_Orphan_YoureGoingToDieHere_01.wav"
+ },
+ {
+  "speaker": "Orphan",
+  "text": "You're never gonna leave here",
+  "file": "Audio/Ghosts/Orphan/SFX_SpiritBox_Orphan_YoureNeverGonnaLeaveHere_01.wav"
+ },
+ {
+  "speaker": "Ghost",
+  "text": "Are you afraid my dear",
+  "file": "Audio/Ghosts/Responses/Are_You_Afraid_My_Dear_AlesiaDavina.wav"
+ },
+ {
+  "speaker": "Ghost",
+  "text": "Are you serious",
+  "file": "Audio/Ghosts/Responses/Are_You_Serious_AlesiaDavina.wav"
+ },
+ {
+  "speaker": "Ghost",
+  "text": "Do you want to play",
+  "file": "Audio/Ghosts/Responses/Do_You_Want_To_Play_AlesiaDavina.wav"
+ },
+ {
+  "speaker": "Ghost",
+  "text": "Don't look at me that way",
+  "file": "Audio/Ghosts/Responses/Dont_Look_At_Me_That_Way_AlesiaDavina.wav"
+ },
+ {
+  "speaker": "Ghost",
+  "text": "Don't stare at me",
+  "file": "Audio/Ghosts/Responses/Dont_Stare_At_Me_AlesiaDavina.wav"
+ },
+ {
+  "speaker": "Ghost",
+  "text": "Don't talk here",
+  "file": "Audio/Ghosts/Responses/Dont_Talk_Here_AlesiaDavina.wav"
+ },
+ {
+  "speaker": "Ghost",
+  "text": "Get me out",
+  "file": "Audio/Ghosts/Responses/Get_Me_Out_AlesiaDavina.wav"
+ },
+ {
+  "speaker": "Ghost",
+  "text": "Go away run away",
+  "file": "Audio/Ghosts/Responses/Go_Away_Run_Away_AlesiaDavina.wav"
+ },
+ {
+  "speaker": "Ghost",
+  "text": "I can't hear you",
+  "file": "Audio/Ghosts/Responses/I_Cant_Hear_You_AlesiaDavina.wav"
+ },
+ {
+  "speaker": "Ghost",
+  "text": "If I were you I wouldn't feel secure",
+  "file": "Audio/Ghosts/Responses/If_I_Were_You_I_Wouldnt_Feel_Secure_AlesiaDavina.wav"
+ },
+ {
+  "speaker": "Ghost",
+  "text": "I'm done with it",
+  "file": "Audio/Ghosts/Responses/Im_Done_With_It_AlesiaDavina.wav"
+ },
+ {
+  "speaker": "Ghost",
+  "text": "Let me tell you something I think I don't like you",
+  "file": "Audio/Ghosts/Responses/Let_Me_Tell_You_Something_I_Think_I_Dont_Like_You_AlesiaDavina.wav"
+ },
+ {
+  "speaker": "Ghost",
+  "text": "Let's have some fun",
+  "file": "Audio/Ghosts/Responses/Lets_Have_Some_Fun_AlesiaDavina.wav"
+ },
+ {
+  "speaker": "Ghost",
+  "text": "Maybe you want to take those pills I don't want to",
+  "file": "Audio/Ghosts/Responses/Maybe_You_Want_To_Take_Those_Pills_I_Dont_Want_To_AlesiaDavina.wav"
+ },
+ {
+  "speaker": "Ghost",
+  "text": "No, no, don't come too close",
+  "file": "Audio/Ghosts/Responses/No_Dont_Come_To_Close_AlesiaDavina.wav"
+ },
+ {
+  "speaker": "Ghost",
+  "text": "So many voices in my head",
+  "file": "Audio/Ghosts/Responses/So_Many_Voices_In_My_Head_AlesiaDavina.wav"
+ },
+ {
+  "speaker": "Ghost",
+  "text": "What do you think about dying",
+  "file": "Audio/Ghosts/Responses/What_Do_You_Think_About_Dying_AlesiaDavina.wav"
+ },
+ {
+  "speaker": "Ghost",
+  "text": "What's wrong with my brain",
+  "file": "Audio/Ghosts/Responses/Whats_Wrong_With_My_Brain_AlesiaDavina.wav"
+ },
+ {
+  "speaker": "Ghost",
+  "text": "You are not safe",
+  "file": "Audio/Ghosts/Responses/You_Are_Not_Safe_AlesiaDavina.wav"
+ },
+ {
+  "speaker": "Ghost",
+  "text": "You look so sad",
+  "file": "Audio/Ghosts/Responses/You_Look_So_Sad_AlesiaDavina.wav"
+ },
+ {
+  "speaker": "Skia",
+  "text": "I don't want to hurt you",
+  "file": "Audio/Ghosts/Responses/Skia/SFX_Skia_HurtYou.wav"
+ },
+ {
+  "speaker": "Skia",
+  "text": "Be nice. I don't wanna hurt you",
+  "file": "Audio/Ghosts/Responses/Skia/SFX_Skia_IDontWantToHurtYou.wav"
+ },
+ {
+  "speaker": "Skia",
+  "text": "I'm very sorry dear stranger",
+  "file": "Audio/Ghosts/Responses/Skia/SFX_Skia_ImSorry.wav"
+ },
+ {
+  "speaker": "Skia",
+  "text": "That wasn't very friendly",
+  "file": "Audio/Ghosts/Responses/Skia/SFX_Skia_NotFriendly.wav"
+ },
+ {
+  "speaker": "Skia",
+  "text": "Don't be sad. it will be over soon",
+  "file": "Audio/Ghosts/Responses/Skia/SFX_Skia_OverSoon.wav"
+ },
+ {
+  "speaker": "Skia",
+  "text": "You have to be quiet",
+  "file": "Audio/Ghosts/Responses/Skia/SFX_Skia_Quiet.wav"
+ },
+ {
+  "speaker": "Ghost",
+  "text": "Are you scared",
+  "file": "Audio/Props/SFX_AreYouScared.wav"
+ },
+ {
+  "speaker": "Ghost",
+  "text": "I will end you",
+  "file": "Audio/Props/SFX_IWillEndYou.wav"
+ },
+ {
+  "speaker": "Ghost",
+  "text": "We are coming for you",
+  "file": "Audio/Props/SFX_WeAreComingForYou.wav"
+ }
+]

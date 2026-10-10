@@ -1,0 +1,1178 @@
+[
+ {
+  "file": "Art/Sound_Of_Horror/SOH_Voice_FX/SOH_Voice_FX_Ghost/AudioWave/Psst_FX_Ghost_behindYou.wav",
+  "speaker": "Ghost",
+  "name": "Psst FX Ghost behindYou",
+  "text": "Psst."
+ },
+ {
+  "file": "Art/Sound_Of_Horror/SOH_Voice_FX/SOH_Voice_FX_Ghost/AudioWave/Sound_Of_Horror_Voice_FX_Ghost_BehindYou.wav",
+  "speaker": "Ghost",
+  "name": "Sound Of Horror Voice FX Ghost BehindYou",
+  "text": "Bye."
+ },
+ {
+  "file": "Art/Sound_Of_Horror/SOH_Voice_FX/SOH_Voice_FX_Ghost/AudioWave/Sound_Of_Horror_Voice_FX_Ghost_LookAtMe.wav",
+  "speaker": "Ghost",
+  "name": "Sound Of Horror Voice FX Ghost LookAtMe",
+  "text": "LookAtMe."
+ },
+ {
+  "file": "Art/Sound_Of_Horror/SOH_Voice_FX/SOH_Voice_FX_Ghost/AudioWave/ThroatGrowl_SFX_BehindPlayer.wav",
+  "speaker": "Ghost",
+  "name": "ThroatGrowl SFX BehindPlayer",
+  "text": "Snoring SFX"
+ },
+ {
+  "file": "Art/Sound_Of_Horror/SOH_Voice_FX/SOH_Voice_FX_Ghost/AudioWave/Wind_FX_Ghost_BehindYou.wav",
+  "speaker": "Ghost",
+  "name": "Wind FX Ghost BehindYou",
+  "text": "Wind FX"
+ },
+ {
+  "file": "Art/Sound_Of_Horror/SOH_Voice_FX/SOH_Voice_FX_Whisper/AudioWave/Sound_Of_Horror_Voice_FX_Whisper_01.wav",
+  "speaker": "Ghost",
+  "name": "Sound Of Horror Voice FX Whisper 01",
+  "text": "Sound Of Horror Voice FX"
+ },
+ {
+  "file": "Audio/Ghosts/Hans/SFX_SpiritBox_Hans_Excuse_Me.wav",
+  "speaker": "Hans",
+  "name": "Excuse Me",
+  "text": "Excuse Me."
+ },
+ {
+  "file": "Audio/Ghosts/Hans/SFX_SpiritBox_Hans_Prays_Wont_Help.wav",
+  "speaker": "Hans",
+  "name": "Prays Wont Help",
+  "text": "Your prayers shall not help you here."
+ },
+ {
+  "file": "Audio/Ghosts/Hans/SFX_SpiritBox_Hans_Suffering_Sustains_Me.wav",
+  "speaker": "Hans",
+  "name": "Suffering Sustains Me",
+  "text": "Your suffering sustains me."
+ },
+ {
+  "file": "Audio/Ghosts/Hans/SFX_Spiritbox_Hans_Allow_Me_To_End_You.wav",
+  "speaker": "Hans",
+  "name": "Allow Me To End You",
+  "text": "Allow Me To End You."
+ },
+ {
+  "file": "Audio/Ghosts/Hans/SFX_Spiritbox_Hans_Almost.wav",
+  "speaker": "Hans",
+  "name": "Almost",
+  "text": "Almost."
+ },
+ {
+  "file": "Audio/Ghosts/Hans/SFX_Spiritbox_Hans_Already_Dead.wav",
+  "speaker": "Hans",
+  "name": "Already Dead",
+  "text": "It's Already Dead."
+ },
+ {
+  "file": "Audio/Ghosts/Hans/SFX_Spiritbox_Hans_Alright.wav",
+  "speaker": "Hans",
+  "name": "Alright",
+  "text": "Alright."
+ },
+ {
+  "file": "Audio/Ghosts/Hans/SFX_Spiritbox_Hans_Amusing_Gesture.wav",
+  "speaker": "Hans",
+  "name": "Amusing Gesture",
+  "text": "Such an Amusing Gesture."
+ },
+ {
+  "file": "Audio/Ghosts/Hans/SFX_Spiritbox_Hans_Awaken_Me.wav",
+  "speaker": "Hans",
+  "name": "Awaken Me",
+  "text": "Who dares to awaken me?"
+ },
+ {
+  "file": "Audio/Ghosts/Hans/SFX_Spiritbox_Hans_Cant_Kill_What_Is_Dead.wav",
+  "speaker": "Hans",
+  "name": "Cant Kill What Is Dead",
+  "text": "You Cannot Kill What Is Already Dead."
+ },
+ {
+  "file": "Audio/Ghosts/Hans/SFX_Spiritbox_Hans_Death.wav",
+  "speaker": "Hans",
+  "name": "Death",
+  "text": "Death."
+ },
+ {
+  "file": "Audio/Ghosts/Hans/SFX_Spiritbox_Hans_Death2.wav",
+  "speaker": "Hans",
+  "name": "Death2",
+  "text": "Death."
+ },
+ {
+  "file": "Audio/Ghosts/Hans/SFX_Spiritbox_Hans_Death_Is_All_Youll_Fine.wav",
+  "speaker": "Hans",
+  "name": "Death Is All Youll Fine",
+  "text": "Death Is All You Will Find Here."
+ },
+ {
+  "file": "Audio/Ghosts/Hans/SFX_Spiritbox_Hans_Deliver_To_Death.wav",
+  "speaker": "Hans",
+  "name": "Deliver To Death",
+  "text": "I shall deliver you to your death."
+ },
+ {
+  "file": "Audio/Ghosts/Hans/SFX_Spiritbox_Hans_Doom.wav",
+  "speaker": "Hans",
+  "name": "Doom",
+  "text": "Doom."
+ },
+ {
+  "file": "Audio/Ghosts/Hans/SFX_Spiritbox_Hans_Grunt.wav",
+  "speaker": "Hans",
+  "name": "Grunt",
+  "text": "Grunt."
+ },
+ {
+  "file": "Audio/Ghosts/Hans/SFX_Spiritbox_Hans_Here.wav",
+  "speaker": "Hans",
+  "name": "Here",
+  "text": "Here."
+ },
+ {
+  "file": "Audio/Ghosts/Hans/SFX_Spiritbox_Hans_It_Has_Come_To_This.wav",
+  "speaker": "Hans",
+  "name": "It Has Come To This",
+  "text": "It Has Come To This."
+ },
+ {
+  "file": "Audio/Ghosts/Hans/SFX_Spiritbox_Hans_Laugh2.wav",
+  "speaker": "Hans",
+  "name": "Laugh2",
+  "text": "Laugh2."
+ },
+ {
+  "file": "Audio/Ghosts/Hans/SFX_Spiritbox_Hans_Laughing.wav",
+  "speaker": "Hans",
+  "name": "Laughing",
+  "text": "Laughing."
+ },
+ {
+  "file": "Audio/Ghosts/Hans/SFX_Spiritbox_Hans_Lifeless_Corpse.wav",
+  "speaker": "Hans",
+  "name": "Lifeless Corpse",
+  "text": "I shall enjoy toying with your lifeless corpse."
+ },
+ {
+  "file": "Audio/Ghosts/Hans/SFX_Spiritbox_Hans_No.wav",
+  "speaker": "Hans",
+  "name": "No",
+  "text": "No."
+ },
+ {
+  "file": "Audio/Ghosts/Hans/SFX_Spiritbox_Hans_No2.wav",
+  "speaker": "Hans",
+  "name": "No2",
+  "text": "No."
+ },
+ {
+  "file": "Audio/Ghosts/Hans/SFX_Spiritbox_Hans_Nothing_Save_you.wav",
+  "speaker": "Hans",
+  "name": "Nothing Save you",
+  "text": "Nothing will save you."
+ },
+ {
+  "file": "Audio/Ghosts/Hans/SFX_Spiritbox_Hans_Play_Thing.wav",
+  "speaker": "Hans",
+  "name": "Play Thing",
+  "text": "You're but Play Thing."
+ },
+ {
+  "file": "Audio/Ghosts/Hans/SFX_Spiritbox_Hans_SKIA_Shouldnt_Be_Here.wav",
+  "speaker": "Hans",
+  "name": "SKIA Shouldnt Be Here",
+  "text": "SKIA You Shouldnt Be Here."
+ },
+ {
+  "file": "Audio/Ghosts/Hans/SFX_Spiritbox_Hans_SKIA_Warning_You.wav",
+  "speaker": "Hans",
+  "name": "SKIA Warning You",
+  "text": "I'm warning you."
+ },
+ {
+  "file": "Audio/Ghosts/Hans/SFX_Spiritbox_Hans_SKIA_You_Shouldnt_Do_That.wav",
+  "speaker": "Hans",
+  "name": "SKIA You Shouldnt Do That",
+  "text": "SKIA You Shouldnt Do That."
+ },
+ {
+  "file": "Audio/Ghosts/Hans/SFX_Spiritbox_Hans_Say_No_More.wav",
+  "speaker": "Hans",
+  "name": "Say No More",
+  "text": "Say No More."
+ },
+ {
+  "file": "Audio/Ghosts/Hans/SFX_Spiritbox_Hans_Stop.wav",
+  "speaker": "Hans",
+  "name": "Stop",
+  "text": "Stop."
+ },
+ {
+  "file": "Audio/Ghosts/Hans/SFX_Spiritbox_Hans_Strength.wav",
+  "speaker": "Hans",
+  "name": "Strength",
+  "text": "Strength."
+ },
+ {
+  "file": "Audio/Ghosts/Hans/SFX_Spiritbox_Hans_Take_Him.wav",
+  "speaker": "Hans",
+  "name": "Take Him",
+  "text": "Take Him."
+ },
+ {
+  "file": "Audio/Ghosts/Hans/SFX_Spiritbox_Hans_This_Ends_Now.wav",
+  "speaker": "Hans",
+  "name": "This Ends Now",
+  "text": "This Ends Now."
+ },
+ {
+  "file": "Audio/Ghosts/Hans/SFX_Spiritbox_Hans_Welcome.wav",
+  "speaker": "Hans",
+  "name": "Welcome",
+  "text": "Welcome."
+ },
+ {
+  "file": "Audio/Ghosts/Hans/SFX_Spiritbox_Hans_Where.wav",
+  "speaker": "Hans",
+  "name": "Where",
+  "text": "Where."
+ },
+ {
+  "file": "Audio/Ghosts/Hans/SFX_Spiritbox_Hans_Yes.wav",
+  "speaker": "Hans",
+  "name": "Yes",
+  "text": "Yes."
+ },
+ {
+  "file": "Audio/Ghosts/McGavin/SFX_Spiritbox_McGavinI_Was_Murdered.wav",
+  "speaker": "McGavin",
+  "name": "I Was Murdered",
+  "text": "I Was Murdered."
+ },
+ {
+  "file": "Audio/Ghosts/McGavin/SFX_Spiritbox_McGavin_Can_You_Hear_Me.wav",
+  "speaker": "McGavin",
+  "name": "Can You Hear Me",
+  "text": "Can You Hear Me."
+ },
+ {
+  "file": "Audio/Ghosts/McGavin/SFX_Spiritbox_McGavin_Hide.wav",
+  "speaker": "McGavin",
+  "name": "Hide",
+  "text": "Hide."
+ },
+ {
+  "file": "Audio/Ghosts/McGavin/SFX_Spiritbox_McGavin_I_Hear_You.wav",
+  "speaker": "McGavin",
+  "name": "I Hear You",
+  "text": "I Hear You."
+ },
+ {
+  "file": "Audio/Ghosts/McGavin/SFX_Spiritbox_McGavin_It_Was_Her.wav",
+  "speaker": "McGavin",
+  "name": "It Was Her",
+  "text": "It Was Her."
+ },
+ {
+  "file": "Audio/Ghosts/McGavin/SFX_Spiritbox_McGavin_Murdered.wav",
+  "speaker": "McGavin",
+  "name": "Murdered",
+  "text": "Murdered."
+ },
+ {
+  "file": "Audio/Ghosts/McGavin/SFX_Spiritbox_McGavin_No.wav",
+  "speaker": "McGavin",
+  "name": "No",
+  "text": "No."
+ },
+ {
+  "file": "Audio/Ghosts/McGavin/SFX_Spiritbox_McGavin_Please_Help.wav",
+  "speaker": "McGavin",
+  "name": "Please Help",
+  "text": "Please Help."
+ },
+ {
+  "file": "Audio/Ghosts/McGavin/SFX_Spiritbox_McGavin_Run.wav",
+  "speaker": "McGavin",
+  "name": "Run",
+  "text": "Run."
+ },
+ {
+  "file": "Audio/Ghosts/McGavin/SFX_Spiritbox_McGavin_Shouldnt_Be_Here.wav",
+  "speaker": "McGavin",
+  "name": "Shouldnt Be Here",
+  "text": "You Shouldnt Be Here."
+ },
+ {
+  "file": "Audio/Ghosts/McGavin/SFX_Spiritbox_McGavin_Stay_Away_from_There.wav",
+  "speaker": "McGavin",
+  "name": "Stay Away from There",
+  "text": "Stay Away from There."
+ },
+ {
+  "file": "Audio/Ghosts/McGavin/SFX_Spiritbox_McGavin_Victoria.wav",
+  "speaker": "McGavin",
+  "name": "Victoria",
+  "text": "Victoria."
+ },
+ {
+  "file": "Audio/Ghosts/McGavin/SFX_Spiritbox_McGavin_Wasnt_An_Accident.wav",
+  "speaker": "McGavin",
+  "name": "Wasnt An Accident",
+  "text": "It Wasnt An Accident."
+ },
+ {
+  "file": "Audio/Ghosts/McGavin/SFX_Spiritbox_McGavin_Where_You_Cant_See.wav",
+  "speaker": "McGavin",
+  "name": "Where You Cant See",
+  "text": "Where You Cant See."
+ },
+ {
+  "file": "Audio/Ghosts/McGavin/SFX_Spiritbox_McGavin_Yes.wav",
+  "speaker": "McGavin",
+  "name": "Yes",
+  "text": "Yes."
+ },
+ {
+  "file": "Audio/Ghosts/McGavin/SFX_Spiritbox_McGavin_You_Dont_belong.wav",
+  "speaker": "McGavin",
+  "name": "You Dont belong",
+  "text": "You Dont belong here."
+ },
+ {
+  "file": "Audio/Ghosts/McGavin/SFX_Spiritbox_McGavin_You_Shouldnt_Have.wav",
+  "speaker": "McGavin",
+  "name": "You Shouldnt Have",
+  "text": "You Shouldnt Have Done That."
+ },
+ {
+  "file": "Audio/Ghosts/McGavin/SFX_Spiritbox_McGavin_Youll_Die_If.wav",
+  "speaker": "McGavin",
+  "name": "Youll Die If",
+  "text": "Youll Die If. You Dont Leave."
+ },
+ {
+  "file": "Audio/Ghosts/McGavin/SFX_Spiritbox_McGavin_Youre_Next.wav",
+  "speaker": "McGavin",
+  "name": "Youre Next",
+  "text": "Youre Next."
+ },
+ {
+  "file": "Audio/Ghosts/Orphan/SFX_SpiritBox_Orphan_Die_01.wav",
+  "speaker": "Orphan",
+  "name": "Die 01",
+  "text": "Die."
+ },
+ {
+  "file": "Audio/Ghosts/Orphan/SFX_SpiritBox_Orphan_Die_02.wav",
+  "speaker": "Orphan",
+  "name": "Die 02",
+  "text": "Die"
+ },
+ {
+  "file": "Audio/Ghosts/Orphan/SFX_SpiritBox_Orphan_Grunt_01.wav",
+  "speaker": "Orphan",
+  "name": "Grunt 01",
+  "text": "Grunt 01."
+ },
+ {
+  "file": "Audio/Ghosts/Orphan/SFX_SpiritBox_Orphan_Grunt_02.wav",
+  "speaker": "Orphan",
+  "name": "Grunt 02",
+  "text": "Grunt 02."
+ },
+ {
+  "file": "Audio/Ghosts/Orphan/SFX_SpiritBox_Orphan_Grunt_03.wav",
+  "speaker": "Orphan",
+  "name": "Grunt 03",
+  "text": "Grunt 03."
+ },
+ {
+  "file": "Audio/Ghosts/Orphan/SFX_SpiritBox_Orphan_Hello_01.wav",
+  "speaker": "Orphan",
+  "name": "Hello 01",
+  "text": "Hello?"
+ },
+ {
+  "file": "Audio/Ghosts/Orphan/SFX_SpiritBox_Orphan_Hello_02.wav",
+  "speaker": "Orphan",
+  "name": "Hello 02",
+  "text": "Hello?"
+ },
+ {
+  "file": "Audio/Ghosts/Orphan/SFX_SpiritBox_Orphan_Hello_03.wav",
+  "speaker": "Orphan",
+  "name": "Hello 03",
+  "text": "Hello 04."
+ },
+ {
+  "file": "Audio/Ghosts/Orphan/SFX_SpiritBox_Orphan_IAmHere_01.wav",
+  "speaker": "Orphan",
+  "name": "IAmHere 01",
+  "text": "IAmHere 01."
+ },
+ {
+  "file": "Audio/Ghosts/Orphan/SFX_SpiritBox_Orphan_IAmHere_02.wav",
+  "speaker": "Orphan",
+  "name": "IAmHere 02",
+  "text": "IAmHere!"
+ },
+ {
+  "file": "Audio/Ghosts/Orphan/SFX_SpiritBox_Orphan_IAmHere_03.wav",
+  "speaker": "Orphan",
+  "name": "IAmHere 03",
+  "text": "IAmHere."
+ },
+ {
+  "file": "Audio/Ghosts/Orphan/SFX_SpiritBox_Orphan_IAmHere_04.wav",
+  "speaker": "Orphan",
+  "name": "IAmHere 04",
+  "text": "IAmHere."
+ },
+ {
+  "file": "Audio/Ghosts/Orphan/SFX_SpiritBox_Orphan_IAmHere_05.wav",
+  "speaker": "Orphan",
+  "name": "IAmHere 05",
+  "text": "IAmHere."
+ },
+ {
+  "file": "Audio/Ghosts/Orphan/SFX_SpiritBox_Orphan_IAmHere_06.wav",
+  "speaker": "Orphan",
+  "name": "IAmHere 06",
+  "text": "IAmHere."
+ },
+ {
+  "file": "Audio/Ghosts/Orphan/SFX_SpiritBox_Orphan_IAmHere_07.wav",
+  "speaker": "Orphan",
+  "name": "IAmHere 07",
+  "text": "IAmHere 07."
+ },
+ {
+  "file": "Audio/Ghosts/Orphan/SFX_SpiritBox_Orphan_IDontWantToHurtYou_01.wav",
+  "speaker": "Orphan",
+  "name": "IDontWantToHurtYou 01",
+  "text": "IDontWantToHurtYou"
+ },
+ {
+  "file": "Audio/Ghosts/Orphan/SFX_SpiritBox_Orphan_IDontWantToHurtYou_02.wav",
+  "speaker": "Orphan",
+  "name": "IDontWantToHurtYou 02",
+  "text": "IDontWantToHurtYou"
+ },
+ {
+  "file": "Audio/Ghosts/Orphan/SFX_SpiritBox_Orphan_IWillFindYou_01.wav",
+  "speaker": "Orphan",
+  "name": "IWillFindYou 01",
+  "text": "IWillFindYou"
+ },
+ {
+  "file": "Audio/Ghosts/Orphan/SFX_SpiritBox_Orphan_IWillFindYou_02.wav",
+  "speaker": "Orphan",
+  "name": "IWillFindYou 02",
+  "text": "IWillFindYou 02."
+ },
+ {
+  "file": "Audio/Ghosts/Orphan/SFX_SpiritBox_Orphan_IWillFindYou_03.wav",
+  "speaker": "Orphan",
+  "name": "IWillFindYou 03",
+  "text": "IWillFindYou"
+ },
+ {
+  "file": "Audio/Ghosts/Orphan/SFX_SpiritBox_Orphan_IWillFindYou_04.wav",
+  "speaker": "Orphan",
+  "name": "IWillFindYou 04",
+  "text": "IWillFindYou."
+ },
+ {
+  "file": "Audio/Ghosts/Orphan/SFX_SpiritBox_Orphan_IWillFindYou_05.wav",
+  "speaker": "Orphan",
+  "name": "IWillFindYou 05",
+  "text": "IWillFindYou."
+ },
+ {
+  "file": "Audio/Ghosts/Orphan/SFX_SpiritBox_Orphan_IWillFindYou_06.wav",
+  "speaker": "Orphan",
+  "name": "IWillFindYou 06",
+  "text": "IWillFindYou"
+ },
+ {
+  "file": "Audio/Ghosts/Orphan/SFX_SpiritBox_Orphan_ImGoingToGetYou_01.wav",
+  "speaker": "Orphan",
+  "name": "ImGoingToGetYou 01",
+  "text": "ImGoingToGetYou"
+ },
+ {
+  "file": "Audio/Ghosts/Orphan/SFX_SpiritBox_Orphan_ImGoingToGetYou_02.wav",
+  "speaker": "Orphan",
+  "name": "ImGoingToGetYou 02",
+  "text": "ImGoingToGetYou 02."
+ },
+ {
+  "file": "Audio/Ghosts/Orphan/SFX_SpiritBox_Orphan_ImGoingToGetYou_03.wav",
+  "speaker": "Orphan",
+  "name": "ImGoingToGetYou 03",
+  "text": "ImGoingToGetYou"
+ },
+ {
+  "file": "Audio/Ghosts/Orphan/SFX_SpiritBox_Orphan_ImSorry_01.wav",
+  "speaker": "Orphan",
+  "name": "ImSorry 01",
+  "text": "I'm sorry, she made me like this."
+ },
+ {
+  "file": "Audio/Ghosts/Orphan/SFX_SpiritBox_Orphan_ImSorry_02.wav",
+  "speaker": "Orphan",
+  "name": "ImSorry 02",
+  "text": "ImSorry 02. She made me like this."
+ },
+ {
+  "file": "Audio/Ghosts/Orphan/SFX_SpiritBox_Orphan_Kill_01.wav",
+  "speaker": "Orphan",
+  "name": "Kill 01",
+  "text": "Kill 01."
+ },
+ {
+  "file": "Audio/Ghosts/Orphan/SFX_SpiritBox_Orphan_Laughing_01.wav",
+  "speaker": "Orphan",
+  "name": "Laughing 01",
+  "text": "Laughing 01."
+ },
+ {
+  "file": "Audio/Ghosts/Orphan/SFX_SpiritBox_Orphan_Laughing_02.wav",
+  "speaker": "Orphan",
+  "name": "Laughing 02",
+  "text": "Laughing 02."
+ },
+ {
+  "file": "Audio/Ghosts/Orphan/SFX_SpiritBox_Orphan_Laughing_03.wav",
+  "speaker": "Orphan",
+  "name": "Laughing 03",
+  "text": "Laughing 04."
+ },
+ {
+  "file": "Audio/Ghosts/Orphan/SFX_SpiritBox_Orphan_LookAtThis_01.wav",
+  "speaker": "Orphan",
+  "name": "LookAtThis 01",
+  "text": "LookAtThis!"
+ },
+ {
+  "file": "Audio/Ghosts/Orphan/SFX_SpiritBox_Orphan_LookAtThis_02.wav",
+  "speaker": "Orphan",
+  "name": "LookAtThis 02",
+  "text": "LookAtThis 02."
+ },
+ {
+  "file": "Audio/Ghosts/Orphan/SFX_SpiritBox_Orphan_LookAtThis_03.wav",
+  "speaker": "Orphan",
+  "name": "LookAtThis 03",
+  "text": "LookAtThis 04."
+ },
+ {
+  "file": "Audio/Ghosts/Orphan/SFX_SpiritBox_Orphan_LookAtThis_04.wav",
+  "speaker": "Orphan",
+  "name": "LookAtThis 04",
+  "text": "LookAtThis."
+ },
+ {
+  "file": "Audio/Ghosts/Orphan/SFX_SpiritBox_Orphan_No_01.wav",
+  "speaker": "Orphan",
+  "name": "No 01",
+  "text": "No 01."
+ },
+ {
+  "file": "Audio/Ghosts/Orphan/SFX_SpiritBox_Orphan_No_02.wav",
+  "speaker": "Orphan",
+  "name": "No 02",
+  "text": "No 02."
+ },
+ {
+  "file": "Audio/Ghosts/Orphan/SFX_SpiritBox_Orphan_Run_01.wav",
+  "speaker": "Orphan",
+  "name": "Run 01",
+  "text": "Run 02."
+ },
+ {
+  "file": "Audio/Ghosts/Orphan/SFX_SpiritBox_Orphan_Run_02.wav",
+  "speaker": "Orphan",
+  "name": "Run 02",
+  "text": "Run!"
+ },
+ {
+  "file": "Audio/Ghosts/Orphan/SFX_SpiritBox_Orphan_Run_03.wav",
+  "speaker": "Orphan",
+  "name": "Run 03",
+  "text": "Run 03."
+ },
+ {
+  "file": "Audio/Ghosts/Orphan/SFX_SpiritBox_Orphan_YouShouldLeaveNow_01.wav",
+  "speaker": "Orphan",
+  "name": "YouShouldLeaveNow 01",
+  "text": "Please, YouShouldLeaveNow!"
+ },
+ {
+  "file": "Audio/Ghosts/Orphan/SFX_SpiritBox_Orphan_YouShouldLeaveNow_02.wav",
+  "speaker": "Orphan",
+  "name": "YouShouldLeaveNow 02",
+  "text": "Please, YouShouldLeave, Now!"
+ },
+ {
+  "file": "Audio/Ghosts/Orphan/SFX_SpiritBox_Orphan_YouShouldLeaveNow_03.wav",
+  "speaker": "Orphan",
+  "name": "YouShouldLeaveNow 03",
+  "text": "Please, YouShouldLeaveNow."
+ },
+ {
+  "file": "Audio/Ghosts/Orphan/SFX_SpiritBox_Orphan_YoureGoingToDieHere_01.wav",
+  "speaker": "Orphan",
+  "name": "YoureGoingToDieHere 01",
+  "text": "YoureGoingToDieHere"
+ },
+ {
+  "file": "Audio/Ghosts/Orphan/SFX_SpiritBox_Orphan_YoureGoingToDieHere_02.wav",
+  "speaker": "Orphan",
+  "name": "YoureGoingToDieHere 02",
+  "text": "YoureGoingToDieHere"
+ },
+ {
+  "file": "Audio/Ghosts/Orphan/SFX_SpiritBox_Orphan_YoureGoingToDieHere_03.wav",
+  "speaker": "Orphan",
+  "name": "YoureGoingToDieHere 03",
+  "text": "YoureGoingToDieHere"
+ },
+ {
+  "file": "Audio/Ghosts/Orphan/SFX_SpiritBox_Orphan_YoureGoingToDieHere_04.wav",
+  "speaker": "Orphan",
+  "name": "YoureGoingToDieHere 04",
+  "text": "YoureGoingToDieHere"
+ },
+ {
+  "file": "Audio/Ghosts/Orphan/SFX_SpiritBox_Orphan_YoureNeverGonnaLeaveHere_01.wav",
+  "speaker": "Orphan",
+  "name": "YoureNeverGonnaLeaveHere 01",
+  "text": "I'll never go with you."
+ },
+ {
+  "file": "Audio/Ghosts/Orphan/SFX_SpiritBox_Orphan_YoureNeverGonnaLeaveHere_02.wav",
+  "speaker": "Orphan",
+  "name": "YoureNeverGonnaLeaveHere 02",
+  "text": "YoureNeverGonnaLeaveHere"
+ },
+ {
+  "file": "Audio/Ghosts/Orphan/SFX_SpiritBox_Orphan_YoureNeverGonnaLeaveHere_03.wav",
+  "speaker": "Orphan",
+  "name": "YoureNeverGonnaLeaveHere 03",
+  "text": "YoureNeverGonnaLeaveHere"
+ },
+ {
+  "file": "Audio/Ghosts/Orphan/SFX_SpiritBox_Orphan_YoureNeverGonnaLeaveHere_04.wav",
+  "speaker": "Orphan",
+  "name": "YoureNeverGonnaLeaveHere 04",
+  "text": "YoureNeverGonnaLeaveHere"
+ },
+ {
+  "file": "Audio/Ghosts/Responses/Action_Annoyed_1_AlesiaDavina.wav",
+  "speaker": "Ghost",
+  "name": "Action Annoyed 1",
+  "text": "2."
+ },
+ {
+  "file": "Audio/Ghosts/Responses/Action_Comfortable_1_AlesiaDavina.wav",
+  "speaker": "Ghost",
+  "name": "Action Comfortable 1",
+  "text": "Wooooooooooowwwwwwwwwwwwwwwwww."
+ },
+ {
+  "file": "Audio/Ghosts/Responses/Action_Comfortable_2_AlesiaDavina.wav",
+  "speaker": "Ghost",
+  "name": "Action Comfortable 2",
+  "text": "Hahahaha!"
+ },
+ {
+  "file": "Audio/Ghosts/Responses/Action_Disgusting_2_AlesiaDavina.wav",
+  "speaker": "Ghost",
+  "name": "Action Disgusting 2",
+  "text": "Mmm. Mmm. Mmmmmm."
+ },
+ {
+  "file": "Audio/Ghosts/Responses/Action_Euphoric_1_AlesiaDavina.wav",
+  "speaker": "Ghost",
+  "name": "Action Euphoric 1",
+  "text": ""
+ },
+ {
+  "file": "Audio/Ghosts/Responses/Action_Forboding_4_AlesiaDavina.wav",
+  "speaker": "Ghost",
+  "name": "Action Forboding 4",
+  "text": "2. 1."
+ },
+ {
+  "file": "Audio/Ghosts/Responses/Action_Hungry_1_AlesiaDavina.wav",
+  "speaker": "Ghost",
+  "name": "Action Hungry 1",
+  "text": "2."
+ },
+ {
+  "file": "Audio/Ghosts/Responses/Action_Hungry_2_AlesiaDavina.wav",
+  "speaker": "Ghost",
+  "name": "Action Hungry 2",
+  "text": "Action Hungry 2."
+ },
+ {
+  "file": "Audio/Ghosts/Responses/Action_Laughter_2_AlesiaDavina.wav",
+  "speaker": "Ghost",
+  "name": "Action Laughter 2",
+  "text": "Laughter 2."
+ },
+ {
+  "file": "Audio/Ghosts/Responses/Action_Laughter_3_AlesiaDavina.wav",
+  "speaker": "Ghost",
+  "name": "Action Laughter 3",
+  "text": "Laughter"
+ },
+ {
+  "file": "Audio/Ghosts/Responses/Action_Laughter_8_AlesiaDavina.wav",
+  "speaker": "Ghost",
+  "name": "Action Laughter 8",
+  "text": "Action Laughter 8."
+ },
+ {
+  "file": "Audio/Ghosts/Responses/Are_You_Afraid_My_Dear_AlesiaDavina.wav",
+  "speaker": "Ghost",
+  "name": "Are You Afraid My Dear",
+  "text": "Are You Afraid My Dear."
+ },
+ {
+  "file": "Audio/Ghosts/Responses/Are_You_Serious_AlesiaDavina.wav",
+  "speaker": "Ghost",
+  "name": "Are You Serious",
+  "text": "Are You Serious."
+ },
+ {
+  "file": "Audio/Ghosts/Responses/Beware_AlesiaDavina.wav",
+  "speaker": "Ghost",
+  "name": "Beware",
+  "text": "Beware."
+ },
+ {
+  "file": "Audio/Ghosts/Responses/Do_You_Want_To_Play_AlesiaDavina.wav",
+  "speaker": "Ghost",
+  "name": "Do You Want To Play",
+  "text": "Do You Want To Play."
+ },
+ {
+  "file": "Audio/Ghosts/Responses/Dont_Look_At_Me_That_Way_AlesiaDavina.wav",
+  "speaker": "Ghost",
+  "name": "Dont Look At Me That Way",
+  "text": "Dont Look At Me That Way."
+ },
+ {
+  "file": "Audio/Ghosts/Responses/Dont_Stare_At_Me_AlesiaDavina.wav",
+  "speaker": "Ghost",
+  "name": "Dont Stare At Me",
+  "text": "Dont Stare At Me."
+ },
+ {
+  "file": "Audio/Ghosts/Responses/Dont_Talk_Here_AlesiaDavina.wav",
+  "speaker": "Ghost",
+  "name": "Dont Talk Here",
+  "text": "Dont Talk Here. Dont Talk Here."
+ },
+ {
+  "file": "Audio/Ghosts/Responses/Get_Me_Out_AlesiaDavina.wav",
+  "speaker": "Ghost",
+  "name": "Get Me Out",
+  "text": "Get Me Out."
+ },
+ {
+  "file": "Audio/Ghosts/Responses/GhostAudio_Die.wav",
+  "speaker": "Ghost",
+  "name": "GhostAudio Die",
+  "text": "Die."
+ },
+ {
+  "file": "Audio/Ghosts/Responses/Go_Away_Run_Away_AlesiaDavina.wav",
+  "speaker": "Ghost",
+  "name": "Go Away Run Away",
+  "text": "Go Away Run Away"
+ },
+ {
+  "file": "Audio/Ghosts/Responses/I_Cant_Hear_You_AlesiaDavina.wav",
+  "speaker": "Ghost",
+  "name": "I Cant Hear You",
+  "text": "I Cant Hear You."
+ },
+ {
+  "file": "Audio/Ghosts/Responses/If_I_Were_You_I_Wouldnt_Feel_Secure_AlesiaDavina.wav",
+  "speaker": "Ghost",
+  "name": "If I Were You I Wouldnt Feel Secure",
+  "text": "If I Were You I Wouldnt Feel Secure."
+ },
+ {
+  "file": "Audio/Ghosts/Responses/Im_Done_With_It_AlesiaDavina.wav",
+  "speaker": "Ghost",
+  "name": "Im Done With It",
+  "text": "Im Done With It."
+ },
+ {
+  "file": "Audio/Ghosts/Responses/Let_Me_Tell_You_Something_I_Think_I_Dont_Like_You_AlesiaDavina.wav",
+  "speaker": "Ghost",
+  "name": "Let Me Tell You Something I Think I Dont Like You",
+  "text": "Let Me Tell You Something I Think I Dont Like You."
+ },
+ {
+  "file": "Audio/Ghosts/Responses/Lets_Have_Some_Fun_AlesiaDavina.wav",
+  "speaker": "Ghost",
+  "name": "Lets Have Some Fun",
+  "text": "Lets Have Some Fun."
+ },
+ {
+  "file": "Audio/Ghosts/Responses/Maybe_You_Want_To_Take_Those_Pills_I_Dont_Want_To_AlesiaDavina.wav",
+  "speaker": "Ghost",
+  "name": "Maybe You Want To Take Those Pills I Dont Want To",
+  "text": "Maybe You Want To Take Those Pills I Dont Want To."
+ },
+ {
+  "file": "Audio/Ghosts/Responses/No_3_AlesiaDavina.wav",
+  "speaker": "Ghost",
+  "name": "No 3",
+  "text": "No!"
+ },
+ {
+  "file": "Audio/Ghosts/Responses/No_Dont_Come_To_Close_AlesiaDavina.wav",
+  "speaker": "Ghost",
+  "name": "No Dont Come To Close",
+  "text": "No, No Dont Come To Close."
+ },
+ {
+  "file": "Audio/Ghosts/Responses/Run_AlesiaDavina.wav",
+  "speaker": "Ghost",
+  "name": "Run",
+  "text": "Run. Run. Run."
+ },
+ {
+  "file": "Audio/Ghosts/Responses/So_Many_Voices_In_My_Head_AlesiaDavina.wav",
+  "speaker": "Ghost",
+  "name": "So Many Voices In My Head",
+  "text": "So Many Voices In My Head."
+ },
+ {
+  "file": "Audio/Ghosts/Responses/What_Do_You_Think_About_Dying_AlesiaDavina.wav",
+  "speaker": "Ghost",
+  "name": "What Do You Think About Dying",
+  "text": "What Do You Think About Dying."
+ },
+ {
+  "file": "Audio/Ghosts/Responses/Whats_Wrong_With_My_Brain_AlesiaDavina.wav",
+  "speaker": "Ghost",
+  "name": "Whats Wrong With My Brain",
+  "text": "Whats Wrong With My Brain."
+ },
+ {
+  "file": "Audio/Ghosts/Responses/You_Are_Not_Safe_AlesiaDavina.wav",
+  "speaker": "Ghost",
+  "name": "You Are Not Safe",
+  "text": "You Are Not Safe."
+ },
+ {
+  "file": "Audio/Ghosts/Responses/You_Look_So_Sad_AlesiaDavina.wav",
+  "speaker": "Ghost",
+  "name": "You Look So Sad",
+  "text": "Hmm, You Look So Sad."
+ },
+ {
+  "file": "Audio/Ghosts/Responses/Skia/SFX_Skia_HurtYou.wav",
+  "speaker": "Skia",
+  "name": "HurtYou",
+  "text": "I don't want HurtYou."
+ },
+ {
+  "file": "Audio/Ghosts/Responses/Skia/SFX_Skia_IDontWantToHurtYou.wav",
+  "speaker": "Skia",
+  "name": "IDontWantToHurtYou",
+  "text": "Be nice. I don't wanna hurt you."
+ },
+ {
+  "file": "Audio/Ghosts/Responses/Skia/SFX_Skia_ImSorry.wav",
+  "speaker": "Skia",
+  "name": "ImSorry",
+  "text": "Hmm. I'm very sorry dear stranger."
+ },
+ {
+  "file": "Audio/Ghosts/Responses/Skia/SFX_Skia_NotFriendly.wav",
+  "speaker": "Skia",
+  "name": "NotFriendly",
+  "text": "That wasn't very friendly."
+ },
+ {
+  "file": "Audio/Ghosts/Responses/Skia/SFX_Skia_OverSoon.wav",
+  "speaker": "Skia",
+  "name": "OverSoon",
+  "text": "Don't be sad. It will be over soon."
+ },
+ {
+  "file": "Audio/Ghosts/Responses/Skia/SFX_Skia_Quiet.wav",
+  "speaker": "Skia",
+  "name": "Quiet",
+  "text": "You have to be quiet."
+ },
+ {
+  "file": "Audio/Props/SFX_AreYouScared.wav",
+  "speaker": "Ghost",
+  "name": "AreYouScared",
+  "text": "AreYouScared."
+ },
+ {
+  "file": "Audio/Props/SFX_IWillEndYou.wav",
+  "speaker": "Ghost",
+  "name": "IWillEndYou",
+  "text": "IWillEndYou."
+ },
+ {
+  "file": "Audio/Props/SFX_WeAreComingForYou.wav",
+  "speaker": "Ghost",
+  "name": "WeAreComingForYou",
+  "text": "WeAreComingForYou."
+ },
+ {
+  "file": "Audio/Z_Test/SFX_Test_Talking.wav",
+  "speaker": "Test",
+  "name": "Test Talking",
+  "text": "U.S. Treasuries ticked higher as equity investors scurried for the sidelines after several tech companies slashed their outlooks and revived worries about a stalled economy at close of business yesterday. Around 9.20 a.m. Eastern Time, the two-year note rose 1.75 points to 99.25, yielding 2.17 percent. The five-year note gained five-eighths of a point to 100.10, with a yield of 3.19 percent. The benchmark 10-year note rose 1.75 points to 101.8, pushing its yield to 4.21 percent. And the 30-year bond gained 1.25 to 103 with a yield of 5.12. Yields and prices, as you know, move in opposite directions. Treasuries rose early in the session after a nosedive in Tokyo stocks, which rippled through to European trading, where most houses were trading modestly lower. But the small drop in yields made only minor dents in the huge spike seen over the past week and a half. Treasuries have risen in only two of the past eight trading sessions. With two-year yields nearly a half percentage point above the Fed's..."
+ },
+ {
+  "file": "Core/Characters/Ghosts/Events/Events/LevelSpecific/BlackMeadow/SFX_Event_Hans_EatingFlesh.wav",
+  "speaker": "Ghost event",
+  "name": "Event Hans EatingFlesh",
+  "text": "Thank you for watching. Please like and subscribe."
+ },
+ {
+  "file": "Core/Characters/Ghosts/Events/Events/LevelSpecific/Cemetery/CircleOfSorrows/Audio/SFX_Cemetery_Praying.wav",
+  "speaker": "Ghost event",
+  "name": "Cemetery Praying",
+  "text": "I was only little when the night sky was so clear. I had to wait in the dark to find the light. If anything, this was a man's problem. I didn't expect such a broken soul to exist. But I could see that this man was also dead."
+ },
+ {
+  "file": "Core/Characters/Ghosts/Events/Events/LevelSpecific/McGavinHouse/SFX_Event_VictoriaMemory_Crying.wav",
+  "speaker": "Ghost event",
+  "name": "Event VictoriaMemory Crying",
+  "text": "Crying."
+ },
+ {
+  "file": "Core/Progression/HQWelcomeWidget/AudioPrompts/SFX_Welcome_Crate.wav",
+  "speaker": "HQ",
+  "name": "Welcome Crate",
+  "text": "The equipment crate consists of all of your personal inventory as well as access to the contract contributions. All items in the contribution section of the crate will be loaded into the vehicle and available in the contract."
+ },
+ {
+  "file": "Core/Progression/HQWelcomeWidget/AudioPrompts/SFX_Welcome_Intro.wav",
+  "speaker": "HQ",
+  "name": "Welcome Intro",
+  "text": "Welcome to the other side. We're ecstatic to have you join our community of ghost hunters and paranormal enthusiasts. As you familiarize yourself with your new headquarters, here's an overview of the key areas awaiting your exploration."
+ },
+ {
+  "file": "Core/Progression/HQWelcomeWidget/AudioPrompts/SFX_Welcome_Laptop.wav",
+  "speaker": "HQ",
+  "name": "Welcome Laptop",
+  "text": "Located on the desk is a laptop that can be used to perform the following operations. Team up with other hunters by finding or creating a session. Assign a custom contract, buying and managing your personal equipment."
+ },
+ {
+  "file": "Core/Progression/HQWelcomeWidget/AudioPrompts/SFX_Welcome_Outro.wav",
+  "speaker": "HQ",
+  "name": "Welcome Outro",
+  "text": "The headquarters is yours to explore and make your own. When you're ready to start your journey, ensure your equipment is contributed and select a contract from the board or laptop. Then, hop into your mobile base to travel to your destination. We can't wait for you to start your journey and experience the thrill of exploring the other side. Happy hunting, from the Other Side Goes Hunting team."
+ },
+ {
+  "file": "Core/Progression/HQWelcomeWidget/AudioPrompts/SFX_Welcome_Tablet.wav",
+  "speaker": "HQ",
+  "name": "Welcome Tablet",
+  "text": "You can access your Personal HQ Tablet with the Tab key. This allows access to the following. Enlocking and purchasing furniture to customize your base. Enlocking, purchasing, and traveling to other headquarters. Customize and outfit your mobile base. View your team members and their details."
+ },
+ {
+  "file": "Core/Progression/HQWelcomeWidget/AudioPrompts/SFX_Welcome_Training.wav",
+  "speaker": "HQ",
+  "name": "Welcome Training",
+  "text": "Introducing the new Cleanse contract game mode for Ghost Hunting. We highly recommend completing the training level to familiarize yourself with this new gameplay. Access the training level on the laptop by selecting the TOS training icon, then choose cleanse mode."
+ },
+ {
+  "file": "Core/Progression/HQWelcomeWidget/AudioPrompts/SFX_Welcome_Wardrobe.wav",
+  "speaker": "HQ",
+  "name": "Welcome Wardrobe",
+  "text": "You can visit the Wardrobe to unlock new accessories and customize your appearance."
+ },
+ {
+  "file": "Core/RespawnSystem/Audio/Audio_RespawnSystem_BrideHumming.wav",
+  "speaker": "Bride",
+  "name": "Audio RespawnSystem BrideHumming",
+  "text": "a grip of the mind is going to block your mind. You just have to change."
+ },
+ {
+  "file": "Core/RespawnSystem/Audio/Audio_Respawn_FemalePsst.wav",
+  "speaker": "Bride",
+  "name": "Audio Respawn FemalePsst",
+  "text": "Audio Respawn."
+ },
+ {
+  "file": "Core/Training/Cleanse/Audio/SFX_TRAINING_AFFIXERCRATE_CHARGED.wav",
+  "speaker": "Training",
+  "name": "TRAINING AFFIXERCRATE CHARGED",
+  "text": "The charging progress can be monitored on the LCD screen. The affixer can be removed at any time, however it's best to wait until it's fully done charging. This is to avoid insufficient battery status."
+ },
+ {
+  "file": "Core/Training/Cleanse/Audio/SFX_TRAINING_AFFIXERCRATE_PICKUP.wav",
+  "speaker": "Training",
+  "name": "TRAINING AFFIXERCRATE PICKUP",
+  "text": "It's time to talk about the spectral affixer crate. In its deployed state, this item is the key component in cleansing the contract location, but we'll get more into that a bit later. This item is heavy and requires both hands to carry."
+ },
+ {
+  "file": "Core/Training/Cleanse/Audio/SFX_TRAINING_AFFIXERCRATE_PLACE.wav",
+  "speaker": "Training",
+  "name": "TRAINING AFFIXERCRATE PLACE",
+  "text": "Normally the affixer is fully charged before starting a contract, however the one you have now needs a bit more juice. With the affixer in your hands, walk up to the charging station and interact with it."
+ },
+ {
+  "file": "Core/Training/Cleanse/Audio/SFX_TRAINING_AFFIXER_COMMANDS.wav",
+  "speaker": "Training",
+  "name": "TRAINING AFFIXER COMMANDS",
+  "text": "When you are finished in the help section, type commands, then press enter. This can be used to understand the various prompts the device can accept. The affixer comes with predicting text to help validate user input in rapid entry."
+ },
+ {
+  "file": "Core/Training/Cleanse/Audio/SFX_TRAINING_AFFIXER_DEPLOY.wav",
+  "speaker": "Training",
+  "name": "TRAINING AFFIXER DEPLOY",
+  "text": "Ideally, the spectral affixer should be set up in the ghost favorite room, but for now you can deploy on the green tarp."
+ },
+ {
+  "file": "Core/Training/Cleanse/Audio/SFX_TRAINING_AFFIXER_INTRO.wav",
+  "speaker": "Training",
+  "name": "TRAINING AFFIXER INTRO",
+  "text": "The primary use of the spectral affixer is to bind the ghost characteristics. A characteristic is defined as an evidence type in the highest recorded level of that evidence. During an investigation, you may encounter various evidence levels. However, we only care about the highest levels. Once you feel that you've determined the correct characteristics, you can enter them into the affixer. If enough characteristics are entered correctly, and the affixer is in the ghost's favorite room, the scan should succeed. Although, If the scan fails, the energy emitted can cause the ghost to become agitated and hostile."
+ },
+ {
+  "file": "Core/Training/Cleanse/Audio/SFX_TRAINING_AFFIXER_RETRIEVE.wav",
+  "speaker": "Training",
+  "name": "TRAINING AFFIXER RETRIEVE",
+  "text": "In order to function properly, the spectral affixer must first be set up. Go retrieve the crate that we charged earlier."
+ },
+ {
+  "file": "Core/Training/Cleanse/Audio/SFX_TRAINING_AFFIXER_SCAN.wav",
+  "speaker": "Training",
+  "name": "TRAINING AFFIXER SCAN",
+  "text": "Take some time and experiment with the different commands and familiarize yourself with using the device. Once you feel comfortable, try entering in any two or more evidence types with an associated characteristic level and then conduct a scan. If you enter in a wrong evidence level, you can just retype the correct information and it will override what was previously entered into the device. You can always type list to see what characteristics you currently have."
+ },
+ {
+  "file": "Core/Training/Cleanse/Audio/SFX_TRAINING_AFFIXER_SCAN_COLOR.wav",
+  "speaker": "Training",
+  "name": "TRAINING AFFIXER SCAN COLOR",
+  "text": "You'll notice under normal circumstances, the color of the light that's emitted by the affixer is blue. If a yellow light is present, the scan has been halted and you will need to initiate another scan."
+ },
+ {
+  "file": "Core/Training/Cleanse/Audio/SFX_TRAINING_AFFIXER_TYPING.wav",
+  "speaker": "Training",
+  "name": "TRAINING AFFIXER TYPING",
+  "text": "Using the affixer involves typing commands into its interface. While it may seem daunting at first, it's actually quite simple. Let's start by typing help and pressing enter."
+ },
+ {
+  "file": "Core/Training/Cleanse/Audio/SFX_TRAINING_ARTIFACTS_EAL.wav",
+  "speaker": "Training",
+  "name": "TRAINING ARTIFACTS EAL",
+  "text": "Ethereal artifacts are objects that are bound in, often symbolic, to the identity of the ghost. These artifacts can be difficult to spot. The ethereal artifact locator, also known as the eel, is an entry-level detector that will glow brighter when you are in close proximity of an artifact. After you've discovered the artifact, simply pick it up. Go ahead and pick up the eel now to see how it functions. Keep in mind the examples on the table cannot be removed."
+ },
+ {
+  "file": "Core/Training/Cleanse/Audio/SFX_TRAINING_AUDIO.wav",
+  "speaker": "Training",
+  "name": "TRAINING AUDIO",
+  "text": "The audio evidence encompasses any unusual sounds captured that indicate a ghostly presence. Such auditory clues are often captured via electronic devices with prompts from the ghost hunter such as hello or can you give me a sign. Located on the table are some recording devices with sound samples that were captured in other investigations. Interact with each one to hear random samples of their respective evidence level."
+ },
+ {
+  "file": "Core/Training/Cleanse/Audio/SFX_TRAINING_CELLPHONE_APPS.wav",
+  "speaker": "Training",
+  "name": "TRAINING CELLPHONE APPS",
+  "text": "The phone has some applications that can be quite useful, as well as a heart rate monitor. Ghosts feed off anxious hunters, so it's wise to keep your heart rate under control. Take a moment and familiarize yourself with the phone's interface now."
+ },
+ {
+  "file": "Core/Training/Cleanse/Audio/SFX_TRAINING_CELLPHONE_EQUIP.wav",
+  "speaker": "Training",
+  "name": "TRAINING CELLPHONE EQUIP",
+  "text": "While in the contract, you have access to your personal TOS cell phone. Go ahead and look at it now."
+ },
+ {
+  "file": "Core/Training/Cleanse/Audio/SFX_TRAINING_CELLPHONE_FLASHLIGHT.wav",
+  "speaker": "Training",
+  "name": "TRAINING CELLPHONE FLASHLIGHT",
+  "text": "The cell phone can serve many purposes. The most useful is its flashlight. This can provide a light source while you use your equipment in your other hand. Keep in mind that ghosts are generally attracted to energy emitted by the light."
+ },
+ {
+  "file": "Core/Training/Cleanse/Audio/SFX_TRAINING_EMF.wav",
+  "speaker": "Training",
+  "name": "TRAINING EMF",
+  "text": "EMF stands for electromagnetic fields that emit wave energy. The higher the EMF reading, the higher the evidence level. It's worth noting that the reading will be consistent regardless of range to the source. Go ahead and pick up the digital EMF reader located on the table to detect the different evidence levels."
+ },
+ {
+  "file": "Core/Training/Cleanse/Audio/SFX_TRAINING_EOC.wav",
+  "speaker": "Training",
+  "name": "TRAINING EOC",
+  "text": "With a successful scan, a cleanse contract is mostly complete and you can return to the headquarters if desired. To earn more rewards, you can stick around to fully cleanse a location by finding the bound items, which you will learn about next."
+ },
+ {
+  "file": "Core/Training/Cleanse/Audio/SFX_TRAINING_EQUIPMENTCRATE_CLOSE.wav",
+  "speaker": "Training",
+  "name": "TRAINING EQUIPMENTCRATE CLOSE",
+  "text": "It's worth noting that the left mouse button is used primarily to interact with objects in the world. Inside the crate you'll find a variety of different equipment that is used to help in your journey of identifying the ghost characteristics in Favorite Room. To close the crate, you can press the escape key."
+ },
+ {
+  "file": "Core/Training/Cleanse/Audio/SFX_TRAINING_EQUIPMENTCRATE_INTERACT.wav",
+  "speaker": "Training",
+  "name": "TRAINING EQUIPMENTCRATE INTERACT",
+  "text": "Welcome to your instructional tour of the Cleanse contract. Before we get started, you want to familiarize yourself with your mobile base. First up is the equipment crate. Go ahead and walk up to it, then interact with it using the left mouse button."
+ },
+ {
+  "file": "Core/Training/Cleanse/Audio/SFX_TRAINING_EVIDENCE_WRAPUP.wav",
+  "speaker": "Training",
+  "name": "TRAINING EVIDENCE WRAPUP",
+  "text": "Now that you have learned about all the different types of evidence, we can move on to the first special equipment of the cleanse contract, the spatula fixer."
+ },
+ {
+  "file": "Core/Training/Cleanse/Audio/SFX_TRAINING_MOBILEBASE_WRAPUP.wav",
+  "speaker": "Training",
+  "name": "TRAINING MOBILEBASE WRAPUP",
+  "text": "Great! Now you should be familiar with your mobile base and cell phone. Next, we'll learn about the characteristics that you'll be searching for. Head over to the evidence sample boost to get started."
+ },
+ {
+  "file": "Core/Training/Cleanse/Audio/SFX_TRAINING_OUTRO.wav",
+  "speaker": "Training",
+  "name": "TRAINING OUTRO",
+  "text": "Great! Now that you are familiar with your mobile base, the evidence equipment, and the special equipment, you can move on to cleansing this house. The ghost is known to be non-violent, so you should be okay. Happy hunting!"
+ },
+ {
+  "file": "Core/Training/Cleanse/Audio/SFX_TRAINING_RADIATION.wav",
+  "speaker": "Training",
+  "name": "TRAINING RADIATION",
+  "text": "Radiation, also known as spectral radiation in the paranormal community, manifests as fluctuations in ambient radiation levels. While the levels aren't directly harmful, higher radiation amounts indicate a higher evidence level and caution should be exercised. The radiation energy is emitted from the source of the ghost interaction. This means a radiation strength will be greater at the source and decrease over distance. On the table is a digital Geiger counter. Use this to get familiar with the different radiation strengths."
+ },
+ {
+  "file": "Core/Training/Cleanse/Audio/SFX_TRAINING_THERMAL.wav",
+  "speaker": "Training",
+  "name": "TRAINING THERMAL",
+  "text": "Thermal evidence is a detection of lower than ambient temperatures. The lower the temperature, the higher the evidence level. We've noticed that a ghost's favorite room will get much colder as activity increases. However, they'll be fooled by cold spots that can appear anywhere in a location. These are more useful for determining the evidence level. The laser thermometer is a ghost hunter's favorite tool in identifying thermal changes. Try it out now!"
+ },
+ {
+  "file": "Core/Training/Cleanse/Audio/SFX_TRAINING_UV.wav",
+  "speaker": "Training",
+  "name": "TRAINING UV",
+  "text": "Ultraviolet stains are markings left from a ghost. The markings require the use of ultraviolet light to become visible. These stains can sometimes be hard to spot. However, the general rule is, the easiest to spot, the higher the evidence level. Using the LED ultraviolet flashlight, you can use the samples provided to differentiate between the levels."
+ },
+ {
+  "file": "Core/Training/Cleanse/Audio/SFX_TRAINING_WRITING.wav",
+  "speaker": "Training",
+  "name": "TRAINING WRITING",
+  "text": "The writing evidence involves mysterious inscriptions or symbols appearing on a blank surface. The types of inscriptions have been categorized into levels for easy identification. Leaving a blank book or notepad open and unattended on a surface has shown to give good results on this writing anomaly. On the table are three examples of verified books that have been previously written in."
+ }
+]
