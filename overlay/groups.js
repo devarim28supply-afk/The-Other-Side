@@ -10,6 +10,10 @@ cfg.GroupColors = {
   Device: "#5BE35B", Object: "#FF9628", Environment: "#FFFFFF",
 };
 cfg.GroupOutline = ["Voice", "Physical"];
+// Kaalob (2026-10-09): all sounds 40 %, ghosts 70 %, live captions 70 %
+cfg.SoundOpacity = 0.4;
+cfg.GroupOpacity = { Ghost: 0.7 };
+cfg.CaptionOpacity = 0.7;
 
 // general sound detector categories
 cfg.CategoryGroups = {

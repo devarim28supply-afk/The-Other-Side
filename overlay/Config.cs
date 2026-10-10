@@ -149,6 +149,10 @@ public sealed class Config
     public Dictionary<string, string> CategoryGroups { get; set; } = new();
     public Dictionary<string, string> GroupColors { get; set; } = new();
     public string[] GroupOutline { get; set; } = Array.Empty<string>();   // groups whose names get a black outline
+    // See-through-ness (0-1): sound names (chips, event list, color key), per-group overrides, live captions.
+    public double SoundOpacity { get; set; } = 1.0;
+    public Dictionary<string, double> GroupOpacity { get; set; } = new();
+    public double CaptionOpacity { get; set; } = 1.0;
     // 0 = automatic (scales with screen height so a 4K TV and a 1080p monitor look the same). Or a fixed multiplier.
     public double UiScale { get; set; } = 0;
 

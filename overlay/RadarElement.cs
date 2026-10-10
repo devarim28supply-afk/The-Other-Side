@@ -112,6 +112,13 @@ public sealed class RadarElement : FrameworkElement
         return ft.Width;
     }
 
+    /// How see-through a sound's name is drawn: GroupOpacity for its group, else SoundOpacity.
+    double OpacityOf(string cat)
+    {
+        string g = cfg.CategoryGroups.TryGetValue(cat, out var m) ? m : cat;
+        return Math.Clamp(cfg.GroupOpacity.TryGetValue(g, out var o) ? o : cfg.SoundOpacity, 0.05, 1);
+    }
+
     bool Outlined(string cat) => cfg.GroupOutline.Contains(cfg.CategoryGroups.TryGetValue(cat, out var g) ? g : cat, StringComparer.OrdinalIgnoreCase);
 
     /// Group-colored label: outlined for GroupOutline groups, shadowed otherwise.
@@ -298,6 +305,7 @@ public sealed class RadarElement : FrameworkElement
                 double cw = Math.Min(w * 0.72, 1150 * s);
                 double chh = cpad * 2 + crow * live.Count;
                 double cx0 = w / 2 - cw / 2, cy0 = h - chh - 34 * s;
+                dc.PushOpacity(Math.Clamp(cfg.CaptionOpacity, 0.05, 1));
                 dc.DrawRoundedRectangle(new SolidColorBrush(Color.FromArgb(190, 12, 12, 16)), null, new Rect(cx0, cy0, cw, chh), 10 * s, 10 * s);
                 for (int i = 0; i < live.Count; i++)
                 {
@@ -307,6 +315,7 @@ public sealed class RadarElement : FrameworkElement
                     var col = i == live.Count - 1 ? Colors.White : Color.FromArgb(200, 220, 224, 232);
                     Text(dc, line, w / 2, cy0 + cpad + i * crow, cfs, col, i == live.Count - 1, 1);
                 }
+                dc.Pop();
             }
         }
 
@@ -422,13 +431,15 @@ public sealed class RadarElement : FrameworkElement
             {
                 var d = chips[i];
                 var col = ColorOf(d.Category);
-                var bg =Color.FromArgb((byte)(90 + 130 * Math.Min(1f, d.Score * 1.4f)), col.R, col.G, col.B);
+                dc.PushOpacity(OpacityOf(d.Category));
+                var bg = Color.FromArgb((byte)(90 + 130 * Math.Min(1f, d.Score * 1.4f)), col.R, col.G, col.B);
                 dc.DrawRoundedRectangle(new SolidColorBrush(bg), new Pen(new SolidColorBrush(Color.FromArgb(160, 0, 0, 0)), 1),
                     new Rect(x, chipY, widths[i], chipSize + 12 * s), 8 * s, 8 * s);
                 // white / yellow chips get black writing, darker chips white
                 bool light = cfg.GroupColors.Count > 0 && 0.299 * col.R + 0.587 * col.G + 0.114 * col.B > 170;
                 if (light) dc.DrawText(FT($"{d.Label}  {(int)(d.Score * 100)}%", chipSize, Color.FromRgb(10, 10, 12), true), new Point(x + 11 * s, chipY + 5 * s));
                 else Text(dc, $"{d.Label}  {(int)(d.Score * 100)}%", x + 11 * s, chipY + 5 * s, chipSize, Colors.White, true);
+                dc.Pop();
                 x += widths[i] + 8 * s;
             }
         }
@@ -451,6 +462,7 @@ public sealed class RadarElement : FrameworkElement
             alpha = Math.Clamp(alpha, 0f, 1f) * (row == 0 ? 1f : 0.85f);
             var col = ColorOf(ev.Category);
             double y = ey - row * rowH;
+            dc.PushOpacity(OpacityOf(ev.Category));
             var dot = Color.FromArgb((byte)(255 * alpha), col.R, col.G, col.B);
             dc.DrawEllipse(new SolidColorBrush(dot), new Pen(new SolidColorBrush(Color.FromArgb((byte)(200 * alpha), 0, 0, 0)), Outlined(ev.Category) ? 2.5 * s : 1),
                 new Point(ex + 7 * s, y + 14 * s), 7 * s, 7 * s);
@@ -459,6 +471,7 @@ public sealed class RadarElement : FrameworkElement
             var labelCol = ev.Pending && ev.Label.EndsWith("!") ? Colors.White : col;
             x += GroupText(dc, ev.Category, ev.Label, x, y + 1 * s, 21 * s, Color.FromArgb((byte)(255 * alpha), labelCol.R, labelCol.G, labelCol.B)) + 12 * s;
             Text(dc, age < 1 ? "now" : $"{(int)age}s", x, y + 6 * s, 14 * s, Color.FromArgb((byte)(200 * alpha), 220, 220, 220));
+            dc.Pop();
             row++;
         }
 
@@ -469,9 +482,11 @@ public sealed class RadarElement : FrameworkElement
             foreach (var g in cfg.GroupColors.Keys)
             {
                 var gc = ColorOf(g);
+                dc.PushOpacity(OpacityOf(g));
                 dc.DrawEllipse(new SolidColorBrush(gc), new Pen(new SolidColorBrush(Color.FromArgb(200, 0, 0, 0)), Outlined(g) ? 2 * s : 1), new Point(kx + 5 * s, ky + kfs * 0.7), 5 * s, 5 * s);
                 kx += 14 * s;
                 kx += GroupText(dc, g, g, kx, ky, kfs, Color.FromArgb(230, gc.R, gc.G, gc.B)) + 16 * s;
+                dc.Pop();
             }
         }
 
