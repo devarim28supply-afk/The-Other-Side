@@ -8,7 +8,10 @@ const cfg = JSON.parse(fs.readFileSync(path, "utf8").replace(/^﻿/, ""));
 cfg.GroupColors = {
   Ghost: "#FF5082", Voice: "#FFE135", Physical: "#FFFFFF",
   Device: "#5BE35B", Object: "#FF9628", Environment: "#FFFFFF",
+  You: "#5AD2FF",     // captions of your own text-to-speech as heard in the mic
 };
+cfg.OwnVoiceCaptions = true;
+cfg.OwnVoiceLabel = "YOU";
 cfg.GroupOutline = ["Voice", "Physical"];
 // Kaalob (2026-10-09): all sounds 40 %, ghosts 70 %, live captions 70 %
 cfg.SoundOpacity = 0.4;

@@ -24,11 +24,19 @@ public sealed class CaptionClient : IDisposable
     readonly CancellationTokenSource cts = new();
     public bool Connected => stream != null;
 
-    public CaptionClient(Config cfg, OverlayState state) { this.cfg = cfg; this.state = state; }
+    readonly bool launchServer;
+    readonly string prefix;
+
+    /// launchServer false = a second stream to the same captioner (e.g. your own mic, prefix "YOU: ").
+    public CaptionClient(Config cfg, OverlayState state, bool launchServer = true, string prefix = "")
+    {
+        this.cfg = cfg; this.state = state; this.launchServer = launchServer; this.prefix = prefix;
+    }
 
     public void Start()
     {
         if (!cfg.WhisperCaptions) return;
+        if (!launchServer) { new Thread(ConnectLoop) { IsBackground = true, Name = "captions " + prefix }.Start(); return; }
         try
         {
             string py = string.IsNullOrEmpty(cfg.WhisperPython) ? cfg.KokoroPython : cfg.WhisperPython;
@@ -86,7 +94,7 @@ public sealed class CaptionClient : IDisposable
                             int last = state.Captions.Count - 1;
                             if (last >= 0 && state.Captions[last].Partial) state.Captions.RemoveAt(last);
                             if (text.Length == 0) continue;
-                            state.Captions.Add(new CaptionLine { Text = text, Time = DateTime.UtcNow, Partial = partial });
+                            state.Captions.Add(new CaptionLine { Text = prefix + text, Time = DateTime.UtcNow, Partial = partial });
                             if (state.Captions.Count > 12) state.Captions.RemoveAt(0);
                         }
                     }

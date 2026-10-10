@@ -316,7 +316,9 @@ public sealed class RadarElement : FrameworkElement
                     if (cfg.GroupColors.Count > 0)
                     {
                         // ghost lines in the Ghost color, people talking in the Voice color; older lines a bit dimmer
-                        var gc = ColorOf(live[i].Text.StartsWith("GHOST") ? "Ghost" : "Voice");
+                        string who = live[i].Text.StartsWith("GHOST") ? "Ghost"
+                                   : live[i].Text.StartsWith(cfg.OwnVoiceLabel + ":") && cfg.GroupColors.ContainsKey("You") ? "You" : "Voice";
+                        var gc = ColorOf(who);
                         col = Color.FromArgb(i == live.Count - 1 ? (byte)255 : (byte)200, gc.R, gc.G, gc.B);
                     }
                     Text(dc, line, w / 2, cy0 + cpad + i * crow, cfs, col, i == live.Count - 1, 1);

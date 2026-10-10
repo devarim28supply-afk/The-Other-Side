@@ -26,6 +26,8 @@ public partial class App : System.Windows.Application
     Speaker? speaker;
     SayWindow? say;
     CaptionClient? captions;
+    CaptionClient? ownCaptions;      // second stream: your own mic ("YOU: ...")
+    MicListener? ownMic;
     float[] floorDb = Array.Empty<float>();   // slowly tracked background level per channel
     float floorAll = float.NaN;
     DateTime lastFrameTime = DateTime.MinValue;
@@ -83,6 +85,14 @@ public partial class App : System.Windows.Application
             captions = new CaptionClient(cfg, state);
             captions.Start();
             engine.Samples16k += s => captions.Feed(s);
+            if (cfg.OwnVoiceCaptions)
+            {
+                // your text-to-speech as it really arrives in the game mic, captioned as "YOU: ..."
+                ownCaptions = new CaptionClient(cfg, state, launchServer: false, prefix: cfg.OwnVoiceLabel + ": ");
+                ownCaptions.Start();
+                ownMic = new MicListener(string.IsNullOrEmpty(cfg.OwnVoiceDevice) ? cfg.MicDevice : cfg.OwnVoiceDevice);
+                ownMic.Samples16k += s => ownCaptions.Feed(s);
+            }
         }
         Log.Write("creating window");
         win = new OverlayWindow(cfg, state);
@@ -502,6 +512,8 @@ public partial class App : System.Windows.Application
     {
         cts.Cancel();
         captions?.Dispose();
+        ownMic?.Dispose();
+        ownCaptions?.Dispose();
         speaker?.StopKokoro();
         if (tray != null) { tray.Visible = false; tray.Dispose(); }
         engine?.Dispose();
