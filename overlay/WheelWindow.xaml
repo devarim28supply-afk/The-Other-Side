@@ -1,0 +1,8 @@
+<Window x:Class="PhasmoSound.WheelWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="PhasmoSound Wheel" WindowStyle="None" AllowsTransparency="True" Background="Transparent"
+        Topmost="True" ShowInTaskbar="False" ResizeMode="NoResize" ShowActivated="True"
+        Left="0" Top="0" Width="16" Height="16" Cursor="Arrow">
+    <Grid x:Name="Root" Background="#01000000" />
+</Window>
