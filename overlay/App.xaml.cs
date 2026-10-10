@@ -391,12 +391,16 @@ public partial class App : System.Windows.Application
                     peak = state.WinPeakDb; peakAngle = state.WinPeakAngle; peakConf = state.WinPeakConf;
                     if (!fast || final) state.WinPeakDb = -100f;
                 }
-                if (peak < cfg.MinDb)
+                // Quiet sounds (under the ambient gate) are still listened to, but only footsteps get through:
+                // Kaalob 2026-10-10 "when footsteps are heard from far away let me know, other small sounds ignore".
+                float stepExtra = cfg.AdaptiveFloor ? Math.Max(0f, cfg.AmbientGateDb - cfg.FootstepGateDb) : 0f;
+                bool stepsOnly = peak < cfg.MinDb;
+                if (peak < cfg.MinDb - stepExtra)
                 {
                     lock (state.Lock) state.Current = new();
                     return;
                 }
-                if (!fast && store != null && store.Count > 0 && peak < cfg.MinDb + 22
+                if (!fast && !stepsOnly && store != null && store.Count > 0 && peak < cfg.MinDb + 22
                     && (DateTime.UtcNow - lastPending).TotalSeconds > 1.5   // nothing sudden happened lately
                     && (now0 = DateTime.UtcNow) - lastBackground > TimeSpan.FromSeconds(2))
                 {
@@ -454,9 +458,12 @@ public partial class App : System.Windows.Application
                         dets = dets.Except(own).ToList();
                     }
                 }
+                if (stepsOnly)
+                    dets = dets.Where(d => cfg.FootstepLabels.Contains(d.Label, StringComparer.OrdinalIgnoreCase)).ToList();
                 if (cfg.LabelGroups.Count > 0 || cfg.CategoryGroups.Count > 0)
                     dets = dets.Select(d => cfg.LabelGroups.TryGetValue(d.Label, out var g) ? d with { Category = g }
                                           : cfg.CategoryGroups.TryGetValue(d.Category, out var g2) ? d with { Category = g2 } : d).ToList();
+                if (stepsOnly) dets = dets.Select(d => d with { Label = d.Label + " (far)" }).ToList();
                 // e.g. "Voice": talking already shows as a caption, so it gets no sound row
                 bool hiddenTop = false;
                 if (cfg.HideGroups.Length > 0)

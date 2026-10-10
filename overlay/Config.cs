@@ -44,6 +44,9 @@ public sealed class Config
     public bool AdaptiveFloor { get; set; } = true;
     public float AmbientRiseDbPerSec { get; set; } = 2f;   // how fast a constant sound gets absorbed into the floor
     public float AmbientGateDb { get; set; } = 6f;         // must be this far above the floor to count
+    // Footsteps only need to be this far above the floor (quieter = far away); shown as "Footsteps (far)".
+    public float FootstepGateDb { get; set; } = 5f;
+    public string[] FootstepLabels { get; set; } = { "Footsteps", "Floor creak", "Running" };
     // A sudden jump of this many dB within ~20 ms counts as a "sudden sound".
     public float OnsetDb { get; set; } = 10f;
     public float LoudOnsetDb { get; set; } = 14f;
