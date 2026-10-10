@@ -34,7 +34,11 @@ public sealed class GameHelper : IDisposable
         "is something coming closer, is the ghost active, is a hunt starting, did a teammate ask for something. " +
         "Reply with ONE note of at most 12 simple words, no emoji, no quotes. Only say what the evidence supports, and say \"maybe\" when unsure. " +
         "Do not just repeat a single sound name; the player already sees those. Do not repeat your previous note unless something changed. " +
-        "If there is nothing useful to add, reply with exactly: -";
+        "If there is nothing useful to add, reply with exactly: -\n\n" +
+        "SUMMARY MODE: when a message starts with SUMMARY, do something different: summarize what the OTHER players talked about " +
+        "in at most 25 simple words, like a friend catching the deaf player up: plans, requests to the player, evidence found, where people are or are going, " +
+        "ghost name or type guesses. Captions cannot tell speakers apart and may have wrong words, so do not invent names or details. " +
+        "Skip small talk unless it is all there was. If nobody really said anything, reply with exactly: -";
 
     // helper\knowledge.md = game cheat sheet (shipped); helper\learned.txt = the player's corrections (Page Down), one per line
     static string HelperDir => Path.Combine(AppContext.BaseDirectory, "helper");
@@ -89,6 +93,19 @@ public sealed class GameHelper : IDisposable
             try
             {
                 await Task.Delay(TimeSpan.FromSeconds(Math.Max(2, cfg.HelperIntervalSec)), cts.Token);
+                // conversation summary: every SummaryIntervalSec, when players said enough new lines
+                string? talk = cfg.SummaryEnabled ? TalkSnapshot() : null;
+                if (talk != null)
+                {
+                    var tsw = System.Diagnostics.Stopwatch.StartNew();
+                    string sum = await Ask(talk);
+                    if (sum.Length > 0 && sum != "-")
+                    {
+                        Log.Write($"helper summary: \"{sum}\" ({tsw.ElapsedMilliseconds} ms)");
+                        lock (state.Lock) { state.SummaryNote = sum; state.SummaryUntil = DateTime.UtcNow.AddSeconds(cfg.SummaryShowSec); }
+                    }
+                    else Log.Write($"helper summary: nothing worth summing up ({tsw.ElapsedMilliseconds} ms)");
+                }
                 string? snapshot = Snapshot();
                 if (snapshot == null) continue;
                 var sw = System.Diagnostics.Stopwatch.StartNew();
@@ -129,6 +146,28 @@ public sealed class GameHelper : IDisposable
         if (caps.Count == 0) sb.AppendLine("  none");
         foreach (var c in caps.TakeLast(8)) sb.AppendLine($"  {(now - c.Time).TotalSeconds:F0}s ago: {c.Text}");
         if (lastNotes.Count > 0) sb.AppendLine("Your previous notes: " + string.Join(" | ", lastNotes));
+        return sb.ToString();
+    }
+
+    DateTime lastSummary = DateTime.UtcNow, lastSummarizedCaption = DateTime.MinValue;
+
+    /// Players' talk since the last summary (ghost lines left out, own computer voice marked); null when not due or too little was said.
+    string? TalkSnapshot()
+    {
+        var now = DateTime.UtcNow;
+        if ((now - lastSummary).TotalSeconds < cfg.SummaryIntervalSec) return null;
+        List<CaptionLine> caps;
+        lock (state.Lock)
+            caps = state.Captions.Where(c => !c.Partial && c.Time > lastSummarizedCaption && (now - c.Time).TotalSeconds <= cfg.SummaryIntervalSec * 2
+                                             && !c.Text.StartsWith("GHOST")).ToList();
+        string you = cfg.OwnVoiceLabel + ": ";
+        int players = caps.Count(c => !c.Text.StartsWith(you));
+        if (players < cfg.SummaryMinLines) return null;
+        lastSummary = now;
+        lastSummarizedCaption = caps.Max(c => c.Time);
+        var sb = new StringBuilder("SUMMARY of the last ");
+        sb.Append($"{cfg.SummaryIntervalSec:F0} seconds of talk (oldest first; \"{you.Trim()}\" lines are the deaf player's own computer voice):\n");
+        foreach (var c in caps) sb.AppendLine($"  {(now - c.Time).TotalSeconds:F0}s ago: {c.Text}");
         return sb.ToString();
     }
 
@@ -188,7 +227,7 @@ public sealed class GameHelper : IDisposable
         // notes are drawn as plain text: drop emoji and other symbols the overlay font cannot show
         string text = new string(pending.Task.Result.Where(ch => ch < 0x2000).ToArray()).Trim();
         text = string.Join(" ", text.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries));
-        return text.Length > 120 ? text[..120] : text;
+        return text.Length > 220 ? text[..220] : text;
     }
 
     public void Dispose()

@@ -342,6 +342,30 @@ public sealed class RadarElement : FrameworkElement
             Text(dc, hline, w / 2, hy + 9 * s, hfs, hcol, true, 1);
         }
 
+        // --- conversation summary: under the helper note, teal border, up to 2 lines
+        string sumNote; DateTime sumUntil;
+        lock (state.Lock) { sumNote = state.SummaryNote; sumUntil = state.SummaryUntil; }
+        if (now < sumUntil && sumNote.Length > 0)
+        {
+            var tcol = Color.FromRgb(90, 230, 200);
+            double tfs = 19 * s, maxW = Math.Min(w * 0.6, 1100 * s);
+            var lines = new List<string>();
+            string tline = "TALK:  ";
+            foreach (var word in sumNote.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+            {
+                string next = tline.Length == 0 ? word : tline + (tline.EndsWith("  ") ? "" : " ") + word;
+                if (FT(next, tfs, Colors.White, true).Width > maxW && tline.Length > 0 && lines.Count < 1) { lines.Add(tline); tline = word; }
+                else tline = next;
+            }
+            lines.Add(tline);
+            double bw = lines.Max(l => FT(l, tfs, Colors.White, true).Width) + 32 * s;
+            double ty = 50 * s + (now < helperUntil && helperNote.Length > 0 ? 20 * s + 28 * s : 0);
+            double th = lines.Count * tfs * 1.35 + 18 * s;
+            dc.DrawRoundedRectangle(new SolidColorBrush(Color.FromRgb(12, 12, 16)), new Pen(new SolidColorBrush(tcol), 2.5),
+                new Rect(w / 2 - bw / 2, ty, bw, th), 10 * s, 10 * s);
+            for (int i = 0; i < lines.Count; i++) Text(dc, lines[i], w / 2, ty + 8 * s + i * tfs * 1.35, tfs, tcol, true, 1);
+        }
+
         // --- speaking sign: Kaalob cannot hear the computer voice, so show when it is talking (2026-10-10)
         string speakText; int speakPhase;
         lock (state.Lock) { speakText = state.SpeakText; speakPhase = state.SpeakPhase; }

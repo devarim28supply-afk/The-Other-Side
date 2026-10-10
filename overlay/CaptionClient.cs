@@ -95,7 +95,7 @@ public sealed class CaptionClient : IDisposable
                             if (last >= 0 && state.Captions[last].Partial) state.Captions.RemoveAt(last);
                             if (text.Length == 0) continue;
                             state.Captions.Add(new CaptionLine { Text = prefix + text, Time = DateTime.UtcNow, Partial = partial });
-                            if (state.Captions.Count > 12) state.Captions.RemoveAt(0);
+                            if (state.Captions.Count > 60) state.Captions.RemoveAt(0);   // the helper summary reads back up to ~2 min
                         }
                     }
                     catch (Exception ex) { Log.Write("caption parse: " + ex.Message); }

@@ -192,7 +192,12 @@ public sealed class Config
     public double HelperIntervalSec { get; set; } = 4;     // look at most this often, and only when something new was heard
     public double HelperWindowSec { get; set; } = 30;      // how far back it reads
     public double HelperShowSec { get; set; } = 8;         // how long a note stays on screen
-    public int HelperRestartCalls { get; set; } = 40;      // fresh session after this many notes (keeps it fast)
+    public int HelperRestartCalls { get; set; } = 40;
+    // Conversation summary (Kaalob 2026-10-10): what the other players talked about, every SummaryIntervalSec when they said enough.
+    public bool SummaryEnabled { get; set; } = true;
+    public double SummaryIntervalSec { get; set; } = 60;
+    public int SummaryMinLines { get; set; } = 3;
+    public double SummaryShowSec { get; set; } = 15;      // fresh session after this many notes (keeps it fast)
     public bool SoftwareRender { get; set; } = true;
 
     public static Config Load(string path)
