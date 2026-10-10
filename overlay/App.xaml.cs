@@ -40,7 +40,7 @@ public partial class App : System.Windows.Application
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
-        Log.Write("---- PhasmoSound starting ----");
+        Log.Write("---- Other Side Sound starting ----");
         cfg = Config.Load(Path.Combine(AppContext.BaseDirectory, "config.json"));
         try
         {
@@ -66,7 +66,7 @@ public partial class App : System.Windows.Application
         catch (Exception ex)
         {
             Log.Write(ex.ToString());
-            System.Windows.MessageBox.Show("PhasmoSound could not start:\n\n" + ex.Message + "\n\nSee log.txt next to the app.", "PhasmoSound");
+            System.Windows.MessageBox.Show("Other Side Sound could not start:\n\n" + ex.Message + "\n\nSee log.txt next to the app.", "Other Side Sound");
             Shutdown();
             return;
         }
@@ -176,13 +176,13 @@ public partial class App : System.Windows.Application
         tray = new System.Windows.Forms.NotifyIcon
         {
             Icon = System.Drawing.SystemIcons.Information,
-            Text = "PhasmoSound overlay  (F8 hide, Ctrl+F8 quit)",
+            Text = "Other Side Sound overlay  (F8 hide, Ctrl+F8 quit)",
             Visible = true,
         };
         var menu = new System.Windows.Forms.ContextMenuStrip();
         menu.Items.Add("Show / hide overlay (F8)", null, (_, _) => win?.ToggleOverlay());
         menu.Items.Add(new System.Windows.Forms.ToolStripSeparator());
-        menu.Items.Add("Quit PhasmoSound (Ctrl+F8)", null, (_, _) => Shutdown());
+        menu.Items.Add("Quit Other Side Sound (Ctrl+F8)", null, (_, _) => Shutdown());
         tray.ContextMenuStrip = menu;
         tray.DoubleClick += (_, _) => win?.ToggleOverlay();
     }
@@ -506,7 +506,7 @@ public partial class App : System.Windows.Application
         if (tray != null) { tray.Visible = false; tray.Dispose(); }
         engine?.Dispose();
         clf?.Dispose();
-        Log.Write("---- PhasmoSound exit ----");
+        Log.Write("---- Other Side Sound exit ----");
         base.OnExit(e);
     }
 }

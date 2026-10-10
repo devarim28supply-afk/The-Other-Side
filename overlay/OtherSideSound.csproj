@@ -6,7 +6,7 @@
     <UseWindowsForms>true</UseWindowsForms>
     <Nullable>enable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
-    <AssemblyName>PhasmoSound</AssemblyName>
+    <AssemblyName>OtherSideSound</AssemblyName>
     <RootNamespace>PhasmoSound</RootNamespace>
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
     <ApplicationManifest>app.manifest</ApplicationManifest>
