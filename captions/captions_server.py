@@ -104,11 +104,36 @@ def match_ghost(text: str):
     return best if score >= 0.72 else None
 
 
+MULTI = not MODEL.endswith(".en")   # multilingual model: other languages are translated to English (Kaalob 2026-10-10, Russian / Ukrainian player)
+LANG_NAMES = {"ru": "Russian", "uk": "Ukrainian", "es": "Spanish", "de": "German", "fr": "French", "pt": "Portuguese", "pl": "Polish",
+              "it": "Italian", "tr": "Turkish", "nl": "Dutch", "sv": "Swedish", "ja": "Japanese", "ko": "Korean", "zh": "Chinese",
+              "ar": "Arabic", "cs": "Czech", "ro": "Romanian", "hu": "Hungarian", "fi": "Finnish", "no": "Norwegian", "da": "Danish",
+              "be": "Belarusian", "kk": "Kazakh", "bg": "Bulgarian", "sr": "Serbian", "hr": "Croatian", "el": "Greek", "he": "Hebrew",
+              "hi": "Hindi", "id": "Indonesian", "vi": "Vietnamese", "th": "Thai"}
+LANG_MIN_PROB = 0.7   # short noisy clips can look like a random language; below this they are treated as English
+
+
+def _run(audio, language, task, prompt):
+    return model.transcribe(audio, language=language, task=task, beam_size=1, best_of=1, temperature=0.0,
+                            condition_on_previous_text=False, without_timestamps=True, initial_prompt=prompt,
+                            vad_filter=True, vad_parameters={"min_silence_duration_ms": 250, "speech_pad_ms": 150, "threshold": 0.35},
+                            no_speech_threshold=0.5, log_prob_threshold=-1.0)
+
+
 def transcribe(audio: np.ndarray) -> str:
-    segs, _ = model.transcribe(audio, language="en", beam_size=1, best_of=1, temperature=0.0,
-                               condition_on_previous_text=False, without_timestamps=True, initial_prompt=NAMES,
-                               vad_filter=True, vad_parameters={"min_silence_duration_ms": 250, "speech_pad_ms": 150, "threshold": 0.35},
-                               no_speech_threshold=0.5, log_prob_threshold=-1.0)
+    if not MULTI:
+        segs, _ = _run(audio, "en", "transcribe", NAMES)
+        return " ".join(s.text.strip() for s in segs).strip()
+    # auto-detect the language; anything not English is translated to English in the same pass
+    segs, info = _run(audio, None, "translate", None)
+    segs = list(segs)
+    lang, prob = info.language, info.language_probability
+    if lang != "en" and prob >= LANG_MIN_PROB:
+        text = " ".join(s.text.strip() for s in segs).strip()
+        return f"[{LANG_NAMES.get(lang, lang)}] {text}" if text else ""
+    if lang == "en":
+        return " ".join(s.text.strip() for s in segs).strip()
+    segs, _ = _run(audio, "en", "transcribe", NAMES)   # unsure about the language: plain English captioning
     return " ".join(s.text.strip() for s in segs).strip()
 
 
