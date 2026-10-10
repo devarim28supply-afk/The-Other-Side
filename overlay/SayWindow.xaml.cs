@@ -13,7 +13,7 @@ public partial class SayWindow : Window
     readonly Speaker speaker;
     readonly Config cfg;
     public event Action<string>? Spoken;
-    /// Teach mode (End key): Enter hands the text to the game helper as a correction instead of speaking it.
+    /// Teach mode (Page Down): Enter hands the text to the game helper as a correction instead of speaking it.
     public event Action<string>? Taught;
     bool teach;
     const string SayHint = "Type what to say.  Enter = speak to players near you   Shift+Enter = speak on the radio   Esc = close";

@@ -29,7 +29,7 @@ public partial class OverlayWindow : Window
     public event Action? HuntKey;
     /// Fired for F6: open the "say" box. Arguments: game rect (physical px) and the game window handle.
     public event Action<int, int, int, int, IntPtr>? SayRequested;
-    /// End key: the say box in teach mode, to correct the game helper.
+    /// Page Down (Kaalob has no End key): the say box in teach mode, to correct the game helper.
     public event Action<int, int, int, int, IntPtr>? TeachRequested;
     /// Fired for Ctrl+F5: speak preset line 2. F5 toggles the phrase board; a digit fires PhraseChosen (1..9).
     public event Action<int, IntPtr>? PresetRequested;
@@ -140,7 +140,7 @@ public partial class OverlayWindow : Window
         PlaceOverGame();
         Log.Write($"source init: placed {sw.ElapsedMilliseconds} ms");
         if (cfg.SayHomeKey && !RegisterHotKey(hwnd, 30, 0, VK_HOME)) Log.Write("hotkey Home not registered");
-        if (cfg.HelperEnabled && !RegisterHotKey(hwnd, 31, 0, VK_END)) Log.Write("hotkey End not registered");
+        if (cfg.HelperEnabled && !RegisterHotKey(hwnd, 31, 0, VK_NEXT)) Log.Write("hotkey Page Down not registered");
         bool middle = cfg.MouseWheelMenu && cfg.WheelMiddleClick;
         if (middle || cfg.SayMouseButton > 0)
         {
@@ -431,7 +431,7 @@ public partial class OverlayWindow : Window
     const int GWL_EXSTYLE = -20;
     const long WS_EX_TRANSPARENT = 0x20, WS_EX_LAYERED = 0x80000, WS_EX_TOOLWINDOW = 0x80, WS_EX_NOACTIVATE = 0x08000000;
     const int WM_HOTKEY = 0x0312;
-    const uint VK_HOME = 0x24, VK_END = 0x23;
+    const uint VK_HOME = 0x24, VK_NEXT = 0x22;   // VK_NEXT = Page Down
     const uint MOD_CONTROL = 0x2,VK_F8 = 0x77, VK_F7 = 0x76, VK_F9 = 0x78, VK_F6 = 0x75, VK_F10 = 0x79, VK_F5 = 0x74, VK_ESCAPE = 0x1B;
     const long WS_OVERLAPPEDWINDOW = 0x00CF0000;
     delegate bool MonitorEnumProc(IntPtr mon, IntPtr hdc, ref RECT r, IntPtr data);

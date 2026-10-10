@@ -36,7 +36,7 @@ public sealed class GameHelper : IDisposable
         "Do not just repeat a single sound name; the player already sees those. Do not repeat your previous note unless something changed. " +
         "If there is nothing useful to add, reply with exactly: -";
 
-    // helper\knowledge.md = game cheat sheet (shipped); helper\learned.txt = the player's corrections (End key), one per line
+    // helper\knowledge.md = game cheat sheet (shipped); helper\learned.txt = the player's corrections (Page Down), one per line
     static string HelperDir => Path.Combine(AppContext.BaseDirectory, "helper");
     static string LearnedPath => Path.Combine(HelperDir, "learned.txt");
 
@@ -56,7 +56,7 @@ public sealed class GameHelper : IDisposable
         return sb.ToString();
     }
 
-    /// End key: the player corrects or teaches the helper. Saved for good, and the session restarts so it applies now.
+    /// Page Down: the player corrects or teaches the helper. Saved for good, and the session restarts so it applies now.
     public void Learn(string text)
     {
         text = text.Trim();
