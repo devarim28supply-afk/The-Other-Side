@@ -148,6 +148,7 @@ public sealed class Config
     public Dictionary<string, string> LabelGroups { get; set; } = new();
     public Dictionary<string, string> CategoryGroups { get; set; } = new();
     public Dictionary<string, string> GroupColors { get; set; } = new();
+    public string[] GroupOutline { get; set; } = Array.Empty<string>();   // groups whose names get a black outline
     // 0 = automatic (scales with screen height so a 4K TV and a 1080p monitor look the same). Or a fixed multiplier.
     public double UiScale { get; set; } = 0;
 

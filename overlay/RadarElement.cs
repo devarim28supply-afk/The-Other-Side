@@ -45,6 +45,8 @@ public sealed class RadarElement : FrameworkElement
     Color ColorOf(string cat)
     {
         if (groupCol.TryGetValue(cat, out var c)) return c;
+        // rows made before a sound is named (e.g. "LOUD !") still carry a detector category
+        if (cfg.CategoryGroups.TryGetValue(cat, out var grp) && grp != cat) return groupCol[cat] = ColorOf(grp);
         if (cfg.GroupColors.TryGetValue(cat, out var hex))
         {
             try { c = (Color)ColorConverter.ConvertFromString(hex); }
@@ -99,6 +101,22 @@ public sealed class RadarElement : FrameworkElement
         dc.DrawText(ft, new Point(x, y));
         return ft.Width;
     }
+
+    /// Text with a solid black outline (GroupOutline groups), for light colors over bright game scenes.
+    double OutlinedText(DrawingContext dc, string s, double x, double y, double size, Color color, bool bold = false)
+    {
+        var ft = FT(s, size, color, bold);
+        var geo = ft.BuildGeometry(new Point(x, y));
+        dc.DrawGeometry(null, new Pen(new SolidColorBrush(Color.FromArgb(color.A, 0, 0, 0)), Math.Max(2, size * 0.16)) { LineJoin = PenLineJoin.Round }, geo);
+        dc.DrawGeometry(new SolidColorBrush(color), null, geo);
+        return ft.Width;
+    }
+
+    bool Outlined(string cat) => cfg.GroupOutline.Contains(cfg.CategoryGroups.TryGetValue(cat, out var g) ? g : cat, StringComparer.OrdinalIgnoreCase);
+
+    /// Group-colored label: outlined for GroupOutline groups, shadowed otherwise.
+    double GroupText(DrawingContext dc, string cat, string s, double x, double y, double size, Color color) =>
+        Outlined(cat) ? OutlinedText(dc, s, x, y, size, color, true) : Text(dc, s, x, y, size, color, true);
 
     static string ArrowFor(float angle, bool surround)
     {
@@ -407,7 +425,10 @@ public sealed class RadarElement : FrameworkElement
                 var bg =Color.FromArgb((byte)(90 + 130 * Math.Min(1f, d.Score * 1.4f)), col.R, col.G, col.B);
                 dc.DrawRoundedRectangle(new SolidColorBrush(bg), new Pen(new SolidColorBrush(Color.FromArgb(160, 0, 0, 0)), 1),
                     new Rect(x, chipY, widths[i], chipSize + 12 * s), 8 * s, 8 * s);
-                Text(dc, $"{d.Label}  {(int)(d.Score * 100)}%", x + 11 * s, chipY + 5 * s, chipSize, Colors.White, true);
+                // white / yellow chips get black writing, darker chips white
+                bool light = cfg.GroupColors.Count > 0 && 0.299 * col.R + 0.587 * col.G + 0.114 * col.B > 170;
+                if (light) dc.DrawText(FT($"{d.Label}  {(int)(d.Score * 100)}%", chipSize, Color.FromRgb(10, 10, 12), true), new Point(x + 11 * s, chipY + 5 * s));
+                else Text(dc, $"{d.Label}  {(int)(d.Score * 100)}%", x + 11 * s, chipY + 5 * s, chipSize, Colors.White, true);
                 x += widths[i] + 8 * s;
             }
         }
@@ -431,12 +452,12 @@ public sealed class RadarElement : FrameworkElement
             var col = ColorOf(ev.Category);
             double y = ey - row * rowH;
             var dot = Color.FromArgb((byte)(255 * alpha), col.R, col.G, col.B);
-            dc.DrawEllipse(new SolidColorBrush(dot), new Pen(new SolidColorBrush(Color.FromArgb((byte)(200 * alpha), 0, 0, 0)), 1),
+            dc.DrawEllipse(new SolidColorBrush(dot), new Pen(new SolidColorBrush(Color.FromArgb((byte)(200 * alpha), 0, 0, 0)), Outlined(ev.Category) ? 2.5 * s : 1),
                 new Point(ex + 7 * s, y + 14 * s), 7 * s, 7 * s);
             double x = ex + 24 * s;
             x += Text(dc, ArrowFor(ev.Angle, surround), x, y - 2 * s, 24 * s, Color.FromArgb((byte)(255 * alpha), 255, 255, 255), true) + 10 * s;
             var labelCol = ev.Pending && ev.Label.EndsWith("!") ? Colors.White : col;
-            x += Text(dc, ev.Label, x, y + 1 * s, 21 * s, Color.FromArgb((byte)(255 * alpha), labelCol.R, labelCol.G, labelCol.B), true) + 12 * s;
+            x += GroupText(dc, ev.Category, ev.Label, x, y + 1 * s, 21 * s, Color.FromArgb((byte)(255 * alpha), labelCol.R, labelCol.G, labelCol.B)) + 12 * s;
             Text(dc, age < 1 ? "now" : $"{(int)age}s", x, y + 6 * s, 14 * s, Color.FromArgb((byte)(200 * alpha), 220, 220, 220));
             row++;
         }
@@ -448,9 +469,9 @@ public sealed class RadarElement : FrameworkElement
             foreach (var g in cfg.GroupColors.Keys)
             {
                 var gc = ColorOf(g);
-                dc.DrawEllipse(new SolidColorBrush(gc), new Pen(new SolidColorBrush(Color.FromArgb(200, 0, 0, 0)), 1), new Point(kx + 5 * s, ky + kfs * 0.7), 5 * s, 5 * s);
+                dc.DrawEllipse(new SolidColorBrush(gc), new Pen(new SolidColorBrush(Color.FromArgb(200, 0, 0, 0)), Outlined(g) ? 2 * s : 1), new Point(kx + 5 * s, ky + kfs * 0.7), 5 * s, 5 * s);
                 kx += 14 * s;
-                kx += Text(dc, g, kx, ky, kfs, Color.FromArgb(230, gc.R, gc.G, gc.B), true) + 16 * s;
+                kx += GroupText(dc, g, g, kx, ky, kfs, Color.FromArgb(230, gc.R, gc.G, gc.B)) + 16 * s;
             }
         }
 

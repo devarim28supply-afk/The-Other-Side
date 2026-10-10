@@ -273,7 +273,7 @@ public partial class App : System.Windows.Application
                 {
                     lastPending = f.Time;
                     bool loud = f.OnsetDb >= cfg.LoudOnsetDb;
-                    AddEvent(new EventItem { Time = f.Time, Label = loud ? "LOUD !" : "!", Category = loud ? "alert" : "other", Angle = angle, Conf = conf, Score = 1f, Pending = true });
+                    AddEvent(new EventItem { Time = f.Time, Label = loud ? "LOUD !" : "!", Category = cfg.GroupColors.Count > 0 ? "unnamed" : loud ? "alert" : "other", Angle = angle, Conf = conf, Score = 1f, Pending = true });
                     onsetSignal.Set();
                     win?.RedrawNow();
                     Log.Write($"ONSET +{f.OnsetDb:F0}dB at {f.LoudDb:F0}dB dir={angle:F0}");

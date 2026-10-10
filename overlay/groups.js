@@ -4,10 +4,12 @@ const fs = require("fs");
 const path = process.argv[2];
 const cfg = JSON.parse(fs.readFileSync(path, "utf8").replace(/^﻿/, ""));
 
+// Kaalob's picks (2026-10-09): Voice yellow + outline, Physical white + outline, Device green, Object orange, Environment white
 cfg.GroupColors = {
-  Ghost: "#FF5082", Voice: "#78AFFF", Physical: "#FF9628",
-  Device: "#B478FF", Object: "#96EB78", Environment: "#5ACDCD",
+  Ghost: "#FF5082", Voice: "#FFE135", Physical: "#FFFFFF",
+  Device: "#5BE35B", Object: "#FF9628", Environment: "#FFFFFF",
 };
+cfg.GroupOutline = ["Voice", "Physical"];
 
 // general sound detector categories
 cfg.CategoryGroups = {
