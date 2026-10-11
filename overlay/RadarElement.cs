@@ -539,8 +539,8 @@ public sealed class RadarElement : FrameworkElement
             row++;
         }
 
-        // --- color key for the sound groups, under the event log
-        if (cfg.GroupColors.Count > 0)
+        // --- color key for the sound groups, under the event log (ShowColorKey off: Kaalob 2026-10-11 "I already know")
+        if (cfg.ShowColorKey && cfg.GroupColors.Count > 0)
         {
             double kx = ex, ky = ey + 32 * s, kfs = 13 * ss;
             foreach (var g in cfg.GroupColors.Keys)
@@ -558,8 +558,12 @@ public sealed class RadarElement : FrameworkElement
         string mode = surround ? $"{(ch == 8 ? "7.1" : ch == 6 ? "5.1" : ch + "ch")} SURROUND" : "STEREO (left / right only)";
         string hint = string.IsNullOrEmpty(status) ? (cfg.MouseWheelMenu ? "F5 = phrase wheel  ·  " : "") + (cfg.SayHomeKey ? "Home" : cfg.SayMouseButton > 0 ? "thumb button" : "F6") + " = type to speak  ·  " + (cfg.HelperEnabled ? "Page Down = teach helper  ·  " : "") + "F10 free mouse  ·  F9 window/full  ·  F8 hide  ·  Ctrl+F8 quit" : status;
         if (!ring && surround) hint = "top = front   bottom = back   ·   " + hint;
-        Text(dc, $"Other Side Sound  ·  {mode}  ·  {dev}", cx, 10 * s, 13 * s, Color.FromArgb(150, 255, 255, 255), true, 1);
-        Text(dc, hint, cx, 28 * s, 11 * s, Color.FromArgb(120, 255, 255, 255), false, 1);
+        // ShowHeader off: Kaalob 2026-10-11 "hide the top thing text, I don't need to see it"
+        if (cfg.ShowHeader)
+        {
+            Text(dc, $"Other Side Sound  ·  {mode}  ·  {dev}", cx, 10 * s, 13 * s, Color.FromArgb(150, 255, 255, 255), true, 1);
+            Text(dc, hint, cx, 28 * s, 11 * s, Color.FromArgb(120, 255, 255, 255), false, 1);
+        }
         // DebugClock: draw time of this frame, to measure how late the overlay reaches the screen against a screenshot's time
         if (cfg.DebugClock) Text(dc, DateTime.Now.ToString("HH:mm:ss.f"), cx, 44 * s, 14 * s, Colors.Yellow, true, 1);
     }

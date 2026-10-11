@@ -184,6 +184,9 @@ public sealed class Config
     // On-screen SPEAKING sign while the voice talks. Off: Kaalob 2026-10-10 "keep it simple, I will know when it speaks by caption".
     public bool SpeakingSign { get; set; } = false;
     public bool DebugClock { get; set; } = false;
+    // Top title + key hints line, and the group color key under the event list. Both off for Kaalob 2026-10-11.
+    public bool ShowHeader { get; set; } = true;
+    public bool ShowColorKey { get; set; } = true;
     // Game helper: Claude reads the sound rows + captions and writes one short note (Kaalob 2026-10-10). Subscription, no tools.
     public bool HelperEnabled { get; set; } = true;
     public string HelperClaudePath { get; set; } = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".local", "bin", "claude.exe");
