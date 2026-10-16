@@ -134,12 +134,24 @@ LoopInGameThreadWithDelay(100, function()
                                 local atten = c.AttenuationSettings
                                 emit(string.format("S\t%s\t%s\t%.0f\t%.0f\t%.0f\t%.1f\t%s", id, sname, p.X, p.Y, p.Z,
                                     rangeOf(valid(atten) and atten or nil, s), sourceKind(c:GetOwner())))
-                                prev = { p.X, p.Y, p.Z }
+                                prev = { p.X, p.Y, p.Z, name = sname }
                             end
-                        elseif not prev.skip then p = c:K2_GetComponentLocation() end
+                        elseif not prev.skip then
+                            p = c:K2_GetComponentLocation()
+                            -- same component, new clip (a spirit box answer swapped into a playing sound): a new sound
+                            local s = c.Sound
+                            local sname = clean(name(s))
+                            if sname ~= prev.name then
+                                local atten = c.AttenuationSettings
+                                emit("E\t" .. id)
+                                emit(string.format("S\t%s\t%s\t%.0f\t%.0f\t%.0f\t%.1f\t%s", id, sname, p.X, p.Y, p.Z,
+                                    rangeOf(valid(atten) and atten or nil, s), sourceKind(c:GetOwner())))
+                                prev = { p.X, p.Y, p.Z, name = sname }
+                            end
+                        end
                         if p ~= nil and prev[1] ~= nil and math.abs(p.X - prev[1]) + math.abs(p.Y - prev[2]) + math.abs(p.Z - prev[3]) > 30 then
                             emit(string.format("M\t%s\t%.0f\t%.0f\t%.0f", id, p.X, p.Y, p.Z))
-                            prev = { p.X, p.Y, p.Z }
+                            prev = { p.X, p.Y, p.Z, name = prev.name }
                         end
                         now[id] = prev
                     end

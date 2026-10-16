@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -10,7 +11,7 @@ using System.Threading;
 namespace PhasmoSound;
 
 /// Partial = still being spoken (WhisperLive sends it word by word); it is replaced until the final version arrives.
-public sealed class CaptionLine { public string Text = ""; public DateTime Time; public bool Partial; }
+public sealed class CaptionLine { public string Text = ""; public DateTime Time; public bool Partial; public bool FromGame; }
 
 /// Streams the overlay's 16 kHz audio to the local Whisper captioner and collects the captions it returns.
 public sealed class CaptionClient : IDisposable
@@ -94,6 +95,8 @@ public sealed class CaptionClient : IDisposable
                             int last = state.Captions.Count - 1;
                             if (last >= 0 && state.Captions[last].Partial) state.Captions.RemoveAt(last);
                             if (text.Length == 0) continue;
+                            // the game feed already showed this ghost line word for word: drop Whisper's copy
+                            if (text.StartsWith("GHOST") && state.Captions.Any(c => c.FromGame && (DateTime.UtcNow - c.Time).TotalSeconds < 8)) continue;
                             state.Captions.Add(new CaptionLine { Text = prefix + text, Time = DateTime.UtcNow, Partial = partial });
                             if (state.Captions.Count > 60) state.Captions.RemoveAt(0);   // the helper summary reads back up to ~2 min
                         }

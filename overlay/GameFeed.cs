@@ -21,6 +21,11 @@ public sealed class GameFeed : IDisposable
     readonly List<(Regex re, string label, string group)> rules = new();
     DateTime huntUntil = DateTime.MinValue;
     readonly Dictionary<string, (string label, string group)> nameCache = new();
+    // ghost voice lines: sound file name -> who + exact sentence (captions/ghost_lines.json), and the spirit box
+    // answer clips (captions/evidence_clips.txt). Kaalob 2026-10-16: show them as subtitles, not as sound rows.
+    readonly Dictionary<string, (string speaker, string text)> ghostLines = new(StringComparer.OrdinalIgnoreCase);
+    readonly HashSet<string> evidenceClips = new(StringComparer.OrdinalIgnoreCase);
+    string lastGhostLine = ""; DateTime lastGhostLineAt = DateTime.MinValue;
 
     // [regex on the game's sound name, label, group]; label "" = never shown (menu clicks, music, weather beds)
     static readonly string[][] Builtin =
@@ -71,8 +76,50 @@ public sealed class GameFeed : IDisposable
             if (r.Length >= 3)
                 try { rules.Add((new Regex(r[0], RegexOptions.IgnoreCase | RegexOptions.Compiled), r[1], r[2])); }
                 catch (Exception ex) { Log.Write($"SoundNames rule \"{r[0]}\" bad: {ex.Message}"); }
+        LoadGhostLines();
         thread = new Thread(Run) { IsBackground = true, Name = "gamefeed" };
         thread.Start();
+    }
+
+    void LoadGhostLines()
+    {
+        string dir = Path.GetDirectoryName(cfg.WhisperScript) ?? "";
+        try
+        {
+            using var doc = System.Text.Json.JsonDocument.Parse(File.ReadAllText(Path.Combine(dir, "ghost_lines.json")));
+            foreach (var l in doc.RootElement.EnumerateArray())
+            {
+                string file = l.GetProperty("file").GetString() ?? "";
+                ghostLines[Path.GetFileNameWithoutExtension(file)] = (l.GetProperty("speaker").GetString() ?? "Ghost", l.GetProperty("text").GetString() ?? "");
+            }
+        }
+        catch (Exception ex) { Log.Write("ghost lines: " + ex.Message); }
+        try
+        {
+            foreach (var p in File.ReadAllText(Path.Combine(dir, "evidence_clips.txt")).Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries))
+                evidenceClips.Add(p[(p.LastIndexOf('/') + 1)..]);
+        }
+        catch (Exception ex) { Log.Write("evidence clips: " + ex.Message); }
+        Log.Write($"game feed: {ghostLines.Count} ghost lines, {evidenceClips.Count} spirit box answer clips");
+    }
+
+    /// A ghost voice line or spirit box answer: shown as a pink subtitle with the exact sentence. Caller holds state.Lock.
+    bool GhostLine(string raw)
+    {
+        string stem = Regex.Replace(raw, "_Cue$", "", RegexOptions.IgnoreCase);
+        bool known = ghostLines.TryGetValue(stem, out var line);
+        bool evidence = evidenceClips.Contains(stem);
+        if (!known && !evidence) return false;
+        var now = DateTime.UtcNow;
+        if (stem == lastGhostLine && (now - lastGhostLineAt).TotalSeconds < 3) return true;   // same clip seen twice (hook + poll)
+        lastGhostLine = stem; lastGhostLineAt = now;
+        string who = known && !line.speaker.Equals("Ghost", StringComparison.OrdinalIgnoreCase) ? $"GHOST ({line.speaker})" : "GHOST";
+        string text = known && line.text.Length > 0 ? line.text : "[" + Regex.Replace(stem, @"^(SFX_SpiritBox_|SFX_)|_\d+$", "").Replace('_', ' ') + "]";
+        string cap = $"{who}: {text}" + (evidence ? "  = AUDIO EVIDENCE" : "");
+        state.Captions.Add(new CaptionLine { Text = cap, Time = now, FromGame = true });
+        if (state.Captions.Count > 60) state.Captions.RemoveAt(0);
+        Log.Write("GHOST LINE " + cap + " raw=" + raw);
+        return true;
     }
 
     /// Friendly label + group for a game sound name; label "" = hidden.
@@ -105,7 +152,7 @@ public sealed class GameFeed : IDisposable
         var buf = new byte[65536];
         string path = cfg.GameFeedPath;
         Log.Write("game feed: " + path);
-        bool warned = false;
+        bool warned = false, catchUp = true;
         while (!stop)
         {
             try
@@ -120,7 +167,7 @@ public sealed class GameFeed : IDisposable
                 if (fs.Length < pos)
                 {
                     // the game restarted and emptied the feed
-                    pos = 0; pending.Clear();
+                    pos = 0; pending.Clear(); catchUp = false;
                     lock (state.Lock) { state.Events.Clear(); state.HasListener = false; }
                     Log.Write("game feed: new game session");
                 }
@@ -136,9 +183,16 @@ public sealed class GameFeed : IDisposable
                 lock (state.Lock)
                 {
                     foreach (var line in text[..last].Split('\n'))
-                        changed |= Handle(line.TrimEnd('\r').Split('\t'));
+                    {
+                        var f = line.TrimEnd('\r').Split('\t');
+                        // overlay started mid-game: the old part of the feed only tells where you stand, its sounds are long over
+                        if (catchUp && f[0] != "L") continue;
+                        changed |= Handle(f);
+                    }
                     state.FeedSeen = DateTime.UtcNow;
                 }
+                if (catchUp) Log.Write($"game feed: skipped {pos / 1024} KB of earlier sounds (overlay started mid-game)");
+                catchUp = false;
                 Tick();
                 if (changed) redraw();
             }
@@ -167,7 +221,6 @@ public sealed class GameFeed : IDisposable
             {
                 string id = f[1], raw = f[2], src = f[7];
                 double x = D(f[3]), y = D(f[4]), z = D(f[5]), range = D(f[6]);
-                if (src == "own" && !cfg.ShowOwnSounds) return false;
                 var (label, group) = Name(raw, src);
                 if (label == "") return false;
                 if (state.HasListener)
@@ -177,6 +230,14 @@ public sealed class GameFeed : IDisposable
                     // fair play: only what a hearing player could hear from here
                     double hear = range > 0 ? range : cfg.DefaultHearM;
                     if (dist > hear) return false;
+                }
+                // ghost speech (also from the spirit box in your own hand) = subtitle, not a sound row
+                if (GhostLine(raw)) return true;
+                // ghost sounds are never "yours" even when the game plays them on you (heartbeat, "behind you")
+                if (src == "own" && group != "Ghost" && !cfg.ShowOwnSounds) return false;
+                if (state.HasListener)
+                {
+                    double dx = x - state.LX, dy = y - state.LY, dz = z - state.LZ;
                     // own sounds the feed could not tie to you (no owner): right on top of you and not the ghost's
                     if (!cfg.ShowOwnSounds && src != "ghost" && group != "Ghost" && Math.Sqrt(dx * dx + dy * dy) < 80 && Math.Abs(dz + cfg.EyeHeightM * 100) < 120) return false;
                 }
@@ -207,9 +268,10 @@ public sealed class GameFeed : IDisposable
                 return false;
             case "2" when f.Length >= 3:
             {
-                if (f[2] == "own" && !cfg.ShowOwnSounds) return false;
                 var (label, group) = Name(f[1], f[2]);
                 if (label == "") return false;
+                if (GhostLine(f[1])) return true;
+                if (f[2] == "own" && group != "Ghost" && !cfg.ShowOwnSounds) return false;
                 var same = state.Events.FirstOrDefault(e => e.Label == label && !e.HasPos && (now - e.Time).TotalSeconds < 2.5);
                 if (same != null) { same.Time = now; same.Count++; return true; }
                 AddEvent(new EventItem { Time = now, Label = label, Category = group });
