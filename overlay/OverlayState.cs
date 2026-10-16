@@ -3,39 +3,33 @@ using System.Collections.Generic;
 
 namespace PhasmoSound;
 
-public sealed class OnsetMark
-{
-    public DateTime Time;
-    public float Angle;
-    public float Conf;
-    public float Strength; // dB jump
-}
-
-public sealed class StepMark
-{
-    public DateTime Time;
-    public float Angle;
-    public float Level;   // 0..1 loudness
-}
-
 public sealed class EventItem
 {
-    public DateTime Time;
+    public DateTime Time;          // last time it was heard / moved
     public string Label = "";
-    public string Category = "";
-    public float Angle;
-    public float Conf;
-    public float Score;
-    public bool Pending;   // shown immediately on a sudden sound; the classifier fills in the name
+    public string Category = "";   // sound group (Ghost, Physical, Device, Object, Environment)
+    public float Score = 1f;
+    // exact position in the map (UE units, cm) from the game feed; none for "in your head" sounds
+    public bool HasPos;
+    public double X, Y, Z;
+    public string Id = "0";        // audio component of a playing sound (0 = one-shot)
+    public bool Playing;           // still playing (moves with its source)
+    public int Count = 1;          // repeats merged into this row (footsteps)
+    public readonly List<(DateTime t, double x, double y, double z)> Trail = new();   // earlier positions (ghost walking)
+
+    /// Move to a new spot, keeping the old one in the trail.
+    public void MoveTo(double x, double y, double z, DateTime now)
+    {
+        if (HasPos) { Trail.Add((Time, X, Y, Z)); if (Trail.Count > 16) Trail.RemoveAt(0); }
+        X = x; Y = y; Z = z;
+    }
 }
 
-/// Everything the overlay draws. Written by the audio and classifier threads, read by the UI thread.
+/// Everything the overlay draws. Written by the game feed / caption threads, read by the UI thread.
 public sealed class OverlayState
 {
     public readonly object Lock = new();
-    public int Channels;
-    public bool Surround;
-    public string DeviceName = "";
+    public bool Surround = true;                        // the game feed gives full 360° directions
     public string Status = "";
     public string Toast = "";
     public string HelperNote = "";                     // game helper's latest note
@@ -50,38 +44,26 @@ public sealed class OverlayState
     public List<string> PageNames = new();
     public DateTime ToastUntil = DateTime.MinValue;
 
-    public float[] ChannelDb = Array.Empty<float>();   // smoothed per-channel level, dBFS
-    public float LoudDb = -100f;                       // smoothed overall level
-    public float DirAngle;                             // degrees, 0 = front, clockwise
-    public float DirConf;
-
-    public readonly List<OnsetMark> Onsets = new();
-    public readonly List<StepMark> Steps = new();      // footsteps that are not yours (off-center)
     public readonly List<CaptionLine> Captions = new(); // whisper captions, oldest first
-    public List<Detection> Current = new();
     public readonly List<EventItem> Events = new();    // newest first
 
-    // step meter: how fast footsteps come (steps per second), set by the audio thread
-    public float StepRate;                              // 0 = none
-    public float StepTrend = 1f;                        // >1 = getting faster
-    public float StepAngle;
-    public bool StepHunting;                            // a hunt was heard in the last HuntHoldSec
-    public DateTime StepUntil = DateTime.MinValue;
+    // listener = your camera, from the game feed
+    public bool HasListener;
+    public double LX, LY, LZ, LYaw;
+    public DateTime FeedSeen = DateTime.MinValue;      // last line from the game feed
 
-    // ghost watch: where the last blink was (0-1 of the game window) and the timing it measured
-    public double GhostMarkX, GhostMarkY;
-    public DateTime GhostMarkUntil = DateTime.MinValue;
-    public float BlinkVisible, BlinkHidden;
-    public string BlinkGuess = "";
-    public DateTime BlinkUntil = DateTime.MinValue;
+    public bool HuntActive;                             // ghost footsteps / heartbeat heard lately
 
-    // stopwatch (Ctrl+1 start, Ctrl+2 reset): Elapsed = time banked before the current run (Start = running since)
-    public bool HuntActive;                             // a hunt is on (heard, or Ctrl+3): shows "HUNT · Ctrl+3 = over"
-    public DateTime? StopwatchStart;
-    public TimeSpan StopwatchElapsed;
-
-    // loudest moment since the classifier last looked (used to tag detections with a direction)
-    public float WinPeakDb = -100f;
-    public float WinPeakAngle;
-    public float WinPeakConf;
+    /// Direction (degrees, 0 = where you look, clockwise), distance (m) and height (m, + = above you) of a point.
+    /// Caller holds Lock.
+    public (float angle, double dist, double up) Where(double x, double y, double z, double eyeHeightM)
+    {
+        if (!HasListener) return (0, -1, 0);
+        double dx = x - LX, dy = y - LY;
+        double up = (z - LZ) / 100 + eyeHeightM;
+        double dist = Math.Sqrt(dx * dx + dy * dy) / 100;
+        double a = Math.Atan2(dy, dx) * 180 / Math.PI - LYaw;   // Unreal: X forward, Y right, yaw turns right
+        a = ((a + 540) % 360) - 180;
+        return ((float)a, dist, up);
+    }
 }

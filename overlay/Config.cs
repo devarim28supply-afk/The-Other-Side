@@ -202,6 +202,22 @@ public sealed class Config
     public int SummaryMinLines { get; set; } = 3;
     public double SummaryShowSec { get; set; } = 15;      // fresh session after this many notes (keeps it fast)
     public bool SoftwareRender { get; set; } = true;
+    // Game feed (2026-10-16, replaces the listening sound detector): the SoundSpy UE4SS mod writes every sound the game
+    // plays, with its exact map position, and the overlay shows its true name, direction, distance and floor.
+    public string GameFeedPath { get; set; } = @"D:\Steam\steamapps\common\The Other Side\TheOtherSide\Binaries\Win64\ue4ss\Mods\SoundSpy\soundfeed.txt";
+    public double DefaultHearM { get; set; } = 25;       // sounds farther than this (when the game gives no hearing range) are not shown
+    public bool ShowOwnSounds { get; set; } = false;     // your own footsteps, items, flashlight
+    public bool EdgeMarkers { get; set; } = false;       // glow on the screen edge in the sound's exact direction (off: the ring replaced it)
+    // Sound ring (Kaalob 2026-10-16): circle around the crosshair, a dot per sound at its exact direction, closer = bigger
+    public bool SoundRing { get; set; } = true;
+    public double SoundRingRadius { get; set; } = 0.11;   // fraction of the shorter screen edge
+    public double SoundRingSec { get; set; } = 3;         // how long a dot stays after the sound
+    public double SoundTrailSec { get; set; } = 2.5;      // fading trail behind a moving sound (ghost walking)
+    public double EdgeMarkerSec { get; set; } = 1.5;
+    public double EyeHeightM { get; set; } = 1.1;        // camera height above floor-level sounds, so "same floor" reads 0
+    public double FloorDiffM { get; set; } = 2.0;        // more than this above / below = another floor (▲ / ▼)
+    // extra name rules, checked before the built-in ones: [regex on the game's sound name, label, group] ("" label = hide)
+    public List<string[]> SoundNames { get; set; } = new();
 
     public static Config Load(string path)
     {

@@ -210,34 +210,13 @@ public sealed class RadarElement : FrameworkElement
         if (w < 10 || h < 10) return;
         double s = cfg.UiScale > 0 ? cfg.UiScale : Math.Max(0.6, h / 720.0);
 
-        float[] chDb; float loud, dirA, dirC; bool surround; int ch; string dev, status, toast; DateTime toastUntil;
-        List<OnsetMark> onsets; List<Detection> cur; List<EventItem> evs; List<StepMark> steps;
+        string status, toast; DateTime toastUntil; List<EventItem> evs;
         lock (state.Lock)
         {
-            chDb = (float[])state.ChannelDb.Clone(); loud = state.LoudDb; dirA = state.DirAngle; dirC = state.DirConf;
-            surround = state.Surround; ch = state.Channels; dev = state.DeviceName; status = state.Status;
-            toast = state.Toast; toastUntil = state.ToastUntil;
-            onsets = state.Onsets.ToList(); cur = state.Current.ToList(); evs = state.Events.ToList(); steps = state.Steps.ToList();
+            status = state.Status; toast = state.Toast; toastUntil = state.ToastUntil;
+            evs = state.Events.ToList();
         }
         var now = DateTime.UtcNow;
-
-        // --- footprints for footsteps that are not yours, on the side they come from
-        if (cfg.StepIcon)
-        {
-            double size = cfg.StepIconSize * s;
-            double thick = cfg.EdgeThickness * s;
-            foreach (var side in new[] { -1, 1 })
-            {
-                var m = steps.Where(st => Math.Sign(st.Angle) == side && (now - st.Time).TotalSeconds < 1.5).OrderByDescending(st => st.Time).FirstOrDefault();
-                if (m == null) continue;
-                double age = (now - m.Time).TotalSeconds;
-                float alpha = (float)(1 - age / 1.5) * (0.55f + 0.45f * m.Level);
-                double x = side < 0 ? thick * 0.5 + size * 0.9 : w - thick * 0.5 - size * 0.9;
-                double y = h / 2;
-                if (surround) { var (pt, edge) = EdgeHit(w, h, m.Angle); if (edge == 0) y = thick * 0.5 + size; else if (edge == 2) y = h - thick * 0.5 - size; else y = pt.Y; x = edge == 3 ? thick * 0.5 + size * 0.9 : edge == 1 ? w - thick * 0.5 - size * 0.9 : pt.X; }
-                DrawFootprints(dc, x, y, size, Color.FromArgb((byte)(255 * Math.Clamp(alpha, 0f, 1f)), 255, 150, 40));
-            }
-        }
 
         // --- phrase board (F5): numbered lines on the right, press 1..9
         bool boardOpen; List<string> board; int pageNo, pages; List<string> pageNames;
@@ -393,130 +372,96 @@ public sealed class RadarElement : FrameworkElement
             Text(dc, toast, w / 2, ty + 9 * s, ts, Colors.White, true, 1);
         }
 
-        // --- step meter: how fast the footsteps come, and what that speed means during a hunt
-        float stepRate, stepTrend; bool stepHunt; DateTime stepUntil;
-        lock (state.Lock) { stepRate = state.StepRate; stepTrend = state.StepTrend; stepHunt = state.StepHunting; stepUntil = state.StepUntil; }
-        if (cfg.StepMeter && stepRate > 0 && now < stepUntil)
+        // --- sound ring around the crosshair: a dot per sound at its exact direction, closer = bigger,
+        //     a fading trail behind a moving sound (ghost walking), ▲ / ▼ for another floor
+        if (cfg.SoundRing)
         {
-            float rel = stepRate / Math.Max(0.1f, cfg.GhostNormalStepsPerSec);
-            var (word, col) = rel < 0.75f ? ("SLOW", Color.FromRgb(120, 200, 255))
-                            : rel < 1.3f ? ("NORMAL", Color.FromRgb(230, 230, 230))
-                            : rel < 1.7f ? ("FAST", Color.FromRgb(255, 170, 40))
-                            : ("VERY FAST", Color.FromRgb(255, 70, 60));
-            string trend = stepTrend > 1.2f ? "  ▲ speeding up" : stepTrend < 0.83f ? "  ▼ slowing" : "";
-            string line = $"{(stepHunt ? "GHOST STEPS" : "STEPS")}  {stepRate:F1}/s  {word}{trend}";
-            string stepHint = !stepHunt ? "" : rel < 0.75f ? "slow: Revenant (not chasing), Deogen (close), old Thaye, warm-room Hantu"
-                        : rel >= 1.7f && stepTrend <= 1.2f ? "fast from the start: Revenant chasing, young Thaye, Deogen far, Moroi, Jinn, Raiju, cold Hantu"
-                        : stepTrend > 1.2f ? "speeding up while it sees you = normal for most ghosts (not Hantu)" : "";
-            double fs = 22 * s, ty = 60 * s + 50 * s;
-            var ft = FT(line, fs, col, true);
-            double bw = Math.Max(ft.Width, stepHint.Length > 0 ? FT(stepHint, 14 * s, Colors.White, false).Width : 0) + 32 * s;
-            double bh = fs + 20 * s + (stepHint.Length > 0 ? 22 * s : 0);
-            double a = Math.Clamp((stepUntil - now).TotalSeconds / 0.5, 0, 1);
-            dc.PushOpacity(a);
-            dc.DrawRoundedRectangle(new SolidColorBrush(Color.FromArgb(200, 20, 20, 24)), new Pen(new SolidColorBrush(col), 2), new Rect(w / 2 - bw / 2, ty, bw, bh), 10 * s, 10 * s);
-            Text(dc, line, w / 2, ty + 9 * s, fs, col, true, 1);
-            if (stepHint.Length > 0) Text(dc, stepHint, w / 2, ty + fs + 14 * s, 14 * s, Color.FromArgb(220, 255, 255, 255), false, 1);
-            dc.Pop();
-        }
-        // --- ghost watch: red corners where the screen just blinked, and the blink timing box
-        double gmx, gmy; DateTime gmUntil, blUntil; float blVis, blHid; string blGuess;
-        lock (state.Lock) { gmx = state.GhostMarkX; gmy = state.GhostMarkY; gmUntil = state.GhostMarkUntil; blVis = state.BlinkVisible; blHid = state.BlinkHidden; blGuess = state.BlinkGuess; blUntil = state.BlinkUntil; }
-        if (now < gmUntil)
-        {
-            double gx = gmx * w, gy = gmy * h, half = 60 * s, len = 22 * s;
-            var pen = new Pen(new SolidColorBrush(Color.FromArgb((byte)(255 * Math.Clamp((gmUntil - now).TotalSeconds / 0.6, 0, 1)), 255, 60, 60)), 4 * s);
-            foreach (var (sx, sy) in new[] { (-1, -1), (1, -1), (-1, 1), (1, 1) })
+            double rcx = w / 2, rcy = h / 2, R = Math.Min(w, h) * cfg.SoundRingRadius;
+            var dots = new List<(float ang, double near, double up, double k, Color col, string cat, List<(float ang, double k)> trail)>();
+            var flashes = new List<(double k, Color col)>();
+            lock (state.Lock)
             {
-                var c = new Point(gx + sx * half, gy + sy * half);
-                dc.DrawLine(pen, c, new Point(c.X - sx * len, c.Y));
-                dc.DrawLine(pen, c, new Point(c.X, c.Y - sy * len));
+                foreach (var ev in state.Events)
+                {
+                    double age = (now - ev.Time).TotalSeconds;
+                    if (age > cfg.SoundRingSec) continue;
+                    double k = 1 - age / cfg.SoundRingSec;
+                    var col = ColorOf(ev.Category);
+                    if (!ev.HasPos) { if (age < 1.2) flashes.Add((1 - age / 1.2, col)); continue; }
+                    var (ang, dist, up) = state.Where(ev.X, ev.Y, ev.Z, cfg.EyeHeightM);
+                    double near = Math.Clamp(1 - dist / Math.Max(1, cfg.DefaultHearM), 0.15, 1);
+                    var trail = new List<(float, double)>();
+                    foreach (var p in ev.Trail)
+                    {
+                        double ta = (now - p.t).TotalSeconds;
+                        if (ta > cfg.SoundTrailSec) continue;
+                        trail.Add((state.Where(p.x, p.y, p.z, cfg.EyeHeightM).angle, 1 - ta / cfg.SoundTrailSec));
+                    }
+                    dots.Add((ang, near, up, k, col, ev.Category, trail));
+                }
+            }
+            if (dots.Count > 0 || flashes.Count > 0)
+            {
+                // faint circle + a tick at the top (= where you look) while there is something to show
+                dc.DrawEllipse(null, new Pen(new SolidColorBrush(Color.FromArgb(70, 255, 255, 255)), 2 * s), new Point(rcx, rcy), R, R);
+                dc.DrawLine(new Pen(new SolidColorBrush(Color.FromArgb(110, 255, 255, 255)), 2 * s), P(rcx, rcy, R - 5 * s, 0), P(rcx, rcy, R + 5 * s, 0));
+                // "in your head" sounds (no direction for anyone): the whole ring pulses in their color
+                foreach (var (k, col) in flashes)
+                    dc.DrawEllipse(null, new Pen(new SolidColorBrush(Color.FromArgb((byte)(200 * k), col.R, col.G, col.B)), 6 * s), new Point(rcx, rcy), R, R);
+                // oldest first so the newest dot is on top
+                for (int i = dots.Count - 1; i >= 0; i--)
+                {
+                    var d = dots[i];
+                    foreach (var (ta, tk) in d.trail)
+                        dc.DrawEllipse(new SolidColorBrush(Color.FromArgb((byte)(150 * tk * d.k), d.col.R, d.col.G, d.col.B)), null, P(rcx, rcy, R, ta), (3 + 3 * d.near) * s, (3 + 3 * d.near) * s);
+                    double r = (5 + 10 * d.near) * s;
+                    var c = P(rcx, rcy, R, d.ang);
+                    byte a = (byte)(255 * Math.Clamp(d.k * 1.6, 0, 1));
+                    dc.DrawEllipse(new SolidColorBrush(Color.FromArgb(a, d.col.R, d.col.G, d.col.B)), new Pen(new SolidColorBrush(Color.FromArgb(a, 0, 0, 0)), Math.Max(1.5, 2 * s)), c, r, r);
+                    if (Math.Abs(d.up) > cfg.FloorDiffM)
+                    {
+                        var o = P(rcx, rcy, R + r + 12 * s, d.ang);
+                        Text(dc, d.up > 0 ? "▲" : "▼", o.X, o.Y - 10 * s, 16 * s, Color.FromArgb(a, 255, 255, 255), true, 1);
+                    }
+                }
             }
         }
-        if (now < blUntil && blGuess.Length > 0)
-        {
-            string bl = $"BLINK  seen {blVis:F2}s / hidden {blHid:F2}s  ·  {blGuess}";
-            double fs2 = 20 * s, by2 = 60 * s + 50 * s + 80 * s;
-            var bft = FT(bl, fs2, Colors.White, true);
-            var bcol = Color.FromRgb(255, 90, 90);
-            dc.DrawRoundedRectangle(new SolidColorBrush(Color.FromArgb(200, 20, 20, 24)), new Pen(new SolidColorBrush(bcol), 2), new Rect(w / 2 - bft.Width / 2 - 16 * s, by2, bft.Width + 32 * s, fs2 + 20 * s), 10 * s, 10 * s);
-            Text(dc, bl, w / 2, by2 + 9 * s, fs2, Colors.White, true, 1);
-        }
-        // --- hunt indicator (top-right): the overlay thinks a hunt is on; Ctrl+3 tells it the hunt is over
-        bool huntOn; lock (state.Lock) huntOn = state.HuntActive;
-        if (huntOn && cfg.HuntKey)
-        {
-            string ht = "HUNT  ·  Ctrl+3 = over";
-            double hfs = 18 * s; var hft = FT(ht, hfs, Colors.White, true);
-            double hx = w - cfg.EdgeThickness * s - 20 * s - hft.Width - 24 * s, hy = 60 * s;
-            dc.DrawRoundedRectangle(new SolidColorBrush(Color.FromArgb(210, 150, 20, 20)), new Pen(new SolidColorBrush(Color.FromRgb(255, 80, 80)), 2), new Rect(hx, hy, hft.Width + 24 * s, hfs + 16 * s), 8 * s, 8 * s);
-            Text(dc, ht, hx + 12 * s, hy + 7 * s, hfs, Colors.White, true, 0);
-        }
 
-        // --- stopwatch (Ctrl+1 start, Ctrl+2 reset): big time top-left, with the smudge marks (Demon 60 s, normal 90 s, Spirit 180 s)
-        DateTime? swStart; TimeSpan swEl;
-        lock (state.Lock) { swStart = state.StopwatchStart; swEl = state.StopwatchElapsed; }
-        if (cfg.Stopwatch && (swStart != null || swEl > TimeSpan.Zero))
+        // --- exact-direction edge markers: a glow on the screen edge where each new (or moving ghost) sound is
+        double thickE = cfg.EdgeThickness * s;
+        if (cfg.EdgeMarkers)
         {
-            var el = swStart is DateTime st0 ? swEl + (now - st0) : swEl;
-            string tt = $"{(int)el.TotalMinutes}:{el.Seconds:00}";
-            double fs3 = 40 * s, x0 = cfg.EdgeThickness * s + 20 * s, y0 = 60 * s;
-            var tcol = swStart != null ? Color.FromRgb(120, 255, 160) : Color.FromRgb(255, 220, 90);
-            var tft = FT(tt, fs3, tcol, true);
-            double bw3 = Math.Max(tft.Width, 230 * s) + 28 * s, bh3 = fs3 + 46 * s;
-            dc.DrawRoundedRectangle(new SolidColorBrush(Color.FromArgb(200, 20, 20, 24)), new Pen(new SolidColorBrush(tcol), 2), new Rect(x0, y0, bw3, bh3), 10 * s, 10 * s);
-            Text(dc, tt, x0 + 14 * s, y0 + 6 * s, fs3, tcol, true, 0);
-            double mx = x0 + 14 * s;
-            foreach (var (sec, name) in new[] { (60, "Demon 60"), (90, "90"), (180, "Spirit 180") })
+            foreach (var ev in evs.Where(e => e.HasPos).Reverse())
             {
-                bool passed = el.TotalSeconds >= sec;
-                mx += Text(dc, (passed ? "✓ " : "") + name, mx, y0 + fs3 + 16 * s, 14 * s, passed ? Color.FromRgb(255, 120, 120) : Color.FromArgb(200, 255, 255, 255), passed, 0) + 14 * s;
-            }
-            Text(dc, "Ctrl+2 reset", x0 + bw3 - 10 * s, y0 + 8 * s, 11 * s, Color.FromArgb(170, 255, 255, 255), false, 2);
-        }
-        float lt = Level(loud);
-        bool ring = string.Equals(cfg.Style, "ring", StringComparison.OrdinalIgnoreCase);
-
-        double chipY;
-        if (ring) chipY = DrawRing(dc, w, h, s, chDb, ch, surround, lt, dirA, dirC, onsets, now);
-        else chipY = DrawEdges(dc, w, h, s, chDb, ch, surround, lt, dirA, dirC, onsets, now);
-
-        // --- current sounds (chips)
-        double cx = w / 2;
-        double ss = s * cfg.SoundTextScale;   // sound text only; captions keep CaptionFontSize
-        double chipSize = 17 * ss;
-        var chips = cur.Take(4).ToList();
-        if (chips.Count > 0)
-        {
-            var widths = chips.Select(d => FT($"{d.Label}  {(int)(d.Score * 100)}%", chipSize, Colors.White, true).Width + 22 * s).ToList();
-            double total = widths.Sum() + (chips.Count - 1) * 8 * s;
-            double x = cx - total / 2;
-            for (int i = 0; i < chips.Count; i++)
-            {
-                var d = chips[i];
-                var col = ColorOf(d.Category);
-                dc.PushOpacity(OpacityOf(d.Category));
-                var bg = Color.FromRgb(col.R, col.G, col.B);   // solid (Kaalob: no see-through)
-                dc.DrawRoundedRectangle(new SolidColorBrush(bg), new Pen(new SolidColorBrush(Color.FromArgb(160, 0, 0, 0)), 1),
-                    new Rect(x, chipY, widths[i], chipSize + 12 * s), 8 * s, 8 * s);
-                // white / yellow chips get black writing, darker chips white
-                bool light = cfg.GroupColors.Count > 0 && 0.299 * col.R + 0.587 * col.G + 0.114 * col.B > 170;
-                if (light) dc.DrawText(FT($"{d.Label}  {(int)(d.Score * 100)}%", chipSize, Color.FromRgb(10, 10, 12), true), new Point(x + 11 * s, chipY + 5 * s));
-                else Text(dc, $"{d.Label}  {(int)(d.Score * 100)}%", x + 11 * s, chipY + 5 * s, chipSize, Colors.White, true);
+                double age = (now - ev.Time).TotalSeconds;
+                if (age > cfg.EdgeMarkerSec) continue;
+                float k = (float)(1 - age / cfg.EdgeMarkerSec);
+                var (ang, dist, up) = Where(ev);
+                var col = ColorOf(ev.Category);
+                // closer = stronger
+                float near = (float)Math.Clamp(1 - dist / Math.Max(1, cfg.DefaultHearM), 0.35, 1);
+                var (pt, edge) = EdgeHit(w, h, ang);
+                double halfLen = (edge == 0 || edge == 2 ? w : h) * 0.10;
+                EdgeGlow(dc, pt, edge, halfLen, thickE * (0.8 + 0.6 * near), Color.FromArgb((byte)(230 * k * near), col.R, col.G, col.B));
+                EdgeBar(dc, w, h, pt, edge, halfLen * 0.7, thickE * 0.18, Color.FromArgb((byte)(255 * k), col.R, col.G, col.B));
+                // its name + distance just inside the glow
+                string tag = $"{ev.Label}  {DistText(dist)}{FloorText(up)}";
+                double tfs = 15 * s * cfg.SoundTextScale / 0.75;
+                var tft = FT(tag, tfs, Colors.White, true);
+                double inset = thickE * 1.1;
+                double tx = Math.Clamp(pt.X, inset + tft.Width / 2, w - inset - tft.Width / 2);
+                double ty = Math.Clamp(pt.Y, inset, h - inset - tfs * 1.4);
+                if (edge == 0) ty = inset; else if (edge == 2) ty = h - inset - tfs * 1.4;
+                else tx = edge == 1 ? w - inset - tft.Width / 2 : inset + tft.Width / 2;
+                dc.PushOpacity(Math.Clamp(k * 1.5, 0, 1));
+                GroupText(dc, ev.Category, tag, tx - tft.Width / 2, ty, tfs, col);
                 dc.Pop();
-                x += widths[i] + 8 * s;
             }
         }
 
-        // --- loudness bar
-        double barW = 220 * s, barH = 7 * s, barY = chipY + chipSize + 22 * s;
-        dc.DrawRoundedRectangle(new SolidColorBrush(Color.FromArgb(110, 0, 0, 0)), null, new Rect(cx - barW / 2, barY, barW, barH), 3, 3);
-        if (lt > 0)
-            dc.DrawRoundedRectangle(new SolidColorBrush(LevelColor(lt)), null, new Rect(cx - barW / 2, barY, barW * lt, barH), 3, 3);
-
-        // --- event log (bottom-left)
+        // --- sound rows (bottom-left): arrow in the exact direction (turns as you turn), name, distance, floor
+        double ss = s * cfg.SoundTextScale;
         double rowH = 34 * ss, ex = 28 * s, ey = h - 46 * s;
-        if (!ring) { ex += cfg.EdgeThickness * 0.35 * s; ey -= cfg.EdgeThickness * 0.35 * s; }
         int row = 0;
         foreach (var ev in evs)
         {
@@ -531,13 +476,27 @@ public sealed class RadarElement : FrameworkElement
             dc.DrawEllipse(new SolidColorBrush(dot), new Pen(new SolidColorBrush(Color.FromArgb((byte)(200 * alpha), 0, 0, 0)), Outlined(ev.Category) ? 2.5 * s : 1),
                 new Point(ex + 7 * ss, y + 14 * ss), 7 * ss, 7 * ss);
             double x = ex + 24 * ss;
-            x += Text(dc, ArrowFor(ev.Angle, surround), x, y - 2 * ss, 24 * ss, Color.FromArgb((byte)(255 * alpha), 255, 255, 255), true) + 10 * s;
-            var labelCol = ev.Pending && ev.Label.EndsWith("!") ? Colors.White : col;
-            x += GroupText(dc, ev.Category, ev.Label, x, y + 1 * ss, 21 * ss, Color.FromArgb((byte)(255 * alpha), labelCol.R, labelCol.G, labelCol.B)) + 12 * s;
+            string where = "";
+            if (ev.HasPos)
+            {
+                var (ang, dist, up) = Where(ev);
+                DrawArrow(dc, x + 14 * ss, y + 14 * ss, 15 * ss, ang, Color.FromArgb((byte)(255 * alpha), 255, 255, 255));
+                where = DistText(dist) + FloorText(up);
+            }
+            else Text(dc, "•", x + 6 * ss, y - 2 * ss, 24 * ss, Color.FromArgb((byte)(255 * alpha), 255, 255, 255), true);
+            x += 34 * ss;
+            x += GroupText(dc, ev.Category, ev.Label, x, y + 1 * ss, 21 * ss, Color.FromArgb((byte)(255 * alpha), col.R, col.G, col.B)) + 12 * s;
+            if (where.Length > 0) x += Text(dc, where, x, y + 3 * ss, 18 * ss, Color.FromArgb((byte)(255 * alpha), 255, 255, 255), true) + 12 * s;
+            if (ev.Count > 1) x += Text(dc, "x" + ev.Count, x, y + 6 * ss, 14 * ss, Color.FromArgb((byte)(200 * alpha), 220, 220, 220)) + 10 * s;
             Text(dc, age < 1 ? "now" : $"{(int)age}s", x, y + 6 * ss, 14 * ss, Color.FromArgb((byte)(200 * alpha), 220, 220, 220));
             dc.Pop();
             row++;
         }
+
+        // --- no feed yet: say so once the game should be running
+        DateTime feedSeen; lock (state.Lock) feedSeen = state.FeedSeen;
+        if (feedSeen == DateTime.MinValue && cfg.ShowHeader)
+            Text(dc, "Waiting for the game (SoundSpy)...", ex, ey - rowH, 14 * ss, Color.FromArgb(170, 255, 255, 255));
 
         // --- color key for the sound groups, under the event log (ShowColorKey off: Kaalob 2026-10-11 "I already know")
         if (cfg.ShowColorKey && cfg.GroupColors.Count > 0)
@@ -555,204 +514,43 @@ public sealed class RadarElement : FrameworkElement
         }
 
         // --- header
-        string mode = surround ? $"{(ch == 8 ? "7.1" : ch == 6 ? "5.1" : ch + "ch")} SURROUND" : "STEREO (left / right only)";
+        double cx = w / 2;
         string hint = string.IsNullOrEmpty(status) ? (cfg.MouseWheelMenu ? "F5 = phrase wheel  ·  " : "") + (cfg.SayHomeKey ? "Home" : cfg.SayMouseButton > 0 ? "thumb button" : "F6") + " = type to speak  ·  " + (cfg.HelperEnabled ? "Page Down = teach helper  ·  " : "") + "F10 free mouse  ·  F9 window/full  ·  F8 hide  ·  Ctrl+F8 quit" : status;
-        if (!ring && surround) hint = "top = front   bottom = back   ·   " + hint;
-        // ShowHeader off: Kaalob 2026-10-11 "hide the top thing text, I don't need to see it"
         if (cfg.ShowHeader)
         {
-            Text(dc, $"Other Side Sound  ·  {mode}  ·  {dev}", cx, 10 * s, 13 * s, Color.FromArgb(150, 255, 255, 255), true, 1);
+            Text(dc, "Other Side Sound  ·  sounds read from the game", cx, 10 * s, 13 * s, Color.FromArgb(150, 255, 255, 255), true, 1);
             Text(dc, hint, cx, 28 * s, 11 * s, Color.FromArgb(120, 255, 255, 255), false, 1);
         }
         // DebugClock: draw time of this frame, to measure how late the overlay reaches the screen against a screenshot's time
         if (cfg.DebugClock) Text(dc, DateTime.Now.ToString("HH:mm:ss.f"), cx, 44 * s, 14 * s, Colors.Yellow, true, 1);
     }
 
-    /// A pair of footprints centred on (x, y); size = height of one foot.
-    static void DrawFootprints(DrawingContext dc, double x, double y, double size, Color color)
+    (float ang, double dist, double up) Where(EventItem ev)
     {
-        var fill = new SolidColorBrush(color);
-        var pen = new Pen(new SolidColorBrush(Color.FromArgb((byte)(color.A * 0.85), 0, 0, 0)), Math.Max(1, size * 0.03));
-        void Foot(double fx, double fy, int mirror)
-        {
-            double L = size, W = size * 0.45;
-            // sole (slightly egg-shaped: bigger at the ball of the foot)
-            dc.DrawEllipse(fill, pen, new Point(fx, fy + L * 0.12), W * 0.42, L * 0.36);
-            dc.DrawEllipse(fill, null, new Point(fx, fy - L * 0.08), W * 0.46, L * 0.22);
-            // toes: big toe on the inner side
-            double[] tr = { 0.17, 0.12, 0.11, 0.10, 0.09 };
-            for (int i = 0; i < 5; i++)
-            {
-                double tx = fx + mirror * (-W * 0.34 + i * W * 0.19);
-                double ty = fy - L * 0.42 + (i == 0 ? L * 0.02 : i * L * 0.02);
-                dc.DrawEllipse(fill, pen, new Point(tx, ty), W * tr[i], W * tr[i]);
-            }
-        }
-        Foot(x - size * 0.28, y + size * 0.12, -1);
-        Foot(x + size * 0.28, y - size * 0.12, 1);
+        lock (state.Lock) return state.Where(ev.X, ev.Y, ev.Z, cfg.EyeHeightM);
     }
 
-    /// Edge style. Returns the y where the chips should start.
-    double DrawEdges(DrawingContext dc, double w, double h, double s, float[] chDb, int ch, bool surround,
-                     float lt, float dirA, float dirC, List<OnsetMark> onsets, DateTime now)
+    static string DistText(double m) => m < 0 ? "" : m < 1.5 ? "close" : $"{m:F0} m";
+
+    string FloorText(double up) => up > cfg.FloorDiffM ? "  ▲ above" : up < -cfg.FloorDiffM ? "  ▼ below" : "";
+
+    /// Arrow pointing the exact way to a sound: up = where you look, right = your right, down = behind you.
+    static void DrawArrow(DrawingContext dc, double cx, double cy, double r, double deg, Color color)
     {
-        double thick = cfg.EdgeThickness * s;
-        var angles = Direction.Angles(ch);
-
-        // --- per-channel glows
-        if (ch == 2)
+        var tip = P(cx, cy, r, deg);
+        var tail = P(cx, cy, r * 0.75, deg + 180);
+        var l = P(cx, cy, r * 0.75, deg - 140);
+        var rr = P(cx, cy, r * 0.75, deg + 140);
+        var g = new StreamGeometry();
+        using (var c = g.Open())
         {
-            DrawChannelEdge(dc, w, h, new Point(0, h / 2), 3, h * 0.62, thick, chDb.Length > 0 ? chDb[0] : -100);
-            DrawChannelEdge(dc, w, h, new Point(w, h / 2), 1, h * 0.62, thick, chDb.Length > 1 ? chDb[1] : -100);
-            Text(dc, "L", 14 * s, h / 2 - 12 * s, 20 * s, Color.FromArgb(130, 255, 255, 255), true, 0);
-            Text(dc, "R", w - 14 * s, h / 2 - 12 * s, 20 * s, Color.FromArgb(130, 255, 255, 255), true, 2);
+            c.BeginFigure(tip, true, true);
+            c.LineTo(rr, true, false);
+            c.LineTo(new Point((tip.X + tail.X * 2) / 3, (tip.Y + tail.Y * 2) / 3), true, false);
+            c.LineTo(l, true, false);
         }
-        else if (angles != null)
-        {
-            double frac = ch >= 8 ? 0.30 : ch == 6 ? 0.36 : 0.45;
-            for (int c = 0; c < angles.Length && c < chDb.Length; c++)
-            {
-                if (float.IsNaN(angles[c])) continue;
-                var (pt, edge) = EdgeHit(w, h, angles[c]);
-                double halfLen = (edge == 0 || edge == 2 ? w : h) * (angles[c] == 0 ? 0.18 : frac);
-                DrawChannelEdge(dc, w, h, pt, edge, halfLen, thick, chDb[c]);
-            }
-            Text(dc, "FRONT", w / 2, 44 * s, 12 * s, Color.FromArgb(120, 255, 255, 255), true, 1);
-            Text(dc, "BACK", w / 2, h - 24 * s, 12 * s, Color.FromArgb(120, 255, 255, 255), true, 1);
-        }
-
-        // --- dominant direction pointer: small triangle just inside the edge
-        if (lt > 0.08f && dirC > 0.12f)
-        {
-            var (pt, edge) = EdgeHit(w, h, dirA);
-            double size = (12 + 20 * lt) * s;
-            double inset = thick * 0.45;
-            Point tip, b1, b2;
-            switch (edge)
-            {
-                case 0: tip = new Point(pt.X, inset + size); b1 = new Point(pt.X - size * 0.6, inset); b2 = new Point(pt.X + size * 0.6, inset); break;
-                case 2: tip = new Point(pt.X, h - inset - size); b1 = new Point(pt.X - size * 0.6, h - inset); b2 = new Point(pt.X + size * 0.6, h - inset); break;
-                case 1: tip = new Point(w - inset - size, pt.Y); b1 = new Point(w - inset, pt.Y - size * 0.6); b2 = new Point(w - inset, pt.Y + size * 0.6); break;
-                default: tip = new Point(inset + size, pt.Y); b1 = new Point(inset, pt.Y - size * 0.6); b2 = new Point(inset, pt.Y + size * 0.6); break;
-            }
-            var g = new StreamGeometry();
-            using (var c = g.Open()) { c.BeginFigure(tip, true, true); c.LineTo(b1, false, false); c.LineTo(b2, false, false); }
-            g.Freeze();
-            var col = LevelColor(lt); col.A = (byte)(120 + 135 * Math.Min(1f, dirC * 1.5f));
-            dc.DrawGeometry(new SolidColorBrush(col), new Pen(Brushes.Black, 1), g);
-        }
-
-        // --- sudden-sound flashes: bright band on the edge the sound came from, growing and fading
-        foreach (var o in onsets)
-        {
-            double age = (now - o.Time).TotalSeconds;
-            if (age < 0 || age > 1.0) continue;
-            float k = (float)(1 - age / 1.0);
-            float str = Math.Clamp((o.Strength - cfg.OnsetDb) / 12f, 0.3f, 1f);
-            var col = LevelColor(0.45f + 0.55f * str); col.A = (byte)(255 * k * str);
-            double grow = 1 + age * 1.6;
-            if (ch == 2 && o.Conf < 0.12f)
-            {
-                // centered sound in stereo: no side information, pulse the whole border
-                var pen = new Pen(new SolidColorBrush(col), thick * 0.5 * grow);
-                dc.DrawRectangle(null, pen, new Rect(0, 0, w, h));
-            }
-            else
-            {
-                var (pt, edge) = EdgeHit(w, h, ch == 2 ? (o.Angle < 0 ? -90 : 90) : o.Angle);
-                double halfLen = (edge == 0 || edge == 2 ? w : h) * 0.22 * grow;
-                EdgeBar(dc, w, h, pt, edge, halfLen, thick * 0.55 * grow, col);
-                EdgeGlow(dc, pt, edge, halfLen * 1.3, thick * 1.4 * grow, Color.FromArgb((byte)(col.A * 0.7), col.R, col.G, col.B));
-            }
-        }
-
-        return h - thick - 20 * s - 17 * s - 12 * s - 22 * s - 7 * s;
+        g.Freeze();
+        dc.DrawGeometry(new SolidColorBrush(color), new Pen(new SolidColorBrush(Color.FromArgb(color.A, 0, 0, 0)), Math.Max(1.5, r * 0.15)) { LineJoin = PenLineJoin.Round }, g);
     }
 
-    void DrawChannelEdge(DrawingContext dc, double w, double h, Point pt, int edge, double halfLen, double thick, float db)
-    {
-        float t = Level(db);
-        if (t <= 0.01f) return;
-        var col = LevelColor(t);
-        col.A = (byte)(35 + 220 * t);
-        EdgeGlow(dc, pt, edge, halfLen, thick * (0.9 + 0.9 * t), col);
-        if (t > 0.35f)
-        {
-            var core = col; core.A = (byte)(200 * (t - 0.35f) / 0.65f);
-            EdgeBar(dc, w, h, pt, edge, halfLen * 0.9, thick * 0.22, core);
-        }
-    }
-
-    /// Ring style (original). Returns the y where the chips should start.
-    double DrawRing(DrawingContext dc, double w, double h, double s, float[] chDb, int ch, bool surround,
-                    float lt, float dirA, float dirC, List<OnsetMark> onsets, DateTime now)
-    {
-        double cx = w / 2, cy = h / 2;
-        double R = Math.Min(w, h) * cfg.RingRadius;
-        double thick = cfg.RingThickness * s;
-
-        dc.DrawEllipse(null, new Pen(new SolidColorBrush(Color.FromArgb(60, 255, 255, 255)), 1.5), new Point(cx, cy), R, R);
-        var angles = Direction.Angles(ch);
-        if (ch == 2)
-        {
-            DrawLevelArc(dc, cx, cy, R, -160, -20, chDb.Length > 0 ? chDb[0] : -100, thick);
-            DrawLevelArc(dc, cx, cy, R, 20, 160, chDb.Length > 1 ? chDb[1] : -100, thick);
-            Text(dc, "L", cx - R - 26 * s, cy - 11 * s, 18 * s, Color.FromArgb(150, 255, 255, 255), true, 1);
-            Text(dc, "R", cx + R + 26 * s, cy - 11 * s, 18 * s, Color.FromArgb(150, 255, 255, 255), true, 1);
-        }
-        else if (angles != null)
-        {
-            double half = ch >= 8 ? 26 : ch == 6 ? 32 : 42;
-            for (int c = 0; c < angles.Length && c < chDb.Length; c++)
-            {
-                if (float.IsNaN(angles[c])) continue;
-                double hh = angles[c] == 0 ? 15 : half;
-                DrawLevelArc(dc, cx, cy, R, angles[c] - hh, angles[c] + hh, chDb[c], thick);
-            }
-            Text(dc, "FRONT", cx, cy - R - thick - 22 * s, 12 * s, Color.FromArgb(130, 255, 255, 255), true, 1);
-            Text(dc, "BACK", cx, cy + R + thick + 6 * s, 12 * s, Color.FromArgb(130, 255, 255, 255), true, 1);
-        }
-
-        if (lt > 0.08f && dirC > 0.12f)
-        {
-            double size = (10 + 18 * lt) * s;
-            double rr = R + thick / 2 + 6 * s;
-            var tip = P(cx, cy, rr, dirA);
-            var b1 = P(cx, cy, rr + size, dirA - 7);
-            var b2 = P(cx, cy, rr + size, dirA + 7);
-            var g = new StreamGeometry();
-            using (var c = g.Open()) { c.BeginFigure(tip, true, true); c.LineTo(b1, false, false); c.LineTo(b2, false, false); }
-            g.Freeze();
-            var col = LevelColor(lt); col.A = (byte)(120 + 135 * Math.Min(1f, dirC * 1.5f));
-            dc.DrawGeometry(new SolidColorBrush(col), new Pen(Brushes.Black, 1), g);
-        }
-
-        foreach (var o in onsets)
-        {
-            double age = (now - o.Time).TotalSeconds;
-            if (age < 0 || age > 1.2) continue;
-            float k = (float)(1 - age / 1.2);
-            float str = Math.Clamp((o.Strength - cfg.OnsetDb) / 12f, 0.25f, 1f);
-            var col = LevelColor(0.4f + 0.6f * str); col.A = (byte)(230 * k * str);
-            double spread = (surround || ch == 2 ? 28 : 40) + age * 25;
-            double rr = R + thick / 2 + 8 * s + age * 60 * s;
-            if (ch == 2 && o.Conf < 0.12f) Arc(dc, cx, cy, rr, 0, 360, col, 4 * s);
-            else Arc(dc, cx, cy, rr, o.Angle - spread, o.Angle + spread, col, (5 + 5 * str) * s);
-        }
-
-        return cy + R + thick + (surround ? 26 : 12) * s;
-    }
-
-    void DrawLevelArc(DrawingContext dc, double cx, double cy, double R, double a0, double a1, float db, double thick)
-    {
-        float t = Level(db);
-        var col = LevelColor(t);
-        col.A = (byte)(40 + 215 * t);
-        Arc(dc, cx, cy, R, a0, a1, col, thick * (0.6 + 0.6 * t));
-        if (t > 0.6f)
-        {
-            var glow = col; glow.A = (byte)(90 * (t - 0.6f) / 0.4f);
-            Arc(dc, cx, cy, R, a0 - 4, a1 + 4, glow, thick * 2.2);
-        }
-    }
 }

@@ -126,22 +126,30 @@ public sealed class GameHelper : IDisposable
     {
         var now = DateTime.UtcNow;
         double win = cfg.HelperWindowSec;
-        List<EventItem> evs; List<CaptionLine> caps; bool hunt, surround;
+        List<EventItem> evs; List<string> evWhere; List<CaptionLine> caps; bool hunt;
         lock (state.Lock)
         {
-            evs = state.Events.Where(e => !e.Pending && (now - e.Time).TotalSeconds <= win && !e.Label.StartsWith("You: ")).ToList();
+            evs = state.Events.Where(e => (now - e.Time).TotalSeconds <= win).ToList();
+            // exact direction from the game feed, as a clock (12 = where you look) + distance + floor
+            evWhere = evs.Select(e =>
+            {
+                if (!e.HasPos) return "no direction (in your head)";
+                var (a, d, up) = state.Where(e.X, e.Y, e.Z, cfg.EyeHeightM);
+                int clock = ((int)Math.Round(a / 30) % 12 + 12) % 12;
+                return $"{(clock == 0 ? 12 : clock)} o'clock, {d:F0} m{(up > cfg.FloorDiffM ? ", upstairs" : up < -cfg.FloorDiffM ? ", downstairs" : "")}";
+            }).ToList();
             caps = state.Captions.Where(c => !c.Partial && (now - c.Time).TotalSeconds <= win).ToList();
-            hunt = state.HuntActive; surround = state.Surround;
+            hunt = state.HuntActive;
         }
         var newest = evs.Select(e => e.Time).Concat(caps.Select(c => c.Time)).DefaultIfEmpty(DateTime.MinValue).Max();
         if (newest <= lastSeenNewest) return null;
         lastSeenNewest = newest;
 
         var sb = new StringBuilder();
-        sb.AppendLine($"Last {win:F0} seconds. Audio is {(surround ? "surround" : "stereo, so only left / right / ahead")}.{(hunt ? " A HUNT may be on." : "")}");
+        sb.AppendLine($"Last {win:F0} seconds. Sounds are read from the game itself with exact directions (clock: 12 = where the player looks, 6 = behind).{(hunt ? " A HUNT is on (ghost footsteps / heartbeat)." : "")}");
         sb.AppendLine("Sounds (newest first):");
         if (evs.Count == 0) sb.AppendLine("  none");
-        foreach (var e in evs.Take(20)) sb.AppendLine($"  {(now - e.Time).TotalSeconds:F0}s ago: {e.Label} [{e.Category}] from {Where(e.Angle, surround)}, loud {e.Score:F2}");
+        for (int i = 0; i < evs.Count && i < 20; i++) sb.AppendLine($"  {(now - evs[i].Time).TotalSeconds:F0}s ago: {evs[i].Label} [{evs[i].Category}]{(evs[i].Count > 1 ? " x" + evs[i].Count : "")} at {evWhere[i]}");
         sb.AppendLine("Captions (oldest first):");
         if (caps.Count == 0) sb.AppendLine("  none");
         foreach (var c in caps.TakeLast(8)) sb.AppendLine($"  {(now - c.Time).TotalSeconds:F0}s ago: {c.Text}");

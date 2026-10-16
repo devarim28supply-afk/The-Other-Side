@@ -126,16 +126,13 @@ public partial class OverlayWindow : Window
         Log.Write($"source init: styles {sw.ElapsedMilliseconds} ms");
         if (!RegisterHotKey(hwnd, 1, 0, VK_F8)) Log.Write("hotkey F8 not registered");
         if (!RegisterHotKey(hwnd, 2, MOD_CONTROL, VK_F8)) Log.Write("hotkey Ctrl+F8 not registered");
-        if (!RegisterHotKey(hwnd, 9, MOD_CONTROL, 0x30)) Log.Write("hotkey Ctrl+0 not registered");
-        if (!RegisterHotKey(hwnd, 3, 0, VK_F7)) Log.Write("hotkey F7 not registered");
+        // Ctrl+0..9 / F7 (save sound examples for the listening detector) are gone with the detector (2026-10-16)
         if (!RegisterHotKey(hwnd, 4, 0, VK_F9)) Log.Write("hotkey F9 not registered");
         if (cfg.SayF6 && !RegisterHotKey(hwnd, 5, 0, VK_F6)) Log.Write("hotkey F6 not registered");
         if (!RegisterHotKey(hwnd, 6, 0, VK_F10)) Log.Write("hotkey F10 not registered");
         // MouseWheelMenu off (Kaalob 2026-10-10: "remove it for now") also frees F5, which opens the same wheel
         if (cfg.MouseWheelMenu && !RegisterHotKey(hwnd, 7, 0, VK_F5)) Log.Write("hotkey F5 not registered");
         if (!RegisterHotKey(hwnd, 8, MOD_CONTROL, VK_F5)) Log.Write("hotkey Ctrl+F5 not registered");
-        for (int i = 0; i < 9; i++)
-            if (i != 4 && !(i == 2 && !cfg.HuntKey) && !RegisterHotKey(hwnd, 10 + i, MOD_CONTROL, (uint)(0x31 + i)))   // Ctrl+5 (Ghost footsteps) removed, hunts record themselves Log.Write($"hotkey Ctrl+{i + 1} not registered");
         Log.Write($"source init: hotkeys {sw.ElapsedMilliseconds} ms");
         PlaceOverGame();
         Log.Write($"source init: placed {sw.ElapsedMilliseconds} ms");

@@ -41,6 +41,23 @@ if (mode == "raw")
     return;
 }
 
+if (mode == "scan")
+{
+    // scan <out.tsv> <name1,name2,...>: which assets (Blueprints etc.) reference these names, e.g. sound functions
+    var names = args[2].Split(',');
+    var pats = names.Select(s => Encoding.ASCII.GetBytes(s)).ToArray();
+    var rows = new List<string> { "asset\t" + string.Join("\t", names) };
+    foreach (var path in provider.Files.Keys.Where(k => k.EndsWith(".uasset", StringComparison.OrdinalIgnoreCase)).OrderBy(k => k))
+    {
+        if (!provider.TrySaveAsset(path, out var head)) continue;
+        var hits = pats.Select(pt => head.AsSpan().IndexOf(pt) >= 0 ? "1" : "").ToArray();
+        if (hits.Any(h => h != "")) rows.Add(path + "\t" + string.Join("\t", hits));
+    }
+    File.WriteAllLines(args[1], rows);
+    Console.WriteLine($"{rows.Count - 1} assets");
+    return;
+}
+
 var outDir = args[1];
 var filter = args.Length > 2 ? args[2] : null;
 Directory.CreateDirectory(outDir);
