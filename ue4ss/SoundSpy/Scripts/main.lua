@@ -100,8 +100,9 @@ hook2D("/Script/Engine.GameplayStatics:SpawnSound2D")
 -- 3) every 100 ms: the listener, and every playing audio component (attached / spawned sounds, also from C++)
 local seen = {}        -- id -> {x, y, z}
 local lastL = nil
-LoopAsync(100, function()
-    ExecuteInGameThread(function()
+-- LoopInGameThreadWithDelay keeps ONE callback on the game thread. LoopAsync + ExecuteInGameThread made a new
+-- callback every 100 ms and crashed the game after ~7 min (UE4SS "Ref was not function", 2026-10-16).
+LoopInGameThreadWithDelay(100, function()
         pcall(function()
             local pc, pawn = localPawn()
             pawnAddr = addr(pawn)
@@ -120,15 +121,23 @@ LoopAsync(100, function()
                 for _, c in ipairs(comps) do
                     if c:IsValid() and c:IsPlaying() then
                         local id = tostring(c:GetAddress())
-                        local p = c:K2_GetComponentLocation()
                         local prev = seen[id]
+                        local p = nil
                         if prev == nil then
                             local s = c.Sound
-                            local atten = c.AttenuationSettings
-                            emit(string.format("S\t%s\t%s\t%.0f\t%.0f\t%.0f\t%.1f\t%s", id, clean(name(s)), p.X, p.Y, p.Z,
-                                rangeOf(valid(atten) and atten or nil, s), sourceKind(c:GetOwner())))
-                            prev = { p.X, p.Y, p.Z }
-                        elseif math.abs(p.X - prev[1]) + math.abs(p.Y - prev[2]) + math.abs(p.Z - prev[3]) > 30 then
+                            local sname = clean(name(s))
+                            if sname:find("^UDS_") then
+                                -- weather beds follow the player everywhere: never sent, never tracked
+                                prev = { skip = true }
+                            else
+                                p = c:K2_GetComponentLocation()
+                                local atten = c.AttenuationSettings
+                                emit(string.format("S\t%s\t%s\t%.0f\t%.0f\t%.0f\t%.1f\t%s", id, sname, p.X, p.Y, p.Z,
+                                    rangeOf(valid(atten) and atten or nil, s), sourceKind(c:GetOwner())))
+                                prev = { p.X, p.Y, p.Z }
+                            end
+                        elseif not prev.skip then p = c:K2_GetComponentLocation() end
+                        if p ~= nil and prev[1] ~= nil and math.abs(p.X - prev[1]) + math.abs(p.Y - prev[2]) + math.abs(p.Z - prev[3]) > 30 then
                             emit(string.format("M\t%s\t%.0f\t%.0f\t%.0f", id, p.X, p.Y, p.Z))
                             prev = { p.X, p.Y, p.Z }
                         end
@@ -137,11 +146,9 @@ LoopAsync(100, function()
                 end
             end
             for id in pairs(seen) do
-                if not now[id] then emit("E\t" .. id) end
+                if not now[id] and not seen[id].skip then emit("E\t" .. id) end
             end
             seen = now
             flush()
         end)
-    end)
-    return false
 end)
