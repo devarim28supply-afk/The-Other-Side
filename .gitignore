@@ -13,3 +13,5 @@ train-data/
 *.wav
 *.binka
 *.onnx
+__pycache__/
+captions/evidence_log/

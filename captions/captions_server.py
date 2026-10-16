@@ -72,7 +72,7 @@ def norm(text: str):
 GHOST = []
 if os.path.exists(_lines_path):
     for ln in json.load(open(_lines_path, encoding="utf-8")):
-        GHOST.append((ln["speaker"], ln["text"], norm(ln["text"])))
+        GHOST.append((ln["speaker"], ln["text"], norm(ln["text"]), ln["file"].replace("\\", "/").lower()))
 print(f"{len(GHOST)} ghost lines loaded", flush=True)
 NAMES = "Hans, McGavin, Victoria, Skia, Orphan."
 
@@ -84,7 +84,7 @@ def match_ghost(text: str):
     if len(words) < 3:
         return None
     best, score = None, 0.0
-    for who, exact, w in GHOST:
+    for who, exact, w, f in GHOST:
         if len(w) < 3:
             continue
         sm = difflib.SequenceMatcher(None, words, w)
@@ -100,8 +100,73 @@ def match_ghost(text: str):
         if tail_ok and m.size >= 4 and m.size >= 0.55 * len(w) and m.b + m.size == len(w):
             r = max(r, 0.8)
         if r > score:
-            best, score = (who, exact), r
+            best, score = (who, exact, f), r
     return best if score >= 0.72 else None
+
+
+# Audio evidence: the ghost's answer on the Spirit Box / Infrasound Receiver is one of the game's recorded clips
+# (evidence_clips.txt). evidence.py matches the game audio against those recordings, which also works for the
+# one-word answers ("Yes", "Run") Whisper alone can never tell apart from a player.
+EVIDENCE_FILES = set()
+EV = None
+EV_Z = 3.5      # matcher score needed when Whisper heard the same words (normal voices saying them scored <= 3.0)
+EV_ALONE_Z = 7.0   # matcher score that counts on its own (test negatives: none above 6; real answers 3-10)
+EV_LOG = os.path.join(_here, "evidence_log")
+try:
+    import evidence  # noqa: E402
+    EVIDENCE_FILES = {a.replace("/Game/", "").lower() + ".wav"
+                      for a in open(os.path.join(_here, "evidence_clips.txt"), encoding="utf-8").read().split()}
+    _t = time.time()
+    EV = evidence.EvidenceMatcher(os.environ.get("TOS_CLIPS", "D:/Tools/tos-sound-overlay/gameclips"))
+    print(f"audio evidence matcher: {EV.files} ghost answers, {len(EV.meta)} templates, "
+          f"{'calibrated' if EV.sd.max() != 1 else 'NOT calibrated'}, {time.time() - _t:.1f}s", flush=True)
+except Exception as e:
+    print("audio evidence matcher off:", e, flush=True)
+    EV = None
+
+
+def evidence_match(text, ring):
+    """(speaker, exact line, file, z) when the game audio just before now matches a ghost answer whose words
+    Whisper also heard; else None. Also returns the best candidates for the log."""
+    if EV is None or len(ring) < evidence.SR:
+        return None, []
+    words = norm(text)
+    if not words:
+        return None, []
+    res = sorted(EV.scores(ring), reverse=True)
+    cands, seen = [], set()
+    for z, k, j in res:
+        if z < 2.5 or len(cands) >= 8:
+            break
+        who, line, rel, semis = EV.meta[k]
+        if rel in seen:
+            continue
+        seen.add(rel)
+        cands.append((round(z, 2), who, line, rel))
+    for z, who, line, rel in cands:
+        if z < EV_Z or line.startswith("("):
+            continue
+        w = norm(line)
+        r = difflib.SequenceMatcher(None, words, w).ratio()
+        short_ok = len(w) <= 2 and all(x in words for x in w) and len(words) <= len(w) + 2
+        if r >= 0.6 or short_ok or (z >= 5 and r >= 0.4):
+            return (who, line, rel, z), cands
+    return None, cands
+
+
+def save_evidence_sample(ring, text, cands, hit):
+    """Keep real game audio around possible ghost answers, to tune the matcher on (not only test clips)."""
+    try:
+        os.makedirs(EV_LOG, exist_ok=True)
+        if len(os.listdir(EV_LOG)) > 400:
+            return
+        name = time.strftime("%Y%m%d-%H%M%S")
+        import soundfile as sf
+        sf.write(os.path.join(EV_LOG, name + ".wav"), ring, evidence.SR)
+        with open(os.path.join(EV_LOG, name + ".json"), "w", encoding="utf-8") as f:
+            json.dump({"whisper": text, "hit": hit, "candidates": cands}, f)
+    except Exception as e:
+        print("evidence log error:", e, flush=True)
 
 
 MULTI = not MODEL.endswith(".en")   # multilingual model: other languages are translated to English (Kaalob 2026-10-10, Russian / Ukrainian player)
@@ -166,6 +231,44 @@ def handle(conn: socket.socket):
     pending = b""
     lock = threading.Lock()
     recent = []           # last few seconds of hop RMS, for the adaptive gate
+    ring = np.zeros(0, dtype=np.float32)   # last BUF_S seconds of audio, for the audio evidence matcher
+    recent_hits = []      # (time, file) of answers already shown, so the poller does not repeat them
+
+    def poll_evidence():
+        """Very strong matches alone (no words needed): breathing / gibberish / laughs (audio level 1),
+        and answers Whisper did not catch. Every second on the last few seconds of game audio."""
+        while not stop.is_set():
+            time.sleep(1.0)
+            if len(ring) < SR * 2:
+                continue
+            try:
+                res = sorted(EV.scores(ring.copy()), reverse=True)
+            except Exception as e:
+                print("evidence poll error:", e, flush=True)
+                continue
+            if not res or res[0][0] < EV_ALONE_Z:
+                continue
+            z, k, j = res[0]
+            who, line, rel, semis = EV.meta[k]
+            now = time.time()
+            recent_hits[:] = [h for h in recent_hits if now - h[0] < 10]
+            if any(f == rel.lower() for _, f in recent_hits):
+                continue
+            recent_hits.append((now, rel.lower()))
+            text = (f"GHOST ({who}): {line}" if who != "Ghost" else f"GHOST: {line}")
+            text += f"  = AUDIO EVIDENCE (level {evidence.level(line)})"
+            print(f"[poll z={z:.1f}] {text}", flush=True)
+            save_evidence_sample(ring.copy(), "", [(round(z, 2), who, line, rel)], [who, line, rel, round(z, 2)])
+            msg = json.dumps({"text": text, "t0": round(stream_t - 2.0, 2), "dur": 2.0, "ms": 0}) + "\n"
+            try:
+                with lock:
+                    conn.sendall(msg.encode("utf-8"))
+            except OSError:
+                return
+
+    stop = threading.Event()
+    if EV is not None:
+        threading.Thread(target=poll_evidence, daemon=True).start()
     PAUSE = 0.45          # a gap this long ends an utterance
     MAX = 4.5             # longer than this: cut at the quietest recent spot and caption what we have
 
@@ -178,6 +281,7 @@ def handle(conn: socket.socket):
 
     def emit(audio, reason):
         start = stream_t - len(audio) / SR
+        snap = ring.copy()          # before Whisper runs: the answer is still in the last seconds
         t = time.time()
         try:
             text = transcribe(audio)
@@ -189,10 +293,33 @@ def handle(conn: socket.socket):
         if not text or text.lower() in BANNED:
             return
         g = match_ghost(text)
+        heard = text
+        ev_ms = 0
+        hit, cands = None, []
+        if EV is not None:
+            t1 = time.time()
+            hit, cands = evidence_match(text, snap)
+            ev_ms = int((time.time() - t1) * 1000)
+            if hit:
+                g = hit
+                print(f"audio evidence: {hit[0]} '{hit[1]}' z={hit[3]} (whisper: {heard!r})", flush=True)
+            if cands:
+                save_evidence_sample(snap, heard, cands, hit)
         if g:
             text = f"GHOST ({g[0]}): {g[1]}" if g[0] not in ("Ghost", "Ghost event") else f"GHOST: {g[1]}"
+            # "= AUDIO EVIDENCE" only when the sound itself matched the ghost's recording; a player can say
+            # "I am here" too (Whisper alone tags it GHOST, as before)
+            confirmed = hit is not None if EV is not None else False
+            if not confirmed and EV is not None:
+                gw = norm(g[1])
+                confirmed = any(z >= EV_Z and norm(line) == gw for z, _, line, _ in cands)
+            if g[2].lower() in EVIDENCE_FILES and confirmed:
+                if any(f == g[2].lower() and time.time() - t_ < 10 for t_, f in recent_hits):
+                    return          # the poller already showed this answer
+                text += f"  = AUDIO EVIDENCE (level {evidence.level(g[1])})"
+                recent_hits.append((time.time(), g[2].lower()))
         msg = json.dumps({"text": text, "t0": round(start, 2), "dur": round(len(audio) / SR, 2), "ms": ms}) + "\n"
-        print(f"[{ms} ms, {len(audio)/SR:.1f}s, {reason}] {text}", flush=True)
+        print(f"[{ms} ms, {len(audio)/SR:.1f}s, {reason}{f', match {ev_ms} ms' if ev_ms else ''}] {text}", flush=True)
         try:
             with lock:
                 conn.sendall(msg.encode("utf-8"))
@@ -214,6 +341,8 @@ def handle(conn: socket.socket):
             samples = np.frombuffer(pending[:n], dtype=np.int16).astype(np.float32) / 32768.0
             pending = pending[n:]
             buf = np.concatenate([buf, samples])
+            if EV is not None:
+                ring = np.concatenate([ring, samples])[-int(evidence.BUF_S * SR):]
             while len(buf) >= hop_n:
                 hop, buf = buf[:hop_n], buf[hop_n:]
                 stream_t += HOP
@@ -252,6 +381,7 @@ def handle(conn: socket.socket):
                     audio = np.concatenate([a for a, _ in part])
                     threading.Thread(target=emit, args=(audio, "long"), daemon=True).start()
     finally:
+        stop.set()
         conn.close()
         print("overlay disconnected", flush=True)
 
