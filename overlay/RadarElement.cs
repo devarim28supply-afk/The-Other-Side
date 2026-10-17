@@ -93,6 +93,27 @@ public sealed class RadarElement : FrameworkElement
         new(s, CultureInfo.InvariantCulture, FlowDirection.LeftToRight, bold ? fontBold : font, size, new SolidColorBrush(color), ppd);
 
     /// align: 0 left, 1 center, 2 right. Draws a dark shadow under the text for readability over any game scene.
+    /// Ring mark for the ghost (Kaalob 2026-10-17): red circle with a white "S" (ghost sound) or two white footprints (ghost steps).
+    void GhostMark(DrawingContext dc, Point c, double r, byte a, bool steps)
+    {
+        var white = new SolidColorBrush(Color.FromArgb(a, 255, 255, 255));
+        dc.DrawEllipse(new SolidColorBrush(Color.FromArgb(a, 255, 35, 35)), new Pen(new SolidColorBrush(Color.FromArgb(a, 0, 0, 0)), Math.Max(1.5, r * 0.15)), c, r, r);
+        if (!steps)
+        {
+            var ft = FT("S", r * 1.3, Color.FromArgb(a, 255, 255, 255), true);
+            dc.DrawText(ft, new Point(c.X - ft.Width / 2, c.Y - ft.Height / 2));
+            return;
+        }
+        // two feet, left one lower: a sole + four toes each
+        foreach (var (fx, fy) in new[] { (-0.27, 0.16), (0.27, -0.12) })
+        {
+            double x = c.X + fx * r, y = c.Y + fy * r;
+            dc.DrawEllipse(white, null, new Point(x, y + 0.14 * r), 0.20 * r, 0.34 * r);
+            for (int t = 0; t < 3; t++)
+                dc.DrawEllipse(white, null, new Point(x + (t - 1) * 0.14 * r, y - 0.34 * r - (t == 1 ? 0.05 * r : 0)), 0.075 * r, 0.085 * r);
+        }
+    }
+
     double Text(DrawingContext dc, string s, double x, double y, double size, Color color, bool bold = false, int align = 0)
     {
         var ft = FT(s, size, color, bold);
@@ -419,7 +440,10 @@ public sealed class RadarElement : FrameworkElement
                     double r = (5 + 10 * d.near) * s;
                     var c = P(rcx, rcy, R, d.ang);
                     byte a = (byte)(255 * Math.Clamp(d.k * 1.6, 0, 1));
-                    dc.DrawEllipse(new SolidColorBrush(Color.FromArgb(a, d.col.R, d.col.G, d.col.B)), new Pen(new SolidColorBrush(Color.FromArgb(a, 0, 0, 0)), Math.Max(1.5, 2 * s)), c, r, r);
+                    if (d.cat is "Ghost" or "GhostSteps")
+                        GhostMark(dc, c, Math.Max(r, 16 * s), a, d.cat == "GhostSteps");
+                    else
+                        dc.DrawEllipse(new SolidColorBrush(Color.FromArgb(a, d.col.R, d.col.G, d.col.B)), new Pen(new SolidColorBrush(Color.FromArgb(a, 0, 0, 0)), Math.Max(1.5, 2 * s)), c, r, r);
                     if (Math.Abs(d.up) > cfg.FloorDiffM)
                     {
                         var o = P(rcx, rcy, R + r + 12 * s, d.ang);
