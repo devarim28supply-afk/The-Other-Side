@@ -15,8 +15,12 @@ string[] rest = args.Skip(1).ToArray();
 if (mode == "feed")
 {
     string path = rest.Length > 0 ? rest[0] : Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "soundfeed.txt"));
+    // one reader per feed file: a second start (the .cmd clicked twice) just leaves
+    using var one = new Mutex(true, "TosReader-" + path.ToLowerInvariant().Replace('\\', '/'), out bool first);
+    if (!first) { Console.WriteLine("The reader is already running."); return 0; }
     // everything printed also goes to reader.log next to the feed
-    var logFile = new StreamWriter(Path.Combine(Path.GetDirectoryName(path)!, "reader.log"), false) { AutoFlush = true };
+    var logStream = new FileStream(Path.Combine(Path.GetDirectoryName(path)!, "reader.log"), FileMode.Create, FileAccess.Write, FileShare.ReadWrite | FileShare.Delete);
+    var logFile = new StreamWriter(logStream) { AutoFlush = true };
     Console.SetOut(new Tee(Console.Out, logFile));
     while (true)
     {
@@ -260,18 +264,29 @@ return 3;
 static void RunFeed(Mem g, string path)
 {
     var ue = new Unreal(g);
-    if (!ue.Find(Console.Out)) throw new Exception("game tables not found");
+    // right after the game starts the tables may not be filled in yet: keep trying for a minute
+    for (int t = 0; !ue.Find(Console.Out); t++)
+    {
+        if (t >= 12 || !g.Alive) throw new Exception("game tables not found");
+        Thread.Sleep(5000);
+    }
     var rf = new Reflect(g, ue);
     rf.Load();
     var feed = new Feed(g, ue, rf, path, Console.Out);
     try
     {
         Console.WriteLine("writing " + path);
+        int tries = 0;
         while (g.Alive)
         {
-            Console.WriteLine($"{DateTime.Now:HH:mm:ss} looking for the game's list of playing sounds...");
+            Console.WriteLine($"{DateTime.Now:HH:mm:ss} looking for the game's list of playing sounds... (try {++tries})");
             var sw = Stopwatch.StartNew();
-            if (!feed.FindList()) { Thread.Sleep(3000); continue; }
+            if (!feed.FindList())
+            {
+                Console.WriteLine($"  not found ({sw.ElapsedMilliseconds / 1000.0:0.0} s), trying again - be in a round and walk around");
+                Thread.Sleep(3000);
+                continue;
+            }
             Console.WriteLine($"{DateTime.Now:HH:mm:ss} found in {sw.ElapsedMilliseconds / 1000.0:0.0} s: {feed.Offsets()}");
             var you = Stopwatch.StartNew();
             while (g.Alive && feed.Tick())

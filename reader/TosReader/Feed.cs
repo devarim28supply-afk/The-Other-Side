@@ -117,6 +117,7 @@ sealed class Feed
         var recs = new HashSet<ulong>();
         foreach (var (at, _) in m.FindAny(sounds, 20000))
             if (((at - RecSound) & 0xF) == 0) recs.Add(at - RecSound);
+        if (recs.Count == 0) { log.WriteLine($"  {sounds.Count} playing sounds -> no records yet"); return false; }
         var starts = new HashSet<ulong>();
         foreach (var (slot, _) in m.FindAny(recs, 20000))
         {
@@ -124,6 +125,7 @@ sealed class Feed
             for (int k = 0; k < 4096 && IsRecord(m.Ptr(s - 8)); k++) s -= 8;
             starts.Add(s);
         }
+        if (starts.Count == 0) { log.WriteLine($"  {sounds.Count} playing sounds -> {recs.Count} records -> no lists yet"); return false; }
         int best = -1;
         ulong found = 0;
         foreach (var (hdr, _) in m.FindAny(starts, 20000))

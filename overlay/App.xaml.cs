@@ -22,10 +22,14 @@ public partial class App : System.Windows.Application
     CaptionClient? captions;
     CaptionClient? ownCaptions;      // second stream: your own mic ("YOU: ...")
     MicListener? ownMic;
+    Mutex? one;
 
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+        // one overlay per folder (the start .cmd clicked twice made two, the second without hotkeys)
+        one = new Mutex(true, "OtherSideSound-" + AppContext.BaseDirectory.ToLowerInvariant().Replace('\\', '/'), out bool first);
+        if (!first) { Shutdown(); return; }
         Log.Write("---- Other Side Sound starting ----");
         cfg = Config.Load(Path.Combine(AppContext.BaseDirectory, "config.json"));
         // The game keeps the GPU ~99% busy, and WPF's GPU drawing of this transparent full-screen window queued behind it (~3 s late).

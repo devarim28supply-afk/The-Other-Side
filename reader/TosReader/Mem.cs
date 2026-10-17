@@ -48,7 +48,10 @@ sealed class Mem : IDisposable
         return new Mem(p.Id, h, (ulong)info.Base, info.Size);
     }
 
-    public bool Alive => !Process.GetProcessById(Pid).HasExited;
+    public bool Alive
+    {
+        get { try { return !Process.GetProcessById(Pid).HasExited; } catch (ArgumentException) { return false; } }
+    }
 
     public byte[] Bytes(ulong addr, int n)
     {
@@ -114,16 +117,26 @@ sealed class Mem : IDisposable
     public List<(ulong at, ulong value)> FindAny(HashSet<ulong> values, int max = 5000)
     {
         var hits = new List<(ulong, ulong)>();
+        if (values.Count == 0) return hits;
+        void Scan(ulong at, byte[] b)
+        {
+            var span = MemoryMarshal.Cast<byte, ulong>(b);
+            for (int i = 0; i < span.Length; i++)
+                if (values.Contains(span[i])) hits.Add((at + (ulong)i * 8, span[i]));
+        }
         foreach (var (start, size) in HeapRegions())
         {
             for (ulong off = 0; off < size && hits.Count < max; off += 0x400000)
             {
                 int n = (int)Math.Min(0x400000, size - off);
                 var b = Bytes(start + off, n);
-                if (b.Length == 0) continue;
-                var span = MemoryMarshal.Cast<byte, ulong>(b);
-                for (int i = 0; i < span.Length; i++)
-                    if (values.Contains(span[i])) hits.Add((start + off + (ulong)i * 8, span[i]));
+                if (b.Length != 0) { Scan(start + off, b); continue; }
+                // the big read failed (a page changed or went away while reading): read this chunk in 64 KB pieces
+                for (int sub = 0; sub < n; sub += 0x10000)
+                {
+                    var p = Bytes(start + off + (ulong)sub, Math.Min(0x10000, n - sub));
+                    if (p.Length != 0) Scan(start + off + (ulong)sub, p);
+                }
             }
         }
         return hits;
