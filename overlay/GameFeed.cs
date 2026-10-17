@@ -31,7 +31,7 @@ public sealed class GameFeed : IDisposable
     static readonly string[][] Builtin =
     {
         new[] { @"^(SW_SubtleClick|SFX_ItemClick|SFX_itemClick|Lyra_UI|Mouse(Pressed|Released)|SFX_UI_|SFX_BassyButton|UI_Sound|UDS_|SFX_BackgroundNoise|SFX_Intro_Music|Intro_|Karl_Casey|VehicleDoor|Coins)", "", "" },
-        new[] { @"Footstep_Ghost|Ghost_Footstep|GhostFootstep", "GHOST STEPS", "Ghost" },
+        new[] { @"Footstep_Ghost|Ghost_Footstep|GhostFootstep", "GHOST STEPS", "GhostSteps" },   // red (Kaalob 2026-10-17)
         new[] { @"Heartbeat", "HEARTBEAT", "Ghost" },
         new[] { @"GhostWhisper|Whisper", "GHOST WHISPER", "Ghost" },
         new[] { @"BehindYou", "GHOST BEHIND YOU", "Ghost" },
@@ -140,7 +140,9 @@ public sealed class GameFeed : IDisposable
             res = (s, "Environment");
         }
         // anything the ghost itself makes is drawn in the ghost color
-        if (src == "ghost" && res.Item1 != "") res = (res.Item1, "Ghost");
+        // (steps the ghost makes with the normal footstep sounds become red GHOST STEPS too)
+        if (src == "ghost" && res.Item2 == "Player") res = ("GHOST STEPS", "GhostSteps");
+        else if (src == "ghost" && res.Item1 != "" && res.Item2 != "GhostSteps") res = (res.Item1, "Ghost");
         return nameCache[key] = res;
     }
 
@@ -233,12 +235,12 @@ public sealed class GameFeed : IDisposable
                 // ghost speech (also from the spirit box in your own hand) = subtitle, not a sound row
                 if (GhostLine(raw)) return true;
                 // ghost sounds are never "yours" even when the game plays them on you (heartbeat, "behind you")
-                if (src == "own" && group != "Ghost" && !cfg.ShowOwnSounds) return false;
+                if (src == "own" && !group.StartsWith("Ghost") && !cfg.ShowOwnSounds) return false;
                 if (state.HasListener)
                 {
                     double dx = x - state.LX, dy = y - state.LY, dz = z - state.LZ;
                     // own sounds the feed could not tie to you (no owner): right on top of you and not the ghost's
-                    if (!cfg.ShowOwnSounds && src != "ghost" && group != "Ghost" && Math.Sqrt(dx * dx + dy * dy) < 80 && Math.Abs(dz + cfg.EyeHeightM * 100) < 120) return false;
+                    if (!cfg.ShowOwnSounds && src != "ghost" && !group.StartsWith("Ghost") && Math.Sqrt(dx * dx + dy * dy) < 80 && Math.Abs(dz + cfg.EyeHeightM * 100) < 120) return false;
                 }
                 if (label is "GHOST STEPS" or "HEARTBEAT") huntUntil = now.AddSeconds(8);
                 // repeats of the same sound close together (footsteps every 0.6 s) move one row instead of adding rows
@@ -259,7 +261,7 @@ public sealed class GameFeed : IDisposable
                 var e = state.Events.FirstOrDefault(e => e.Id == f[1]);
                 if (e == null) return false;
                 e.MoveTo(D(f[2]), D(f[3]), D(f[4]), now);
-                if (e.Category == "Ghost") e.Time = now;   // a moving ghost sound stays on screen while it moves
+                if (e.Category.StartsWith("Ghost")) e.Time = now;   // a moving ghost sound stays on screen while it moves
                 return true;
             }
             case "E" when f.Length >= 2:
@@ -270,7 +272,7 @@ public sealed class GameFeed : IDisposable
                 var (label, group) = Name(f[1], f[2]);
                 if (label == "") return false;
                 if (GhostLine(f[1])) return true;
-                if (f[2] == "own" && group != "Ghost" && !cfg.ShowOwnSounds) return false;
+                if (f[2] == "own" && !group.StartsWith("Ghost") && !cfg.ShowOwnSounds) return false;
                 var same = state.Events.FirstOrDefault(e => e.Label == label && !e.HasPos && (now - e.Time).TotalSeconds < 2.5);
                 if (same != null) { same.Time = now; same.Count++; return true; }
                 AddEvent(new EventItem { Time = now, Label = label, Category = group });
