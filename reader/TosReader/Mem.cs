@@ -116,30 +116,41 @@ sealed class Mem : IDisposable
     // Addresses in the heap that hold any of the values (one pass over the heap).
     public List<(ulong at, ulong value)> FindAny(HashSet<ulong> values, int max = 5000)
     {
-        var hits = new List<(ulong, ulong)>();
+        var hits = new List<(ulong at, ulong value)>();
         if (values.Count == 0) return hits;
-        void Scan(ulong at, byte[] b)
-        {
-            var span = MemoryMarshal.Cast<byte, ulong>(b);
-            for (int i = 0; i < span.Length; i++)
-                if (values.Contains(span[i])) hits.Add((at + (ulong)i * 8, span[i]));
-        }
+        // quick pre-check on 16 bits of the value before the HashSet (most heap words fail here)
+        var maybe = new bool[1 << 16];
+        foreach (var v in values) maybe[(int)((v >> 3) & 0xFFFF)] = true;
+        var chunks = new List<(ulong at, int n)>();
         foreach (var (start, size) in HeapRegions())
+            for (ulong off = 0; off < size; off += 0x400000)
+                chunks.Add((start + off, (int)Math.Min(0x400000, size - off)));
+        int count = 0;
+        // one pass over the heap, split over the CPU cores (still only reads)
+        Parallel.ForEach(chunks, () => new List<(ulong, ulong)>(), (c, state, mine) =>
         {
-            for (ulong off = 0; off < size && hits.Count < max; off += 0x400000)
+            if (Volatile.Read(ref count) >= max) { state.Stop(); return mine; }
+            void Scan(ulong at, byte[] b)
             {
-                int n = (int)Math.Min(0x400000, size - off);
-                var b = Bytes(start + off, n);
-                if (b.Length != 0) { Scan(start + off, b); continue; }
-                // the big read failed (a page changed or went away while reading): read this chunk in 64 KB pieces
-                for (int sub = 0; sub < n; sub += 0x10000)
+                var span = MemoryMarshal.Cast<byte, ulong>(b);
+                for (int i = 0; i < span.Length; i++)
                 {
-                    var p = Bytes(start + off + (ulong)sub, Math.Min(0x10000, n - sub));
-                    if (p.Length != 0) Scan(start + off + (ulong)sub, p);
+                    ulong v = span[i];
+                    if (maybe[(int)((v >> 3) & 0xFFFF)] && values.Contains(v)) { mine.Add((at + (ulong)i * 8, v)); Interlocked.Increment(ref count); }
                 }
             }
-        }
-        return hits;
+            var b = Bytes(c.at, c.n);
+            if (b.Length != 0) { Scan(c.at, b); return mine; }
+            // the big read failed (a page changed or went away while reading): read this chunk in 64 KB pieces
+            for (int sub = 0; sub < c.n; sub += 0x10000)
+            {
+                var p = Bytes(c.at + (ulong)sub, Math.Min(0x10000, c.n - sub));
+                if (p.Length != 0) Scan(c.at + (ulong)sub, p);
+            }
+            return mine;
+        }, mine => { lock (hits) hits.AddRange(mine); });
+        hits.Sort((a, b) => a.at.CompareTo(b.at));
+        return hits.Count > max ? hits.GetRange(0, max) : hits;
     }
 
     public string Ascii(ulong addr, int n) => Encoding.ASCII.GetString(Bytes(addr, n));

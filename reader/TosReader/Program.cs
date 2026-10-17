@@ -291,7 +291,11 @@ static void RunFeed(Mem g, string path)
             var you = Stopwatch.StartNew();
             while (g.Alive && feed.Tick())
             {
-                if (you.ElapsedMilliseconds >= 5000) { feed.AudioComponents(); you.Restart(); }   // you (local player) after map changes
+                if (you.ElapsedMilliseconds >= 5000)                 // you (local player) after map changes
+                {
+                    if (feed.Stale(feed.AudioComponents())) break;  // new round: the list moved, find it again
+                    you.Restart();
+                }
                 Thread.Sleep(50);
             }
         }

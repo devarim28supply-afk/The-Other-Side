@@ -138,6 +138,8 @@ sealed class Feed
             if (all && num > best) { best = num; found = hdr; }
         }
         listHeader = found;
+        foundPC = localPC;
+        lastSounds = DateTime.Now;
         log.WriteLine($"  {sounds.Count} playing sounds -> {recs.Count} records -> {starts.Count} lists -> header 0x{found:X} ({best} sounds)");
         return found != 0;
     }
@@ -190,6 +192,25 @@ sealed class Feed
 
     int bad;
     public bool Verbose = true;                              // log who owns sounds marked "other"
+    ulong foundPC;                                           // local player controller when the list was found
+    DateTime lastSounds = DateTime.Now;                      // last time the list held any sound
+
+    // After a new round the old list header can still look like a sane, empty list (seen on a friend's PC:
+    // feed went silent for good). Stale = the local player controller changed, or components are playing
+    // but the list stayed empty for 15 s. Call every few seconds, after AudioComponents().
+    public bool Stale(List<ulong> comps)
+    {
+        if (foundPC == 0) foundPC = localPC;
+        if (localPC != foundPC) { log.WriteLine($"{DateTime.Now:HH:mm:ss} new round (player changed), searching again"); return true; }
+        if ((DateTime.Now - lastSounds).TotalSeconds < 15) return false;
+        foreach (var c in comps)
+            if ((m.Read<byte>(c + (ulong)oActive) & mActive) != 0 && SoundName(m.Ptr(c + (ulong)oSound)) != null)
+            {
+                log.WriteLine($"{DateTime.Now:HH:mm:ss} sound list went quiet while sounds play (new round?), searching again");
+                return true;
+            }
+        return false;
+    }
 
     // false when the list went bad for a while (then FindList again)
     public bool Tick()
@@ -212,6 +233,7 @@ sealed class Feed
         bad = 0;
         ulong data = m.Ptr(listHeader);
         int num = m.I32(listHeader + 8);
+        if (num > 0) lastSounds = DateTime.Now;
         var ptrs = num == 0 ? Array.Empty<byte>() : m.Bytes(data, num * 8);
         var now = new Dictionary<ulong, Playing>();
         for (int i = 0; i + 8 <= ptrs.Length; i += 8)
