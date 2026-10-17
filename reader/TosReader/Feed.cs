@@ -126,21 +126,31 @@ sealed class Feed
             starts.Add(s);
         }
         if (starts.Count == 0) { log.WriteLine($"  {sounds.Count} playing sounds -> {recs.Count} records -> no lists yet"); return false; }
-        int best = -1;
+        // the right list holds the most of the sounds playing right now (by record), not just the most records:
+        // on a friend's PC a list of 2 leftover records won and the feed stayed silent
+        int best = -1, bestHits = 0;
         ulong found = 0;
         foreach (var (hdr, _) in m.FindAny(starts, 20000))
         {
             listHeader = hdr;
             int num = m.I32(hdr + 8);
             if (!ListOk() || num == 0) continue;
-            bool all = true;
-            for (int i = 0; i < num && all; i++) all = IsRecord(m.Ptr(m.Ptr(hdr) + (ulong)i * 8));
-            if (all && num > best) { best = num; found = hdr; }
+            int valid = 0, hits = 0;
+            for (int i = 0; i < num; i++)
+            {
+                ulong r = m.Ptr(m.Ptr(hdr) + (ulong)i * 8);
+                if (IsRecord(r)) valid++;
+                if (recs.Contains(r)) hits++;
+            }
+            if (valid * 2 < num || hits == 0) continue;
+            if (hits > bestHits || hits == bestHits && num > best) { bestHits = hits; best = num; found = hdr; }
         }
-        listHeader = found;
+        // the same list again = it was right (far-away loops can look active without being in it): stop re-checking a while
+        if (found != 0 && found == lastFound) quietUntil = DateTime.Now.AddMinutes(2);
+        lastFound = listHeader = found;
         foundPC = localPC;
-        lastSounds = DateTime.Now;
-        log.WriteLine($"  {sounds.Count} playing sounds -> {recs.Count} records -> {starts.Count} lists -> header 0x{found:X} ({best} sounds)");
+        lastReal = DateTime.Now;
+        log.WriteLine($"  {sounds.Count} playing sounds -> {recs.Count} records -> {starts.Count} lists -> header 0x{found:X} ({best} sounds, {bestHits} of them playing)");
         return found != 0;
     }
 
@@ -193,18 +203,21 @@ sealed class Feed
     int bad;
     public bool Verbose = true;                              // log who owns sounds marked "other"
     ulong foundPC;                                           // local player controller when the list was found
-    DateTime lastSounds = DateTime.Now;                      // last time the list held any sound
+    DateTime lastReal = DateTime.Now;                        // last time the list held a sound other than a weather bed
+    ulong lastFound;                                         // header the last search found
+    DateTime quietUntil;                                     // no "went quiet" re-search before this
 
-    // After a new round the old list header can still look like a sane, empty list (seen on a friend's PC:
-    // feed went silent for good). Stale = the local player controller changed, or components are playing
-    // but the list stayed empty for 15 s. Call every few seconds, after AudioComponents().
+    // After a new round the old list header can still look like a sane list, empty or holding a couple of leftover
+    // records (seen on a friend's PC: feed went silent for good). Stale = the local player controller changed, or
+    // components are playing real sounds but the list held only weather beds or nothing for 20 s.
+    // Call every few seconds, after AudioComponents().
     public bool Stale(List<ulong> comps)
     {
         if (foundPC == 0) foundPC = localPC;
         if (localPC != foundPC) { log.WriteLine($"{DateTime.Now:HH:mm:ss} new round (player changed), searching again"); return true; }
-        if ((DateTime.Now - lastSounds).TotalSeconds < 15) return false;
+        if ((DateTime.Now - lastReal).TotalSeconds < 20 || DateTime.Now < quietUntil) return false;
         foreach (var c in comps)
-            if ((m.Read<byte>(c + (ulong)oActive) & mActive) != 0 && SoundName(m.Ptr(c + (ulong)oSound)) != null)
+            if ((m.Read<byte>(c + (ulong)oActive) & mActive) != 0 && SoundName(m.Ptr(c + (ulong)oSound)) is string s && !s.StartsWith("UDS_"))
             {
                 log.WriteLine($"{DateTime.Now:HH:mm:ss} sound list went quiet while sounds play (new round?), searching again");
                 return true;
@@ -233,7 +246,6 @@ sealed class Feed
         bad = 0;
         ulong data = m.Ptr(listHeader);
         int num = m.I32(listHeader + 8);
-        if (num > 0) lastSounds = DateTime.Now;
         var ptrs = num == 0 ? Array.Empty<byte>() : m.Bytes(data, num * 8);
         var now = new Dictionary<ulong, Playing>();
         for (int i = 0; i + 8 <= ptrs.Length; i += 8)
@@ -247,6 +259,7 @@ sealed class Feed
             seen.TryGetValue(r, out var prev);
             if (prev != null && prev.Sound == sound && prev.Skip) { now[r] = prev; continue; }
             if (name.StartsWith("UDS_")) { now[r] = new Playing(sound, 0, 0, 0, true); continue; }   // weather beds
+            lastReal = DateTime.Now;
             double x = BitConverter.ToDouble(rec, RecPos), y = BitConverter.ToDouble(rec, RecPos + 8), z = BitConverter.ToDouble(rec, RecPos + 16);
             if (prev == null || prev.Sound != sound)
             {
