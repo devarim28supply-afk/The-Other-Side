@@ -83,7 +83,8 @@ public sealed class GameFeed : IDisposable
 
     void LoadGhostLines()
     {
-        string dir = Path.GetDirectoryName(cfg.WhisperScript) ?? "";
+        // relative paths (the friend package) are taken from the overlay's own folder
+        string dir = Path.GetDirectoryName(Path.GetFullPath(cfg.WhisperScript, AppContext.BaseDirectory)) ?? "";
         try
         {
             using var doc = System.Text.Json.JsonDocument.Parse(File.ReadAllText(Path.Combine(dir, "ghost_lines.json")));
@@ -150,7 +151,7 @@ public sealed class GameFeed : IDisposable
         long pos = 0;
         var pending = new StringBuilder();
         var buf = new byte[65536];
-        string path = cfg.GameFeedPath;
+        string path = Path.GetFullPath(cfg.GameFeedPath, AppContext.BaseDirectory);
         Log.Write("game feed: " + path);
         bool warned = false, catchUp = true;
         while (!stop)
@@ -159,7 +160,7 @@ public sealed class GameFeed : IDisposable
             {
                 if (!File.Exists(path))
                 {
-                    if (!warned) { Log.Write("game feed: file not there yet (start the game with SoundSpy installed)"); warned = true; }
+                    if (!warned) { Log.Write("game feed: file not there yet (start the game and the reader or SoundSpy)"); warned = true; }
                     Thread.Sleep(1000);
                     continue;
                 }
