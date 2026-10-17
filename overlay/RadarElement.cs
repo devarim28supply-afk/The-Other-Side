@@ -37,6 +37,7 @@ public sealed class RadarElement : FrameworkElement
         ["other"] = Color.FromRgb(180, 180, 180),
         ["custom"] = Color.FromRgb(250, 240, 190),
         ["game"] = Color.FromRgb(255, 215, 0),
+        ["Player"] = Color.FromRgb(60, 140, 255),          // players' footsteps (Kaalob 2026-10-17: blue), GroupColors can override
     };
 
     readonly Dictionary<string, Color> groupCol = new(StringComparer.OrdinalIgnoreCase);

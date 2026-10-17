@@ -40,7 +40,7 @@ public sealed class GameFeed : IDisposable
         new[] { @"Growl", "GROWL", "Ghost" },
         new[] { @"Breath", "BREATHING", "Ghost" },
         new[] { @"Crying|Cry_", "CRYING", "Ghost" },
-        new[] { @"^Footsteps?_", "Footsteps", "Physical" },
+        new[] { @"^Footsteps?_", "Player steps", "Player" },   // ghost steps are their own files (above); these are people
         new[] { @"FloorCreak", "Floor creak", "Physical" },
         new[] { @"Door.*Slam|Slam", "DOOR SLAM", "Physical" },
         new[] { @"Door.*Creak", "Door creak", "Physical" },
@@ -141,8 +141,6 @@ public sealed class GameFeed : IDisposable
         }
         // anything the ghost itself makes is drawn in the ghost color
         if (src == "ghost" && res.Item1 != "") res = (res.Item1, "Ghost");
-        // players' footsteps: say so, never ghost-colored
-        if (src == "player" && res.Item1 == "Footsteps") res = ("Player steps", "Physical");
         return nameCache[key] = res;
     }
 
