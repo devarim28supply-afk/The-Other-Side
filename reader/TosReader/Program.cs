@@ -340,6 +340,113 @@ if (mode == "box")
     return 0;
 }
 
+if (mode == "params")
+{
+    // spirit box sound parameters (MetaSound inputs set by the game), printed when they change, for [sec] (default 600)
+    int secs = rest.Length > 0 ? int.Parse(rest[0]) : 600;
+    ulong audioCls = rf.Class("AudioComponent");
+    int oDef = rf.Offset("AudioComponent", "DefaultParameters"), oInst = rf.Offset("AudioComponent", "InstanceParameters");
+    const int Stride = 0xA0;                                  // FAudioParameter (UE 5.4)
+    var last = new Dictionary<string, string>();
+    var comps = new List<ulong>();
+    var end = DateTime.Now.AddSeconds(secs);
+    var walk = Stopwatch.StartNew();
+    bool first = true;
+    string P(ulong arr)
+    {
+        ulong data = mem.Ptr(arr); int n = mem.I32(arr + 8);
+        if (n <= 0 || n > 64 || data == 0) return $"({n})";
+        var sb = new System.Text.StringBuilder($"({n})");
+        for (int i = 0; i < n; i++)
+        {
+            ulong e = data + (ulong)(i * Stride);
+            ulong obj = mem.Ptr(e + 0x18);
+            int objs = mem.I32(e + 0x68);
+            sb.Append($" [{ue.FName(e)} f={mem.F32(e + 8):0.##} b={mem.Read<byte>(e + 0xC)} i={mem.I32(e + 0x10)} type={mem.Read<byte>(e + 0x80)}");
+            if (obj != 0) sb.Append($" obj={ue.ObjName(obj)}");
+            if (objs > 0 && objs < 50)
+                for (int k = 0; k < objs; k++) sb.Append($" obj[{k}]={ue.ObjName(mem.Ptr(mem.Ptr(e + 0x60) + (ulong)k * 8))}");
+            sb.Append(']');
+        }
+        return sb.ToString();
+    }
+    Console.WriteLine($"watching spirit box parameters for {secs} s");
+    while (DateTime.Now < end)
+    {
+        if (first || walk.ElapsedMilliseconds > 3000)
+        {
+            walk.Restart(); first = false;
+            comps.Clear();
+            foreach (var (_, o) in ue.Objects())
+                if (rf.IsA(ue.Class(o), audioCls) && ue.ClassName(ue.Outer(o)).Contains("SpiritBox", StringComparison.OrdinalIgnoreCase)) comps.Add(o);
+        }
+        foreach (var c in comps)
+        {
+            string key = $"{ue.ObjName(ue.Outer(c))}.{ue.ObjName(c)}";
+            string now = $"default {P(c + (ulong)oDef)}  instance {P(c + (ulong)oInst)}";
+            if (last.GetValueOrDefault(key) != now) { last[key] = now; Console.WriteLine($"{DateTime.Now:HH:mm:ss.f} {key}: {now}"); }
+        }
+        Thread.Sleep(100);
+    }
+    return 0;
+}
+
+if (mode == "diff")
+{
+    // which values inside a spirit box change, and when (to find the "ghost answered" moment), for [sec] (default 600):
+    // the box actor, its sound component and its EvidenceActor, first 0x420 bytes each (the box actor ends at 0x3C0); a slot that keeps changing
+    // (timers, positions) is printed 20 times and then muted
+    int secs = rest.Length > 0 ? int.Parse(rest[0]) : 600;
+    const int Size = 0x420;
+    ulong boxCls = rf.Class("BP_Holdable_SpiritBox_C");
+    int oMain = rf.Offset("BP_Holdable_SpiritBox_C", "MainAudio"), oEv = rf.Offset("BP_Holdable_SpiritBox_C", "EvidenceActor");
+    var prev = new Dictionary<ulong, byte[]>();
+    var count = new Dictionary<(ulong, int), int>();
+    var targets = new List<(ulong at, string name)>();
+    var end = DateTime.Now.AddSeconds(secs);
+    var walk = Stopwatch.StartNew();
+    bool first = true;
+    static bool H(ulong p) => p > 0x10000 && p < 0x7FF000000000 && (p & 7) == 0;
+    Console.WriteLine($"watching spirit box values for {secs} s");
+    while (DateTime.Now < end)
+    {
+        if (first || walk.ElapsedMilliseconds > 3000)
+        {
+            walk.Restart(); first = false;
+            var t = new List<(ulong, string)>();
+            foreach (var (_, o) in ue.Objects())
+                if (ue.Class(o) == boxCls && !ue.ObjName(o).StartsWith("Default__"))
+                {
+                    string n = ue.ObjName(o)[^4..];
+                    t.Add((o, $"box{n}"));
+                    if (mem.Ptr(o + (ulong)oMain) is ulong a && a != 0) t.Add((a, $"box{n}.MainAudio"));
+                    if (mem.Ptr(o + (ulong)oEv) is ulong e && e != 0) t.Add((e, $"box{n}.Evidence({ue.ClassName(e)})"));
+                }
+            foreach (var x in t) if (!targets.Contains(x)) Console.WriteLine($"{DateTime.Now:HH:mm:ss.f} watching {x.Item2}");
+            targets = t;
+        }
+        foreach (var (at, name) in targets)
+        {
+            var b = mem.Bytes(at, Size);
+            if (b.Length < Size) continue;
+            if (prev.TryGetValue(at, out var old))
+                for (int q = 0; q < Size; q += 8)
+                {
+                    ulong ov = BitConverter.ToUInt64(old, q), nv = BitConverter.ToUInt64(b, q);
+                    if (ov == nv) continue;
+                    int c = count[(at, q)] = count.GetValueOrDefault((at, q)) + 1;
+                    if (c > 20) continue;
+                    string what = H(nv) && ue.ObjName(nv) is string on && on.Length > 0 ? $" ({on})" : "";
+                    Console.WriteLine($"{DateTime.Now:HH:mm:ss.f} {name}+0x{q:X3}: {ov:X} -> {nv:X}{what}" +
+                        $"  f={BitConverter.ToSingle(b, q):0.###}/{BitConverter.ToSingle(b, q + 4):0.###}{(c == 20 ? "  (now muted)" : "")}");
+                }
+            prev[at] = b;
+        }
+        Thread.Sleep(100);
+    }
+    return 0;
+}
+
 Console.WriteLine("unknown mode " + mode);
 return 3;
 
