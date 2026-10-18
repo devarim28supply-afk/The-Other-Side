@@ -142,9 +142,13 @@ sealed class Feed
                 if (IsRecord(r)) valid++;
                 if (recs.Contains(r)) hits++;
             }
-            if (valid * 2 < num || hits == 0) continue;
-            if (hits > bestHits || hits == bestHits && num > best) { bestHits = hits; best = num; found = hdr; }
+            if (valid * 2 < num || hits == 0 || dead.Contains(hdr)) continue;
+            // the list that carried a full set of sounds before wins whenever it holds a playing sound
+            int score = hdr == good ? hits + 1000 : hits;
+            if (score > bestHits || score == bestHits && num > best) { bestHits = score; best = num; found = hdr; }
         }
+        if (bestHits >= 1000) bestHits -= 1000;
+        if (found == 0) dead.Clear();                          // nothing left: give the skipped lists another chance next try
         // the same list again = it was right (far-away loops can look active without being in it): stop re-checking a while
         if (found != 0 && found == lastFound) quietUntil = DateTime.Now.AddMinutes(2);
         lastFound = listHeader = found;
@@ -206,6 +210,10 @@ sealed class Feed
     DateTime lastReal = DateTime.Now;                        // last time the list held a sound other than a weather bed
     ulong lastFound;                                         // header the last search found
     DateTime quietUntil;                                     // no "went quiet" re-search before this
+    // lists that went quiet while sounds played: skipped by the next searches (a 2-sound leftover list kept
+    // winning again and again on Kaalob's PC); good = the list last seen holding 3+ real sounds
+    readonly HashSet<ulong> dead = new();
+    ulong good;
 
     // After a new round the old list header can still look like a sane list, empty or holding a couple of leftover
     // records (seen on a friend's PC: feed went silent for good). Stale = the local player controller changed, or
@@ -220,6 +228,8 @@ sealed class Feed
             if ((m.Read<byte>(c + (ulong)oActive) & mActive) != 0 && SoundName(m.Ptr(c + (ulong)oSound)) is string s && !s.StartsWith("UDS_"))
             {
                 log.WriteLine($"{DateTime.Now:HH:mm:ss} sound list went quiet while sounds play (new round?), searching again");
+                dead.Add(listHeader);
+                if (good == listHeader) good = 0;
                 return true;
             }
         return false;
@@ -260,6 +270,7 @@ sealed class Feed
             if (prev != null && prev.Sound == sound && prev.Skip) { now[r] = prev; continue; }
             if (name.StartsWith("UDS_")) { now[r] = new Playing(sound, 0, 0, 0, true); continue; }   // weather beds
             lastReal = DateTime.Now;
+            if (num >= 3 && good != listHeader) { good = listHeader; dead.Remove(listHeader); }
             double x = BitConverter.ToDouble(rec, RecPos), y = BitConverter.ToDouble(rec, RecPos + 8), z = BitConverter.ToDouble(rec, RecPos + 16);
             if (prev == null || prev.Sound != sound)
             {
