@@ -201,7 +201,32 @@ sealed class Feed
                 if (pc != 0) localPC = pc;
             }
         }
+        foreach (var c in list)
+            if (SoundName(m.Ptr(c + (ulong)oSound)) is string s && s.Contains("SpiritBox", StringComparison.OrdinalIgnoreCase))
+                boxes.TryAdd(c, (0, false));
         return list;
+    }
+
+    // Spirit box answers: the game swaps the answer clip (SFX_SpiritBox_<ghost>_<words>) into the box's own playing
+    // component, so the active-sound list keeps showing the box noise and the answer never reached the feed.
+    // Watched directly every tick; sent as a 2D sound, the overlay turns it into the ghost subtitle.
+    readonly Dictionary<ulong, (ulong sound, bool on)> boxes = new();
+
+    void SpiritBoxes()
+    {
+        foreach (var (c, last) in boxes.ToList())
+        {
+            ulong s = m.Ptr(c + (ulong)oSound);
+            bool on = (m.Read<byte>(c + (ulong)oActive) & mActive) != 0;
+            string? name = SoundName(s);
+            if (name == null) { boxes.Remove(c); continue; }       // component gone
+            if (on && (s != last.sound || !last.on) && name.StartsWith("SFX_SpiritBox_", StringComparison.OrdinalIgnoreCase))
+            {
+                Emit($"2\t{name}\tghost");
+                log.WriteLine($"{DateTime.Now:HH:mm:ss} spirit box answer: {name}");
+            }
+            boxes[c] = (s, on);
+        }
     }
 
     int bad;
@@ -252,6 +277,7 @@ sealed class Feed
             }
         }
 
+        SpiritBoxes();
         if (!ListOk()) { w.Flush(); return ++bad < 50; }
         bad = 0;
         ulong data = m.Ptr(listHeader);
