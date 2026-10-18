@@ -5,6 +5,7 @@ using TosReader;
 //   TosReader scan [words]     find the tables, list classes + objects named like words
 //   TosReader props <Class>    list a class's properties and offsets (from the game's reflection)
 //   TosReader audio            list sound components that are playing right now
+//   TosReader box [sec]        watch spirit boxes: where an answer clip shows up (ask the box questions meanwhile)
 //   TosReader [feed] [file]    (default) write the live sound feed for the overlay, waits for the game
 
 const string Game = "TheOtherSide-Win64-Shipping";
@@ -254,6 +255,87 @@ if (mode == "raw")
             Console.WriteLine($"  +0x{q:X2}  {BitConverter.ToUInt64(b, q):X16}  {ue.FName(f + (ulong)q)}");
         Console.WriteLine();
         f = mem.Ptr(f + 0x18);
+    }
+    return 0;
+}
+
+if (mode == "box")
+{
+    // where does a spirit box answer go? Watch for [sec] (default 600):
+    //  - SFX_SpiritBox_* sound objects (which are loaded, and any that appear later = picked on demand)
+    //  - every sound component inside a spirit box actor: its Sound and on/off, when they change
+    //  - pointers to any SFX_SpiritBox_* object inside the box components and the box actor, 1 and 2 levels deep
+    int secs = rest.Length > 0 ? int.Parse(rest[0]) : 600;
+    ulong audioCls = rf.Class("AudioComponent");
+    int oSound = rf.Offset("AudioComponent", "Sound");
+    var (oActive, mActive) = rf.Bool("ActorComponent", "bIsActive");
+    static bool H(ulong p) => p > 0x10000 && p < 0x7FF000000000 && (p & 7) == 0;
+    var answers = new Dictionary<ulong, string>();
+    var comps = new Dictionary<ulong, string>();               // box component -> last "sound on/off"
+    var boxActors = new HashSet<ulong>();
+    var refsSeen = new Dictionary<string, string>();          // slot -> clip it pointed at last
+    var end = DateTime.Now.AddSeconds(secs);
+    var walk = Stopwatch.StartNew();
+    bool firstWalk = true;
+    string T() => DateTime.Now.ToString("HH:mm:ss.f");
+    void Scan(ulong at, string where, int size)
+    {
+        var b = mem.Bytes(at, size);
+        for (int q = 0; q + 8 <= b.Length; q += 8)
+        {
+            ulong p = BitConverter.ToUInt64(b, q);
+            if (!H(p)) continue;
+            if (answers.TryGetValue(p, out var n1)) { Report($"{where}+0x{q:X}", n1); continue; }
+            var b2 = mem.Bytes(p, 0x100);
+            for (int r = 0; r + 8 <= b2.Length; r += 8)
+                if (answers.TryGetValue(BitConverter.ToUInt64(b2, r), out var n2)) Report($"{where}+0x{q:X} -> +0x{r:X}", n2);
+        }
+    }
+    // a slot is printed when it first points at a clip and whenever it points at another one
+    void Report(string slot, string clip)
+    {
+        if (refsSeen.GetValueOrDefault(slot) == clip) return;
+        refsSeen[slot] = clip;
+        Console.WriteLine($"{T()} REF {slot} -> {clip}");
+    }
+    Console.WriteLine($"watching spirit boxes for {secs} s - ask the box questions now");
+    while (DateTime.Now < end)
+    {
+        if (firstWalk || walk.ElapsedMilliseconds > 1000)
+        {
+            walk.Restart();
+            foreach (var (_, o) in ue.Objects())
+            {
+                string name = ue.ObjName(o);
+                if (name.StartsWith("Default__")) continue;
+                if (name.StartsWith("SFX_SpiritBox_", StringComparison.OrdinalIgnoreCase) && ue.ClassName(o).StartsWith("Sound"))
+                {
+                    if (answers.TryAdd(o, name) && !firstWalk) Console.WriteLine($"{T()} NEW clip object loaded: {name}");
+                }
+                else if (rf.IsA(ue.Class(o), audioCls))
+                {
+                    ulong actor = ue.Outer(o);
+                    if (ue.ClassName(actor).Contains("SpiritBox", StringComparison.OrdinalIgnoreCase) && comps.TryAdd(o, ""))
+                    {
+                        boxActors.Add(actor);
+                        Console.WriteLine($"{T()} box component {name} in {ue.ObjName(actor)} ({ue.ClassName(actor)})");
+                    }
+                }
+            }
+            if (firstWalk) Console.WriteLine($"{T()} {answers.Count} SFX_SpiritBox_ clip objects loaded, {comps.Count} box components");
+            firstWalk = false;
+        }
+        foreach (var c in comps.Keys.ToList())
+        {
+            ulong s = mem.Ptr(c + (ulong)oSound);
+            bool on = (mem.Read<byte>(c + (ulong)oActive) & mActive) != 0;
+            string now = $"{ue.ObjName(s)} ({ue.ClassName(s)}) {(on ? "ON" : "off")}";
+            if (now != comps[c]) { Console.WriteLine($"{T()} {ue.ObjName(c)}: {now}"); comps[c] = now; }
+            if (answers.Count > 0) Scan(c, ue.ObjName(c), 0x1000);
+        }
+        if (answers.Count > 0)
+            foreach (var a in boxActors) Scan(a, ue.ObjName(a), 0x1000);
+        Thread.Sleep(100);
     }
     return 0;
 }
