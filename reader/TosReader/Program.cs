@@ -447,6 +447,43 @@ if (mode == "diff")
     return 0;
 }
 
+if (mode == "clips")
+{
+    // spirit box answer clips (SFX_SpiritBox_*): which one changes inside, and when, for [sec] (default 900).
+    // A clip that gets played should touch its own state (decoder / streaming / proxy data).
+    int secs = rest.Length > 0 ? int.Parse(rest[0]) : 900;
+    const int Size = 0x400;
+    var clips = new Dictionary<ulong, string>();
+    foreach (var (_, o) in ue.Objects())
+    {
+        string n = ue.ObjName(o);
+        if (n.StartsWith("SFX_SpiritBox_", StringComparison.OrdinalIgnoreCase) && ue.ClassName(o).StartsWith("Sound")) clips[o] = n;
+    }
+    Console.WriteLine($"watching {clips.Count} answer clips for {secs} s");
+    var prev = new Dictionary<ulong, byte[]>();
+    var count = new Dictionary<(ulong, int), int>();
+    var end = DateTime.Now.AddSeconds(secs);
+    while (DateTime.Now < end)
+    {
+        foreach (var (o, n) in clips)
+        {
+            var b = mem.Bytes(o, Size);
+            if (b.Length < Size) continue;
+            if (prev.TryGetValue(o, out var old))
+                for (int q = 0; q < Size; q += 8)
+                {
+                    ulong ov = BitConverter.ToUInt64(old, q), nv = BitConverter.ToUInt64(b, q);
+                    if (ov == nv) continue;
+                    int c = count[(o, q)] = count.GetValueOrDefault((o, q)) + 1;
+                    if (c <= 20) Console.WriteLine($"{DateTime.Now:HH:mm:ss.f} {n}+0x{q:X3}: {ov:X} -> {nv:X}{(c == 20 ? "  (now muted)" : "")}");
+                }
+            prev[o] = b;
+        }
+        Thread.Sleep(100);
+    }
+    return 0;
+}
+
 Console.WriteLine("unknown mode " + mode);
 return 3;
 
