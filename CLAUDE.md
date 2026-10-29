@@ -6,11 +6,24 @@ Two people play The Other Side together (Steam app 2764750, UE 5.4, shipping exe
 
 Private, non-commercial, both players opt in. Do not edit paks or any other game files. Do not reveal ghost type, ghost position, or unfound evidence. Do not spoof the game. SoundSpy and the sound overlay stay as they are.
 
-## What the user last saw
+## Where this stopped
 
-Nathan could see a diamond on Kaalo's face. Kaalo saw no shape on Nathan, because Kaalo's faces window was not running. After it was started, Kaalo said the diamond does not match the real face plate: when a character turns, the picture must turn with the head the way the in-game mesh does, and the back of the head must cover it.
+Kaalo said to stop after the last bug report. Do not restart TosFace, do not kill the game, and do not rebuild the zip unless he asks. Re-check processes before you trust the pids below. They were true on the night of 2026-10-28.
 
-A mesh-matched overlay was then written and pushed as `ebc2268`. It was not seen on a second player. At the last check `plate.txt` contained only the local plate, so the window was parked off screen. Treat that change as unproven.
+Two bugs are open:
+
+1. The webcam picture is not on. A screen capture showed a black diamond on Badwolves' face, nameplate `96 Badwolves`. The diamond was in the right place while he faced the camera. The inside was solid black. Both people were in LiveKit room `the-other-side` and neither had published a video track: `tos-woke` (name WokeFire, no attributes, 0 tracks) and `tos-friend` (name Friend, attribute `tosId=257`, `tosName=Badwolves`, 0 tracks). Kaalo's WebView was connected to LiveKit and to `127.0.0.1:5192`. Health returned ok. `openCamera` retries for about 40 seconds and then gives up. The "camera busy" text is on the hidden panel, so nobody sees it. `share.log` had no new `face` lines after 18:50, which matches no video frames being posted. Nathan's missing track is the picture that belongs on that diamond. Kaalo's missing track is what Nathan would see.
+
+2. The overlay does not cover two screens. It stays on The Other Side's screen only. `ShareHex.OnEnum` keeps the one largest visible game window and projects into that client rect. The game window at that moment was `-2560,-370`, 2560x1440, which is the left monitor. The diamond window was inside it, about `-1252,-145`, 424x590. This was not investigated further. Kaalo stopped the work there.
+
+What is already true from that same look:
+
+- The running game had loaded `FacePlate loaded build 39` at 21:17. Self id was 257, then a few seconds later 258. The pose file then had `M 258` and the other plate `257`, which matched Nathan's `tosId`.
+- Kaalo's own camera was not drawn over his view. The black diamond was the other player.
+- Turning so the picture matches the mesh, and the back of the head covering it, was not re-checked after the diamond was seen face-on.
+- The Hex and Diamond button window is hidden in `PanelForm.SetVisibleCore` in the working tree. That change is local until this handoff commit. Parking the form at `(-32000,-32000)` was not enough: Windows put it back on Nathan's one-monitor desktop. A desktop zip was rebuilt after the hide. If Nathan still sees the buttons, he is on an older zip. The buttons do not control the shape.
+
+Earlier, before this look: Nathan had seen a flat screen diamond on Kaalo, and Kaalo had seen no shape because his faces window was not running. That part is superseded by the capture above.
 
 ## Done when
 
@@ -30,7 +43,7 @@ Right Arrow, `GetAsyncKeyState(0x27)`, works while the game is focused. The mous
 - Hold at least 1 second: hex locks. The lock fires at the 1 second mark while the key is still down.
 - Tap while locked: diamond.
 
-Default settled shape is diamond. Morph is 400 ms, ease-out cubic `cubic-bezier(0, 0, 0.2, 1)`. There is no auto ping-pong and no right-edge pin. Do not bring those back. The Hex and Diamond buttons are parked at `(-32000, -32000)` with `ShowInTaskbar` false. Do not bring that window back. Quit by ending `TosFace.exe` in Task Manager. There is no close button.
+Default settled shape is diamond. Morph is 400 ms, ease-out cubic `cubic-bezier(0, 0, 0.2, 1)`. There is no auto ping-pong and no right-edge pin. Do not bring those back. The Hex and Diamond button window must not be shown. Parking it at `(-32000, -32000)` is not enough: Windows puts that tool window back on a one-monitor desktop, which is why Nathan still saw the buttons. `PanelForm.SetVisibleCore` keeps it hidden. Right Arrow is the only shape control. Do not show that form. Quit by ending `TosFace.exe` in Task Manager. There is no close button.
 
 ## Pieces
 
@@ -49,7 +62,7 @@ Default settled shape is diamond. Morph is 400 ms, ease-out cubic `cubic-bezier(
 | Face model | `face/host/models/face_detection_yunet_2023mar.onnx` (232589 bytes). Gitignored. Fallback `D:\Projects\M2A\assets\models\face_detection_yunet_2023mar.onnx` |
 | M2A spec for shape and tracking | `D:\Projects\M2A\lib\features\webcam\` (`overlay_geometry.dart`, `shape_design.dart`, `shape_controller.dart`, `diamond_tracking.dart`) |
 
-`main.lua` on disk logs `FacePlate loaded build 39`. UE4SS hot reload is off (`EnableHotReloadSystem = 0`). The game keeps the script it loaded at process start. Read the first `loaded build` line in `faceplate.log` and the process start time before assuming build 39 is live. On the evening of 2026-10-28 the running game had loaded build 38. Copy Lua to the Steam path after every Lua edit, and also to `C:\Users\Kaalo\OneDrive\Desktop\FacePlate-main.lua`. Do not tell Kaalo a new script is live while the old process is running.
+`main.lua` on disk logs `FacePlate loaded build 39`. UE4SS hot reload is off (`EnableHotReloadSystem = 0`). The game keeps the script it loaded at process start. Read the first `loaded build` line in `faceplate.log` and the process start time before assuming build 39 is live. A later launch the same night loaded build 39. Copy Lua to the Steam path after every Lua edit, and also to `C:\Users\Kaalo\OneDrive\Desktop\FacePlate-main.lua`. Do not tell Kaalo a new script is live while the old process is running.
 
 Build 39 writes `M {selfPlayerId}` into `plate.txt`. Build 38 does not. The overlay skips the `M` id. With no `M` line it skips any plate whose average depth is under 50 cm, which is your own head in first person. A friend standing closer than 50 cm is also skipped until the game restarts into build 39. Restarting TosFace does not reload Lua. Restarting the game does.
 
@@ -77,7 +90,7 @@ TosFace finds `plate.txt` by the game exe path: `{exe dir}\ue4ss\Mods\FacePlate\
 
 Projection uses the component transform and the camera from `plate.txt`. UE rotation basis matches `FRotator`: local X/Y/Z are those axes. Horizontal FOV comes from the `C` line. Viewport is the largest visible client of `TheOtherSide-Win64-Shipping`. A vertex closer than 5 cm is rejected. Do not call `ProjectWorldLocationToScreen`. Do not move an unattached mesh with `K2_SetWorldLocation` every tick. That crashed. The plate is created with `AddComponentByClass` and attached to the `head` socket.
 
-Current draw path, unverified in game:
+Current draw path. The diamond outline was seen on Badwolves' face. The picture inside it was black, and a turned head was not re-checked:
 
 - Morph diamond and hex in the face plane (`ShareHex.TryPlate`). Diamond height matches the hex. Diamond width is height / 1.45. Vertex order is top-left, top-right, right, bottom-right, bottom-left, left. Diamond is the degenerate set top, top, right, bottom, bottom, left.
 - Project those 6 points. The window is their screen bounding box, not a 16:9 card.

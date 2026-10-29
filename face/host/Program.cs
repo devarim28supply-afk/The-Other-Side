@@ -37,45 +37,69 @@ internal static class Program
         readonly TrackBar lift = new() { Left = 12, Top = 64, Width = 350, Minimum = 40, Maximum = 180, Value = 80, TickFrequency = 20 };
         string shape = "diamond";
 
+        bool booted;
+
         public PanelForm(bool preview)
         {
             this.preview = preview;
             Text = "Other Side faces";
-            FormBorderStyle = FormBorderStyle.FixedToolWindow;
-            TopMost = false;
+            FormBorderStyle = FormBorderStyle.None;
             ShowInTaskbar = false;
             StartPosition = FormStartPosition.Manual;
-            Location = new Point(-32000, -32000);
-            ClientSize = new Size(384, 168);
-            Controls.Add(hexBtn);
-            Controls.Add(diamondBtn);
-            Controls.Add(lift);
-            Controls.Add(status);
+            ClientSize = new Size(1, 1);
             overlay = new OverlayForm(preview);
             share = new ShareHexForm();
             share.PlaceVideo = (x, y, w, h, poly, uv, watch) => overlay.PlaceVideo(x, y, w, h, poly, uv, watch);
             share.Show();
-            hexBtn.Click += (_, _) => { shape = "hex"; PaintShape(); Push(); };
-            diamondBtn.Click += (_, _) => { shape = "diamond"; PaintShape(); Push(); };
-            lift.ValueChanged += (_, _) => Push();
-            PaintShape();
-            Load += async (_, _) =>
+            if (preview)
             {
-                status.Text = "Opening the camera…";
-                try
-                {
-                    await overlay.Start(() => Push(), text => BeginInvoke(() =>
-                    {
-                        status.Text = text;
-                    }));
-                    Push();
-                }
-                catch (Exception ex)
-                {
-                    status.Text = ex.Message;
-                }
-            };
+                FormBorderStyle = FormBorderStyle.FixedToolWindow;
+                ClientSize = new Size(384, 168);
+                Location = new Point(80, 80);
+                Controls.Add(hexBtn);
+                Controls.Add(diamondBtn);
+                Controls.Add(lift);
+                Controls.Add(status);
+                hexBtn.Click += (_, _) => { shape = "hex"; PaintShape(); Push(); };
+                diamondBtn.Click += (_, _) => { shape = "diamond"; PaintShape(); Push(); };
+                lift.ValueChanged += (_, _) => Push();
+                PaintShape();
+            }
+            Load += (_, _) => Boot();
             FormClosed += (_, _) => Application.Exit();
+        }
+
+        // Windows pulls a tool window at (-32000, -32000) back onto a one-monitor
+        // desktop. Nathan was seeing the Hex and Diamond buttons because of that.
+        protected override void SetVisibleCore(bool value)
+        {
+            if (!preview)
+            {
+                if (!IsHandleCreated) CreateHandle();
+                base.SetVisibleCore(false);
+                Boot();
+                return;
+            }
+            base.SetVisibleCore(value);
+        }
+
+        async void Boot()
+        {
+            if (booted) return;
+            booted = true;
+            if (preview) status.Text = "Opening the camera…";
+            try
+            {
+                await overlay.Start(() => Push(), text => BeginInvoke(() =>
+                {
+                    if (preview) status.Text = text;
+                }));
+                Push();
+            }
+            catch (Exception ex)
+            {
+                if (preview) status.Text = ex.Message;
+            }
         }
 
         void PaintShape()
