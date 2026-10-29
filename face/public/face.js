@@ -192,6 +192,38 @@ async function openCamera(joined) {
   }
 }
 
+// Each player controls only their own shape. My shape comes from my game
+// (/api/shape) and goes to LiveKit as the `shape` attribute. The other player's
+// attribute goes back to my game as shape_remote.txt (/shape).
+let sentShape = "";
+let sentShapeAt = 0;
+let remoteShape = "";
+let remoteShapeAt = 0;
+
+async function syncShape() {
+  if (!room) return;
+  const now = performance.now();
+  try {
+    const res = await fetch("/api/shape", { cache: "no-store" });
+    const mine = (await res.text()).trim() === "hex" ? "hex" : "diamond";
+    if (mine !== sentShape || now - sentShapeAt > 5000) {
+      sentShape = mine;
+      sentShapeAt = now;
+      room.localParticipant.setAttributes({ shape: mine }).catch(() => { sentShape = ""; });
+    }
+  } catch { /* the host is restarting */ }
+  let theirs = "";
+  for (const p of room.remoteParticipants.values()) {
+    const s = p.attributes?.shape;
+    if (s === "hex" || s === "diamond") { theirs = s; break; }
+  }
+  if (theirs && (theirs !== remoteShape || now - remoteShapeAt > 5000)) {
+    remoteShape = theirs;
+    remoteShapeAt = now;
+    fetch("/shape?v=" + theirs, { method: "POST" }).catch(() => { remoteShape = ""; });
+  }
+}
+
 function publishId() {
   if (!room || !state.selfId || publishedId === state.selfId) return;
   const id = state.selfId;
@@ -242,6 +274,7 @@ if (location.hash === "#preview") {
 } else {
   feed();
   requestAnimationFrame(place);
+  setInterval(syncShape, 250);
   setTimeout(() => connect(), 300);
   const view = document.createElement("canvas");
   view.style.cssText = "position:absolute;inset:0;width:100%;height:100%";

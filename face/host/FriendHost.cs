@@ -70,6 +70,45 @@ static class FriendHost
                 SaveFrame(stream, req, rawPath);
                 return;
             }
+            if (path == "/api/shape")
+            {
+                // My shape, written by the game when I press Right Arrow. The page
+                // publishes it to the other player.
+                var mine = "diamond";
+                try
+                {
+                    var f = Path.Combine(ShareHexForm.PlateDir(), "shape_self.txt");
+                    if (File.Exists(f) && File.ReadAllText(f).Trim() == "hex") mine = "hex";
+                }
+                catch { }
+                Write(stream, "text/plain", mine);
+                return;
+            }
+            if (path == "/shape" && parts[0] == "POST")
+            {
+                // The other player's shape, for the game to read.
+                var v = QueryFlag(rawPath, "v");
+                if (v != "hex" && v != "diamond")
+                {
+                    Write(stream, "text/plain", "bad shape", 404);
+                    return;
+                }
+                try
+                {
+                    var dir = ShareHexForm.PlateDir();
+                    Directory.CreateDirectory(dir);
+                    var finalPath = Path.Combine(dir, "shape_remote.txt");
+                    var temp = finalPath + "." + Guid.NewGuid().ToString("N") + ".tmp";
+                    File.WriteAllText(temp, v);
+                    lock (FrameGate) File.Move(temp, finalPath, true);
+                    Write(stream, "text/plain", "ok");
+                }
+                catch
+                {
+                    Write(stream, "text/plain", "busy", 503);
+                }
+                return;
+            }
             if (path == "/api/health")
             {
                 Write(stream, "application/json", """{"ok":true,"room":"the-other-side"}""");

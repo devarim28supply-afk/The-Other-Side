@@ -450,22 +450,76 @@ end
 local FACE_S = 1.35
 local FACE_X = { 11, 11, 0, -11, -11, 0 }
 local HEX_Z = { -8, 8, 14, 8, -8, -14 }
+-- Kaalo 2026-10-28: plate up a little; the diamond keeps its size; the hex grows
+-- DOWN to the stomach (top flats stay at 11, bottom flats go to -28, the side
+-- points to the middle). Plate units, scaled by FACE_S and the head-bone scale.
+local HEX_X = { 11, 11, -8.5, -28, -28, -8.5 }
+local HEX_TALL = 11 + 28
+local PLATE_UP = 3
 local shapeBlend = 0
+-- Default (confirmed by Kaalo 2026-10-28): only the first winding, which faces
+-- OUT, unmirrored for a viewer in front of the character. The second winding is
+-- the one that faces the back of the head; the material only draws a picture on
+-- the engine-front side, so showing both gave a black plate from the front.
+-- facing.txt beside this script overrides that live, no restart. Words in it:
+-- "mu" mirrors left/right, "mv" flips up/down, "sa" = first winding only,
+-- "sb" = second only, "nd" = normals point -Y. No file = "sa".
+local flipU, flipV = false, false
+local useA, useB, normalDown = true, false, false
+local facingAt = 0
+local facingText = nil
+
+local function readFacing()
+    local now = os.clock()
+    if now < facingAt then return false end
+    facingAt = now + 1
+    local f = io.open((modDir or ".") .. "\\facing.txt", "r")
+    local text = "sa"
+    if f then
+        text = (f:read("*a") or ""):lower()
+        f:close()
+    end
+    if text == facingText then return false end
+    facingText = text
+    flipU = string.find(text, "mu", 1, true) ~= nil
+    flipV = string.find(text, "mv", 1, true) ~= nil
+    local sa = string.find(text, "sa", 1, true) ~= nil
+    local sb = string.find(text, "sb", 1, true) ~= nil
+    useA = sa or not sb
+    useB = sb
+    normalDown = string.find(text, "nd", 1, true) ~= nil
+    log("facing mu=" .. tostring(flipU) .. " mv=" .. tostring(flipV) .. " A=" .. tostring(useA) .. " B=" .. tostring(useB) .. " nd=" .. tostring(normalDown))
+    return true
+end
 
 local function faceArrays(blend)
     local dz = 11 / 1.45
     local diamondZ = { 0, 0, dz, 0, 0, -dz }
     local v, uv, n, col = {}, {}, {}, {}
     for i = 1, 6 do
-        local x = FACE_X[i]
+        local x = FACE_X[i] + (HEX_X[i] - FACE_X[i]) * blend
         local z = diamondZ[i] + (HEX_Z[i] - diamondZ[i]) * blend
-        v[i] = vec(x * FACE_S, 18, z * FACE_S)
+        v[i] = vec((x + PLATE_UP) * FACE_S, 18, z * FACE_S)
         -- Head bone +Z is the character's right = the viewer's left = u 0.
-        uv[i] = { X = (14 - z) / 28, Y = (11 - x) / 22 }
-        n[i] = vec(0, 1, 0)
+        -- The diamond shows the same crop of the frame as before. The hex shows the
+        -- whole frame across its taller shape; the UVs blend with the morph.
+        local ud = (14 - diamondZ[i]) / 28
+        local wd = (11 - FACE_X[i]) / 22
+        local uh = (14 - HEX_Z[i]) / 28
+        local wh = (11 - HEX_X[i]) / HEX_TALL
+        local u = ud + (uh - ud) * blend
+        local w = wd + (wh - wd) * blend
+        if flipU then u = 1 - u end
+        if flipV then w = 1 - w end
+        uv[i] = { X = u, Y = w }
+        n[i] = vec(0, normalDown and -1 or 1, 0)
         col[i] = { R = 1, G = 1, B = 1, A = 1 }
     end
-    local tri = { 0, 1, 2, 0, 2, 3, 0, 3, 4, 0, 4, 5, 0, 2, 1, 0, 3, 2, 0, 4, 3, 0, 5, 4 }
+    local tri = {}
+    local setA = { 0, 1, 2, 0, 2, 3, 0, 3, 4, 0, 4, 5 }
+    local setB = { 0, 2, 1, 0, 3, 2, 0, 4, 3, 0, 5, 4 }
+    if useA then for _, k in ipairs(setA) do tri[#tri + 1] = k end end
+    if useB then for _, k in ipairs(setB) do tri[#tri + 1] = k end end
     return v, tri, n, uv, col
 end
 
@@ -560,13 +614,46 @@ local function arrowDown()
     return res == true
 end
 
+-- Each player controls only their own shape. The key sets MY shape: it is written
+-- to shape_self.txt, TosFace publishes it to LiveKit, and the other player's game
+-- reads it from their shape_remote.txt. The plate I look at follows the OTHER
+-- player's shape (shape_remote.txt), never my own key.
+local ownHex = nil
+local remoteHex = false
+local remoteAt = 0
+
+local function setOwn(hex)
+    if ownHex == hex then return end
+    ownHex = hex
+    local f = io.open((modDir or ".") .. "\\shape_self.txt", "w")
+    if f then
+        f:write(hex and "hex" or "diamond")
+        f:close()
+    end
+end
+
+local function readRemoteShape()
+    local now = os.clock()
+    if now < remoteAt then return end
+    remoteAt = now + 0.2
+    local f = io.open((modDir or ".") .. "\\shape_remote.txt", "r")
+    if not f then return end
+    local text = (f:read("*a") or ""):lower()
+    f:close()
+    local hex = string.find(text, "hex", 1, true) ~= nil
+    if hex ~= remoteHex then
+        remoteHex = hex
+        requestShape(hex)
+    end
+end
+
 local function tapArrow()
     if hexLocked then
         hexLocked = false
         hexUntil = 0
-        requestShape(false)
+        setOwn(false)
     else
-        requestShape(true)
+        setOwn(true)
         hexUntil = os.clock() + 20
     end
 end
@@ -583,7 +670,7 @@ local function tickShape()
             lockFired = true
             hexLocked = true
             hexUntil = 0
-            requestShape(true)
+            setOwn(true)
         end
         if not down and keyWasDown and not lockFired then tapArrow() end
         if not down then keyDownAt = 0 end
@@ -591,9 +678,12 @@ local function tickShape()
     end
     if hexUntil > 0 and now >= hexUntil and not hexLocked then
         hexUntil = 0
-        requestShape(false)
+        setOwn(false)
     end
+    if ownHex == nil then setOwn(false) end
+    readRemoteShape()
     local blend = currentBlend()
+    if readFacing() then drawnBlend = -1 end
     if math.abs(blend - drawnBlend) > 0.002 then
         drawnBlend = blend
         shapeBlend = blend
@@ -1000,7 +1090,7 @@ log("share hook kind " .. hookKind)
 shareHooked = okHook
 log("share hook " .. tostring(okHook) .. " " .. tostring(errHook))
 
-log("FacePlate loaded build 42")
+log("FacePlate loaded build 46")
 
 local bootTicks = 0
 
