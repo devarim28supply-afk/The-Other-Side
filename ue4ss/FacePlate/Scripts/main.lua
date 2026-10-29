@@ -77,12 +77,14 @@ local function hexArrays()
         n[i] = vec(0, 1, 0)
         col[i] = { R = 1, G = 1, B = 1, A = 1 }
     end
-    uv[1] = { X = 0.22, Y = 0 }
-    uv[2] = { X = 0.78, Y = 0 }
-    uv[3] = { X = 1, Y = 0.5 }
-    uv[4] = { X = 0.78, Y = 1 }
-    uv[5] = { X = 0.22, Y = 1 }
-    uv[6] = { X = 0, Y = 0.5 }
+    -- Head bone +Z is the character's right, which is the viewer's left. The
+    -- unmirrored camera frame has u = 0 on that side. v = 0 is the top (+X).
+    uv[1] = { X = 0.786, Y = 0 }
+    uv[2] = { X = 0.214, Y = 0 }
+    uv[3] = { X = 0, Y = 0.5 }
+    uv[4] = { X = 0.214, Y = 1 }
+    uv[5] = { X = 0.786, Y = 1 }
+    uv[6] = { X = 1, Y = 0.5 }
     local tri = { 0, 1, 2, 0, 2, 3, 0, 3, 4, 0, 4, 5, 0, 2, 1, 0, 3, 2, 0, 4, 3, 0, 5, 4 }
     return v, tri, n, uv, col
 end
@@ -336,6 +338,7 @@ local function paintPlain(plate)
     end
     pcall(function() plate:SetMaterial(0, made) end)
     log("picture off")
+    return made
 end
 
 local mirror = nil
@@ -438,6 +441,177 @@ local function makeMirror(pawn, id)
     return { comp = plate, player = player, id = id }
 end
 
+-- Diamond <-> hex on the face plane. Same rules as M2A overlay_geometry and
+-- shape_controller: shared vertex order so the morph is a plain lerp, the diamond
+-- is a degenerate hex (top two verts coincide, bottom two coincide), diamond
+-- width = height / 1.45, 400 ms ease-out cubic-bezier(0, 0, 0.2, 1).
+-- The picture does not change: each vertex takes its UV from its place on the
+-- plane, so the shape only crops it.
+local FACE_S = 1.35
+local FACE_X = { 11, 11, 0, -11, -11, 0 }
+local HEX_Z = { -8, 8, 14, 8, -8, -14 }
+local shapeBlend = 0
+
+local function faceArrays(blend)
+    local dz = 11 / 1.45
+    local diamondZ = { 0, 0, dz, 0, 0, -dz }
+    local v, uv, n, col = {}, {}, {}, {}
+    for i = 1, 6 do
+        local x = FACE_X[i]
+        local z = diamondZ[i] + (HEX_Z[i] - diamondZ[i]) * blend
+        v[i] = vec(x * FACE_S, 18, z * FACE_S)
+        -- Head bone +Z is the character's right = the viewer's left = u 0.
+        uv[i] = { X = (14 - z) / 28, Y = (11 - x) / 22 }
+        n[i] = vec(0, 1, 0)
+        col[i] = { R = 1, G = 1, B = 1, A = 1 }
+    end
+    local tri = { 0, 1, 2, 0, 2, 3, 0, 3, 4, 0, 4, 5, 0, 2, 1, 0, 3, 2, 0, 4, 3, 0, 5, 4 }
+    return v, tri, n, uv, col
+end
+
+local function hexArrays()
+    return faceArrays(shapeBlend)
+end
+
+local function rebuildPlate(row, blend)
+    local v, tri, nrm, uv, col = faceArrays(blend)
+    row.localVerts = v
+    local ok = pcall(function()
+        row.comp:CreateMeshSection_LinearColor(0, v, tri, nrm, uv, {}, {}, {}, col, {}, false, false)
+    end)
+    if not ok then
+        pcall(function() row.comp:CreateMeshSection(0, v, tri, nrm, uv, {}, {}, false) end)
+    end
+end
+
+local shapeIsHex, shapeAnim = false, false
+local animFrom, animTo, animStart, pendingShape = 0, 0, 0, -1
+local keyWasDown, lockFired, hexLocked = false, false, false
+local keyDownAt, hexUntil = 0, 0
+local keyPolled = false
+local keyFailed = false
+local drawnBlend = 0
+
+local function bez(u, a, b, c, d)
+    local w = 1 - u
+    return w * w * w * a + 3 * w * w * u * b + 3 * w * u * u * c + u * u * u * d
+end
+
+local function bezD(u, a, b, c, d)
+    local w = 1 - u
+    return 3 * w * w * (b - a) + 6 * w * u * (c - b) + 3 * u * u * (d - c)
+end
+
+local function easeOut(x)
+    local u = x
+    for _ = 1, 8 do
+        local bx = bez(u, 0, 0, 0.2, 1)
+        local dx = bezD(u, 0, 0, 0.2, 1)
+        if math.abs(dx) < 1e-5 then break end
+        u = u - (bx - x) / dx
+        if u < 0 then u = 0 end
+        if u > 1 then u = 1 end
+    end
+    return bez(u, 0, 0, 1, 1)
+end
+
+local function requestShape(hex)
+    if shapeAnim then
+        pendingShape = hex and 1 or 0
+        return
+    end
+    if shapeIsHex == hex then return end
+    animFrom = shapeIsHex and 1 or 0
+    animTo = hex and 1 or 0
+    animStart = os.clock()
+    shapeAnim = true
+end
+
+local function currentBlend()
+    if not shapeAnim then return shapeIsHex and 1 or 0 end
+    local t = (os.clock() - animStart) / 0.4
+    if t >= 1 then
+        shapeIsHex = animTo >= 0.5
+        shapeAnim = false
+        if pendingShape >= 0 then
+            local nextHex = pendingShape == 1
+            pendingShape = -1
+            requestShape(nextHex)
+        end
+        return shapeIsHex and 1 or 0
+    end
+    return animFrom + (animTo - animFrom) * easeOut(t)
+end
+
+-- Right Arrow. Tap: hex for 20 s, then diamond. A tap during those 20 s starts
+-- them over. Hold 1 s: hex locks. Tap while locked: diamond.
+local function arrowDown()
+    local pc = UEHelpers.GetPlayerController()
+    if not valid(pc) then return nil end
+    local ok, res = pcall(function() return pc:IsInputKeyDown({ KeyName = FName("Right") }) end)
+    if not ok then
+        if not keyFailed then
+            keyFailed = true
+            log("arrow poll failed " .. tostring(res))
+        end
+        return nil
+    end
+    keyPolled = true
+    return res == true
+end
+
+local function tapArrow()
+    if hexLocked then
+        hexLocked = false
+        hexUntil = 0
+        requestShape(false)
+    else
+        requestShape(true)
+        hexUntil = os.clock() + 20
+    end
+end
+
+local function tickShape()
+    local now = os.clock()
+    local down = arrowDown()
+    if down ~= nil then
+        if down and not keyWasDown then
+            keyDownAt = now
+            lockFired = false
+        end
+        if down and not lockFired and keyDownAt > 0 and now - keyDownAt >= 1 then
+            lockFired = true
+            hexLocked = true
+            hexUntil = 0
+            requestShape(true)
+        end
+        if not down and keyWasDown and not lockFired then tapArrow() end
+        if not down then keyDownAt = 0 end
+        keyWasDown = down
+    end
+    if hexUntil > 0 and now >= hexUntil and not hexLocked then
+        hexUntil = 0
+        requestShape(false)
+    end
+    local blend = currentBlend()
+    if math.abs(blend - drawnBlend) > 0.002 then
+        drawnBlend = blend
+        shapeBlend = blend
+        for _, row in pairs(plates) do
+            if type(row) == "table" and not row.self and valid(row.comp) then rebuildPlate(row, blend) end
+        end
+    end
+end
+
+-- If this game build will not report the key, fall back to a plain tap bind.
+local function bindArrowFallback()
+    if type(RegisterKeyBind) ~= "function" or not Key then return end
+    local ok, err = pcall(function()
+        RegisterKeyBind(Key.RIGHT, function() ExecuteInGameThread(function() pcall(tapArrow) end) end)
+    end)
+    log("arrow keybind " .. tostring(ok) .. " " .. tostring(err))
+end
+
 local function makePlate(pawn, mesh, socket, id, arrays)
     local cls = findClass("/Script/ProceduralMeshComponent.ProceduralMeshComponent")
     if not cls then log("ProceduralMeshComponent class missing") return nil end
@@ -469,9 +643,9 @@ local function makePlate(pawn, mesh, socket, id, arrays)
             plate:CreateMeshSection(0, v, tri, nrm, uv, {}, {}, false)
         end)
     end
-    paintPlain(plate)
+    local made = paintPlain(plate)
     log("plate on " .. id .. " socket " .. socket)
-    return { comp = plate, player = nil, id = id, localVerts = v }
+    return { comp = plate, mat = made, player = nil, id = id, localVerts = v }
 end
 
 local function fileSize(path)
@@ -637,6 +811,61 @@ local function refreshMedia(row)
     end
 end
 
+-- The picture is drawn by the engine on the plate mesh, so it moves with the
+-- head bone on the same frame. TosFace writes the other player's camera as
+-- remote.jpg beside this script; each new frame is imported as a texture.
+local renderLib = nil
+local imageNotes = 0
+
+local function refreshImage(row)
+    if row.self or not valid(row.comp) or not row.mat or not valid(row.mat) then return end
+    local now = os.clock()
+    if row.nextImage and now < row.nextImage then return end
+    row.nextImage = now + 0.1
+    local path = (modDir or ".") .. "\\remote.jpg"
+    local data = readBin(path)
+    if data and data ~= row.lastData then
+        row.lastData = data
+        row.lastFrameAt = now
+        if not valid(renderLib) then
+            renderLib = findClass("/Script/Engine.Default__KismetRenderingLibrary")
+        end
+        local tex = nil
+        if valid(renderLib) then
+            local world = nil
+            pcall(function() world = UEHelpers.GetWorld() end)
+            local ok, ret = pcall(function() return renderLib:ImportFileAsTexture2D(world, path) end)
+            if ok and valid(ret) then
+                tex = ret
+            elseif imageNotes < 5 then
+                imageNotes = imageNotes + 1
+                log("import texture failed " .. tostring(ret))
+            end
+        elseif imageNotes < 5 then
+            imageNotes = imageNotes + 1
+            log("KismetRenderingLibrary missing")
+        end
+        if tex then
+            local setOk, setErr = pcall(function() row.mat:SetTextureParameterValue(FName("SlateUI"), tex) end)
+            if not setOk and imageNotes < 5 then
+                imageNotes = imageNotes + 1
+                log("set picture failed " .. tostring(setErr))
+            end
+            if setOk and not row.shown then
+                row.shown = true
+                pcall(function() row.comp:SetHiddenInGame(false, true) end)
+                log("picture on " .. tostring(row.id))
+            end
+        end
+    end
+    -- No new frame for 3 seconds: the other player left or turned the camera off.
+    if row.shown and row.lastFrameAt and now - row.lastFrameAt > 3 then
+        row.shown = false
+        pcall(function() row.comp:SetHiddenInGame(true, true) end)
+        log("picture off " .. tostring(row.id))
+    end
+end
+
 local function characters()
     local list = {}
     for _, cls in ipairs({ "BP_Character_HQ_C", "BP_Character_Survivor_C" }) do
@@ -657,7 +886,11 @@ local shareHooked = false
 local shareSeq = 0
 local shareHandle = nil
 
+-- The screen overlay is gone. The pose file only fed it.
+local POSE_FILE = false
+
 local function writeShare()
+    if not POSE_FILE then return end
     local pc = UEHelpers.GetPlayerController()
     if not valid(pc) or not valid(pc.PlayerCameraManager) then return end
     local mgr = pc.PlayerCameraManager
@@ -767,7 +1000,7 @@ log("share hook kind " .. hookKind)
 shareHooked = okHook
 log("share hook " .. tostring(okHook) .. " " .. tostring(errHook))
 
-log("FacePlate loaded build 40")
+log("FacePlate loaded build 42")
 
 local bootTicks = 0
 
@@ -780,6 +1013,14 @@ LoopInGameThreadWithDelay(16, function()
         if not shareReady then
             shareReady = true
             log("share frame")
+        end
+        for _, row in pairs(plates) do
+            if type(row) == "table" then pcall(refreshImage, row) end
+        end
+        pcall(tickShape)
+        if keyFailed and not plates.arrowBound then
+            plates.arrowBound = true
+            bindArrowFallback()
         end
         if bootTicks % 12 ~= 0 then
             if not shareHooked then writeShare() end

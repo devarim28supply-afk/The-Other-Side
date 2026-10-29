@@ -160,7 +160,7 @@ static class FriendHost
             var bits = pair.Split('=', 2);
             if (bits.Length == 2 && bits[0] == "id") id = Uri.UnescapeDataString(bits[1]);
         }
-        if (id.Length == 0 || id.Length > 8 || id.Any(c => c < '0' || c > '9'))
+        if (id != "remote")
         {
             Write(stream, "text/plain", "bad id", 404);
             return;
@@ -177,7 +177,8 @@ static class FriendHost
             Write(stream, "text/plain", "bad frame", 404);
             return;
         }
-        var dir = @"D:\Tools\tos-faceplates";
+        // Beside the FacePlate script: the game reads remote.jpg from there.
+        var dir = ShareHexForm.PlateDir();
         Directory.CreateDirectory(dir);
         var finalPath = Path.Combine(dir, id + ".jpg");
         var temp = finalPath + "." + Guid.NewGuid().ToString("N") + ".tmp";

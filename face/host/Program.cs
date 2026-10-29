@@ -30,7 +30,6 @@ internal static class Program
     {
         readonly bool preview;
         readonly OverlayForm overlay;
-        readonly ShareHexForm share;
         readonly Label status = new() { Left = 12, Top = 96, Width = 360, Height = 64, Font = new Font("Segoe UI", 11f) };
         readonly Button hexBtn = new() { Left = 12, Top = 12, Width = 170, Height = 44, Text = "Hex", Font = new Font("Segoe UI", 14f), FlatStyle = FlatStyle.Flat };
         readonly Button diamondBtn = new() { Left = 192, Top = 12, Width = 170, Height = 44, Text = "Diamond", Font = new Font("Segoe UI", 14f), FlatStyle = FlatStyle.Flat };
@@ -48,9 +47,8 @@ internal static class Program
             StartPosition = FormStartPosition.Manual;
             ClientSize = new Size(1, 1);
             overlay = new OverlayForm(preview);
-            share = new ShareHexForm();
-            share.PlaceVideo = (x, y, w, h, poly, uv, watch) => overlay.PlaceVideo(x, y, w, h, poly, uv, watch);
-            share.Show();
+            // No screen overlay. The picture is a mesh in the game (FacePlate Lua).
+            // This process only brings the other camera in and writes remote.jpg.
             if (preview)
             {
                 FormBorderStyle = FormBorderStyle.FixedToolWindow;

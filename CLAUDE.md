@@ -62,7 +62,7 @@ Default settled shape is diamond. Morph is 400 ms, ease-out cubic `cubic-bezier(
 | Face model | `face/host/models/face_detection_yunet_2023mar.onnx` (232589 bytes). Gitignored. Fallback `D:\Projects\M2A\assets\models\face_detection_yunet_2023mar.onnx` |
 | M2A spec for shape and tracking | `D:\Projects\M2A\lib\features\webcam\` (`overlay_geometry.dart`, `shape_design.dart`, `shape_controller.dart`, `diamond_tracking.dart`) |
 
-`main.lua` on disk logs `FacePlate loaded build 40` (engine post tick hook when UE4SS has it, else PlayerTick; adds a `T` game-clock line to plate.txt). UE4SS hot reload is off (`EnableHotReloadSystem = 0`). The game keeps the script it loaded at process start. Read the first `loaded build` line in `faceplate.log` and the process start time before assuming build 39 is live. A later launch the same night loaded build 39. Copy Lua to the Steam path after every Lua edit, and also to `C:\Users\Kaalo\OneDrive\Desktop\FacePlate-main.lua`. Do not tell Kaalo a new script is live while the old process is running.
+`main.lua` on disk logs `FacePlate loaded build 42`. UE4SS hot reload is off (`EnableHotReloadSystem = 0`). The game keeps the script it loaded at process start. Read the first `loaded build` line in `faceplate.log` and the process start time before assuming build 39 is live. A later launch the same night loaded build 39. Copy Lua to the Steam path after every Lua edit, and also to `C:\Users\Kaalo\OneDrive\Desktop\FacePlate-main.lua`. Do not tell Kaalo a new script is live while the old process is running.
 
 Build 39 writes `M {selfPlayerId}` into `plate.txt`. Build 38 does not. The overlay skips the `M` id. With no `M` line it skips any plate whose average depth is under 50 cm, which is your own head in first person. A friend standing closer than 50 cm is also skipped until the game restarts into build 39. Restarting TosFace does not reload Lua. Restarting the game does.
 
@@ -142,3 +142,14 @@ Nathan's update is a new `OtherSideFaces.zip` from `face/friend/make-friend-zip.
 
 - Black picture cause on Kaalo's PC: OBS (`obs64.exe`) held the webcam, so `getUserMedia` failed with `NotReadableError`. Close OBS or turn on "Deactivate when not showing" for its camera source. The page now reports the real error; TosFace writes it to `%LOCALAPPDATA%\TosFace\face.log`.
 - `ShareHex.Lead` moves the projected plate ahead by `lead.txt` milliseconds (beside the exe, default 12, 0 = off) using the `T` line speed. Untested in game; tune from how the lock feels.
+
+## In-game picture (build 41-42, 2026-10-29) - supersedes the overlay sections above
+
+Kaalo asked to drop the screen overlay: the webcam is now drawn by the engine on the hex mesh attached to the head bone, so it cannot lag or drift.
+
+- TosFace no longer builds `ShareHexForm` or places any window. It only joins LiveKit, publishes the local camera, and POSTs the other player's frame to `/frame?id=remote`, which `FriendHost.SaveFrame` writes as `remote.jpg` beside `main.lua` (`ShareHexForm.PlateDir()`, so it works without a D: drive).
+- Lua `refreshImage` reads `remote.jpg` about every 100 ms and loads it with `KismetRenderingLibrary:ImportFileAsTexture2D`, then sets it as `SlateUI` on the plate's `Widget3DPassThrough_Opaque` instance. The plate is hidden until the first frame and again after 3 s with no new frame. The self plate stays hidden. A few `import texture failed` lines are a frame read mid-replace and are harmless.
+- The pose file (`plate.txt`) is off (`POSE_FILE = false`). The `PlayerTick` hook never registers (class not loaded at script start), which is why the old pose writer ran on a free 16 ms timer.
+- Build 42 adds the diamond/hex morph in Lua (`faceArrays`, `tickShape`), rules from M2A `overlay_geometry.dart` / `shape_controller.dart`: default diamond, 400 ms ease-out, picture UVs come from each vertex's place on the face plane. Right Arrow is read with `PlayerController:IsInputKeyDown` (fallback: `RegisterKeyBind`, tap only). The key changes plates on the machine where it is pressed.
+- Not done: diamond face-tracking pan/roam on the mesh. Open: Kaalo reported the picture "faces the other side of the hex" (build 41); cause not confirmed. The mesh has both windings, so the back of the plate shows a mirrored picture. Ask for lettered answers before changing UVs or winding.
+- Camera: another program holding the webcam (OBS on both PCs) gives `NotReadableError`; TosFace stops retrying after 40 tries.

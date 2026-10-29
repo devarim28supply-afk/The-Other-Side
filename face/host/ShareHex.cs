@@ -68,6 +68,8 @@ sealed class ShareHexForm : Form
 
     // The game writes plate.txt beside the FacePlate mod. That path works on
     // any PC. The D:\Tools file is only a fallback.
+    public static string PlateDir() => Path.GetDirectoryName(PlateFile()) ?? @"D:Tools	os-faceplates";
+
     static string PlateFile()
     {
         if (DateTime.UtcNow < plateFileUntil) return plateFile;

@@ -343,17 +343,13 @@ if (location.hash === "#preview") {
       if (blob) fetch("/frame?id=" + encodeURIComponent(id), { method: "POST", body: blob });
     }, "image/jpeg", 0.72);
   };
+  // The game draws this frame on the other player's head plate (FacePlate Lua).
   const dump = () => {
-    if (localEl && localEl.readyState >= 2) {
-      mineCtx.drawImage(localEl, 0, 0, mine.width, mine.height);
-      post(mine, "0");
-    }
-    for (const [id, p] of state.people) {
-      if (p.self || id === state.selfId) continue;
-      const vid = videoFor(id);
-      if (!vid || vid.readyState < 2) continue;
+    const remotes = [...videos.values()].filter((row) => !state.selfId || row.tosId !== state.selfId);
+    const vid = remotes.length ? remotes[0].el : null;
+    if (vid && vid.readyState >= 2 && vid.videoWidth > 0) {
       ctx.drawImage(vid, 0, 0, canvas.width, canvas.height);
-      post(canvas, id);
+      post(canvas, "remote");
     }
     setTimeout(dump, 100);
   };
