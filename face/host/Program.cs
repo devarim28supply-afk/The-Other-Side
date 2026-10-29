@@ -230,7 +230,7 @@ internal static class Program
             var folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "TosFace");
             Directory.CreateDirectory(folder);
             var env = await CoreWebView2Environment.CreateAsync(null, folder,
-                new CoreWebView2EnvironmentOptions("--autoplay-policy=no-user-gesture-required"));
+                new CoreWebView2EnvironmentOptions("--autoplay-policy=no-user-gesture-required --disable-features=CalculateNativeWinOcclusion --disable-renderer-backgrounding --disable-backgrounding-occluded-windows"));
             await web.EnsureCoreWebView2Async(env);
             web.CoreWebView2.PermissionRequested += (_, e) =>
             {
@@ -272,7 +272,27 @@ internal static class Program
             using var doc = JsonDocument.Parse(json);
             var root = doc.RootElement;
             if (root.TryGetProperty("status", out var st))
-                onStatus?.Invoke(st.GetString() ?? "");
+            {
+                var text = st.GetString() ?? "";
+                LogStatus(text);
+                onStatus?.Invoke(text);
+            }
+        }
+
+        string lastLogged = "";
+
+        // LocalAppData exists on every PC. The D: logs do not exist on Nathan's.
+        void LogStatus(string text)
+        {
+            if (text == lastLogged) return;
+            lastLogged = text;
+            try
+            {
+                var dir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "TosFace");
+                Directory.CreateDirectory(dir);
+                File.AppendAllText(Path.Combine(dir, "face.log"), DateTime.Now.ToString("HH:mm:ss") + " " + text + "\n");
+            }
+            catch { }
         }
 
         void FollowGame()

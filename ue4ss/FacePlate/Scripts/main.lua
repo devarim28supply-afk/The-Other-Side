@@ -709,6 +709,8 @@ local function writeShare()
         end
     end
     if meId then lines[#lines + 1] = "M " .. meId end
+    -- Game clock in ms. The overlay uses it to measure how fast the head moves.
+    lines[#lines + 1] = string.format("T %.1f", os.clock() * 1000)
     local payload = table.concat(lines, "\n") .. "\n"
     shareSeq = (shareSeq % 1000000) + 1
     local body = "S " .. shareSeq .. "\n" .. payload .. "E " .. shareSeq .. "\n"
@@ -737,16 +739,35 @@ do
     if clear then clear:write("NONE\n") clear:close() end
 end
 
-local okHook, errHook = pcall(function()
-    RegisterHook("/Script/Engine.PlayerController:PlayerTick", function()
-        if not shareReady then return end
-        pcall(writeShare)
+-- The freshest pose is after the engine finished the frame: animation has moved
+-- the head bone and the camera has updated. PlayerTick runs before both, so the
+-- plate trailed the head by about a frame. Use the engine post tick when this
+-- UE4SS has it. Keep PlayerTick as the fallback.
+local okHook, errHook = false, "none"
+local hookKind = "none"
+if type(RegisterEngineTickPostCallback) == "function" then
+    okHook, errHook = pcall(function()
+        RegisterEngineTickPostCallback(function()
+            if not shareReady then return end
+            pcall(writeShare)
+        end)
     end)
-end)
+    if okHook then hookKind = "engine post tick" end
+end
+if not okHook then
+    okHook, errHook = pcall(function()
+        RegisterHook("/Script/Engine.PlayerController:PlayerTick", function()
+            if not shareReady then return end
+            pcall(writeShare)
+        end)
+    end)
+    if okHook then hookKind = "PlayerTick" end
+end
+log("share hook kind " .. hookKind)
 shareHooked = okHook
 log("share hook " .. tostring(okHook) .. " " .. tostring(errHook))
 
-log("FacePlate loaded build 39")
+log("FacePlate loaded build 40")
 
 local bootTicks = 0
 

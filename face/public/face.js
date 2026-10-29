@@ -184,7 +184,9 @@ async function openCamera(joined) {
       setStatus("camera live");
       return;
     } catch (err) {
-      setStatus("camera busy");
+      // Keep the real reason. "camera busy" alone hid why no track was published.
+      const why = err instanceof Error ? err.name + ": " + err.message : String(err);
+      setStatus("camera busy (" + i + ") " + why);
       await new Promise((r) => setTimeout(r, 1000));
     }
   }

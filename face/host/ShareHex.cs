@@ -338,6 +338,7 @@ sealed class ShareHexForm : Form
             HideHex();
             return;
         }
+        poly = Lead(poly, body, watch, hex);
         float minX = float.MaxValue, minY = float.MaxValue, maxX = float.MinValue, maxY = float.MinValue;
         foreach (var p in poly)
         {
@@ -369,8 +370,99 @@ sealed class ShareHexForm : Form
         }
     }
 
+    // The overlay is a separate window. Its picture reaches the screen a few
+    // milliseconds after the game drew the frame, so a moving head left the plate
+    // behind. Measure the plate speed on the game clock (the T line) and draw it
+    // where it will be when the overlay shows up.
+    PointF[]? leadPrev;
+    float leadT = float.NaN;
+    float leadVx, leadVy;
+    string leadWatch = "";
+    float leadMs = 12f;
+    DateTime leadFileAt = DateTime.MinValue;
+
+    float LeadMs()
+    {
+        // lead.txt beside the exe: milliseconds, 0 turns the lead off.
+        if (DateTime.UtcNow < leadFileAt) return leadMs;
+        leadFileAt = DateTime.UtcNow.AddSeconds(2);
+        try
+        {
+            var f = Path.Combine(AppContext.BaseDirectory, "lead.txt");
+            if (File.Exists(f) && Num(File.ReadAllText(f).Trim(), out float v) && v >= 0f && v <= 60f) leadMs = v;
+        }
+        catch { }
+        return leadMs;
+    }
+
+    static bool FrameClock(string body, out float t)
+    {
+        t = 0f;
+        int i = body.LastIndexOf("\nT ", StringComparison.Ordinal);
+        if (i < 0) return false;
+        int e = body.IndexOf('\n', i + 1);
+        var text = (e < 0 ? body.Substring(i + 3) : body.Substring(i + 3, e - (i + 3))).Trim();
+        return Num(text, out t);
+    }
+
+    PointF[] Lead(PointF[] poly, string body, string watch, float hexBlend)
+    {
+        float lead = LeadMs();
+        if (!FrameClock(body, out float t) || lead <= 0f || animating || watch != leadWatch)
+        {
+            leadPrev = poly;
+            leadT = float.NaN;
+            leadVx = leadVy = 0f;
+            leadWatch = watch;
+            if (!FrameClock(body, out t)) return poly;
+            leadT = t;
+            return poly;
+        }
+        if (leadPrev != null && leadPrev.Length == poly.Length && !float.IsNaN(leadT) && t != leadT)
+        {
+            float dt = t - leadT;
+            if (dt > 0.5f && dt < 80f)
+            {
+                float mx = 0f, my = 0f;
+                for (int i = 0; i < poly.Length; i++)
+                {
+                    mx += poly[i].X - leadPrev[i].X;
+                    my += poly[i].Y - leadPrev[i].Y;
+                }
+                mx /= poly.Length;
+                my /= poly.Length;
+                // A cut or a respawn is not motion. Do not throw the plate across the screen.
+                if (MathF.Abs(mx) < 300f && MathF.Abs(my) < 300f)
+                {
+                    leadVx = leadVx * 0.4f + (mx / dt) * 0.6f;
+                    leadVy = leadVy * 0.4f + (my / dt) * 0.6f;
+                }
+                else
+                {
+                    leadVx = leadVy = 0f;
+                }
+            }
+            leadPrev = poly;
+            leadT = t;
+        }
+        else if (leadPrev == null || float.IsNaN(leadT))
+        {
+            leadPrev = poly;
+            leadT = t;
+        }
+        float ox = Math.Clamp(leadVx * lead, -60f, 60f);
+        float oy = Math.Clamp(leadVy * lead, -60f, 60f);
+        if (ox == 0f && oy == 0f) return poly;
+        var o = new PointF[poly.Length];
+        for (int i = 0; i < poly.Length; i++) o[i] = new PointF(poly[i].X + ox, poly[i].Y + oy);
+        return o;
+    }
+
     void HideHex()
     {
+        leadPrev = null;
+        leadT = float.NaN;
+        leadVx = leadVy = 0f;
         draw.Clear();
         PlaceVideo?.Invoke(0, 0, 0, 0, null, null, "");
         if (Visible && Bounds.Left > -1000) Hide();
