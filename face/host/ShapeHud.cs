@@ -178,7 +178,9 @@ sealed class ShapeHud : Form
     {
         float[] diaX = { 11, 11, 0, -11, -11, 0 };
         float[] hexX = { 11, 11, -8.5f, -28, -28, -8.5f };
-        float[] hexZ = { -8, 8, 14, 8, -8, -14 };
+        // The hex is the old hex scaled up evenly (39 tall instead of 22), so it keeps its shape.
+        float sc = 39f / 22f;
+        float[] hexZ = { -8 * sc, 8 * sc, 14 * sc, 8 * sc, -8 * sc, -14 * sc };
         float dz = 11f / 1.45f;
         float[] diaZ = { 0, 0, dz, 0, 0, -dz };
         var pts = new PointF[6];
@@ -200,7 +202,7 @@ sealed class ShapeHud : Form
         {
             g.SmoothingMode = SmoothingMode.AntiAlias;
             g.Clear(Color.Transparent);
-            float k = 5f;
+            float k = 4.6f;
             var pts = Points(blend, k, Size_ / 2f, Size_ / 2f);
             using var fill = new SolidBrush(Color.FromArgb(255, 255, 214, 10));
             using var edge = new Pen(Color.FromArgb(255, 60, 48, 0), 3f) { LineJoin = LineJoin.Round };

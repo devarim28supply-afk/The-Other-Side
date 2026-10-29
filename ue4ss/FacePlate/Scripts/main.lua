@@ -449,12 +449,16 @@ end
 -- plane, so the shape only crops it.
 local FACE_S = 1.35
 local FACE_X = { 11, 11, 0, -11, -11, 0 }
-local HEX_Z = { -8, 8, 14, 8, -8, -14 }
 -- Kaalo 2026-10-28: plate up a little; the diamond keeps its size; the hex grows
 -- DOWN to the stomach (top flats stay at 11, bottom flats go to -28, the side
--- points to the middle). Plate units, scaled by FACE_S and the head-bone scale.
+-- points to the middle) and keeps its SHAPE: it is the old hex scaled up evenly,
+-- so it gets wider as it gets taller and the picture is not stretched.
+-- Plate units, scaled by FACE_S and the head-bone scale.
 local HEX_X = { 11, 11, -8.5, -28, -28, -8.5 }
 local HEX_TALL = 11 + 28
+local HEX_SCALE = HEX_TALL / 22
+local HEX_HALFW = 14 * HEX_SCALE
+local HEX_Z = { -8 * HEX_SCALE, 8 * HEX_SCALE, 14 * HEX_SCALE, 8 * HEX_SCALE, -8 * HEX_SCALE, -14 * HEX_SCALE }
 local PLATE_UP = 3
 local shapeBlend = 0
 -- Default (confirmed by Kaalo 2026-10-28): only the first winding, which faces
@@ -466,6 +470,9 @@ local shapeBlend = 0
 -- "sb" = second only, "nd" = normals point -Y. No file = "sa".
 local flipU, flipV = false, false
 local useA, useB, normalDown = true, false, false
+-- Kaalo 2026-10-29: plate a little closer to the face (was 18).
+local PLATE_OUT_DEFAULT = 14
+local plateOut = PLATE_OUT_DEFAULT
 local facingAt = 0
 local facingText = nil
 
@@ -488,24 +495,64 @@ local function readFacing()
     useA = sa or not sb
     useB = sb
     normalDown = string.find(text, "nd", 1, true) ~= nil
+    -- "out14" = how far the plate floats in front of the face, head-bone units.
+    local outText = text:match("out(%d+%.?%d*)")
+    plateOut = outText and tonumber(outText) or PLATE_OUT_DEFAULT
+    log("plate out " .. tostring(plateOut))
     log("facing mu=" .. tostring(flipU) .. " mv=" .. tostring(flipV) .. " A=" .. tostring(useA) .. " B=" .. tostring(useB) .. " nd=" .. tostring(normalDown))
     return true
+end
+
+-- Face tracking, M2A diamond_tracking: the diamond roams over the footage, then the
+-- footage pans. TosFace measures the other player's face in their camera frames and
+-- writes track.txt ("dx pan", feed pixels of a 1280 wide feed, already smoothed).
+-- Horizontal only, no zoom. The hex always shows the whole frame, so it ignores this.
+local trackDx, trackPan = 0, 0
+local trackTargetDx, trackTargetPan = 0, 0
+local trackAt = 0
+
+local function readTrack()
+    local now = os.clock()
+    if now < trackAt then return end
+    trackAt = now + 0.05
+    local f = io.open((modDir or ".") .. "\\track.txt", "r")
+    if not f then return end
+    local text = f:read("*a") or ""
+    f:close()
+    local a, b = text:match("^%s*(%-?[%d%.]+)%s+(%-?[%d%.]+)")
+    if a and b then
+        trackTargetDx = tonumber(a) or 0
+        trackTargetPan = tonumber(b) or 0
+    end
+end
+
+-- Where the diamond window sits on the plate (plate units, +Z = viewer left) and how
+-- far the footage is panned (fraction of the frame width), kept inside the frame.
+local function trackedDiamond()
+    local dxf = trackDx / 1280
+    local panf = trackPan / 1280
+    local hd = (11 / 1.45) / 28
+    local uc = 0.5 + dxf - panf
+    if uc < hd then panf = 0.5 + dxf - hd elseif uc > 1 - hd then panf = 0.5 + dxf - (1 - hd) end
+    return -dxf * 28, panf
 end
 
 local function faceArrays(blend)
     local dz = 11 / 1.45
     local diamondZ = { 0, 0, dz, 0, 0, -dz }
+    local shiftZ, panf = trackedDiamond()
     local v, uv, n, col = {}, {}, {}, {}
     for i = 1, 6 do
         local x = FACE_X[i] + (HEX_X[i] - FACE_X[i]) * blend
-        local z = diamondZ[i] + (HEX_Z[i] - diamondZ[i]) * blend
-        v[i] = vec((x + PLATE_UP) * FACE_S, 18, z * FACE_S)
+        local zd = diamondZ[i] + shiftZ
+        local z = zd + (HEX_Z[i] - zd) * blend
+        v[i] = vec((x + PLATE_UP) * FACE_S, plateOut, z * FACE_S)
         -- Head bone +Z is the character's right = the viewer's left = u 0.
         -- The diamond shows the same crop of the frame as before. The hex shows the
         -- whole frame across its taller shape; the UVs blend with the morph.
-        local ud = (14 - diamondZ[i]) / 28
+        local ud = (14 - zd) / 28 - panf
         local wd = (11 - FACE_X[i]) / 22
-        local uh = (14 - HEX_Z[i]) / 28
+        local uh = (HEX_HALFW - HEX_Z[i]) / (2 * HEX_HALFW)
         local wh = (11 - HEX_X[i]) / HEX_TALL
         local u = ud + (uh - ud) * blend
         local w = wd + (wh - wd) * blend
@@ -684,7 +731,15 @@ local function tickShape()
     readRemoteShape()
     local blend = currentBlend()
     if readFacing() then drawnBlend = -1 end
-    if math.abs(blend - drawnBlend) > 0.002 then
+    readTrack()
+    local trackMoved = false
+    local ndx = trackDx + (trackTargetDx - trackDx) * 0.3
+    local npan = trackPan + (trackTargetPan - trackPan) * 0.3
+    if math.abs(ndx - trackDx) > 0.4 or math.abs(npan - trackPan) > 0.4 then
+        trackDx, trackPan = ndx, npan
+        trackMoved = blend < 0.999
+    end
+    if math.abs(blend - drawnBlend) > 0.002 or trackMoved then
         drawnBlend = blend
         shapeBlend = blend
         for _, row in pairs(plates) do
@@ -907,6 +962,48 @@ end
 local renderLib = nil
 local imageNotes = 0
 
+-- The plate shows its picture on the outer face only; its back is plain black.
+-- Kaalo 2026-10-29: make the back invisible, as if the plate is not there. When the
+-- camera is behind the plate the whole plate is hidden (the same side test as the old
+-- overlay: (camera - face centre) . outward normal <= 0, normal = component +Y).
+local function applyVisible(row)
+    local want = row.shown and not row.behind
+    if want == row.vis then return end
+    row.vis = want
+    pcall(function() row.comp:SetHiddenInGame(not want, true) end)
+end
+
+local function gateBehind(row)
+    if row.self or not row.shown or not valid(row.comp) then return end
+    local pc = UEHelpers.GetPlayerController()
+    if not valid(pc) or not valid(pc.PlayerCameraManager) then return end
+    local cl, loc, rot, sc
+    local ok = pcall(function()
+        cl = pc.PlayerCameraManager:GetCameraLocation()
+        loc = row.comp:K2_GetComponentLocation()
+        rot = row.comp:K2_GetComponentRotation()
+        sc = row.comp:K2_GetComponentScale()
+    end)
+    if not ok or not cl or not loc or not rot then return end
+    local rad = math.pi / 180
+    local sp, cp = math.sin((rot.Pitch or 0) * rad), math.cos((rot.Pitch or 0) * rad)
+    local sy, cy = math.sin((rot.Yaw or 0) * rad), math.cos((rot.Yaw or 0) * rad)
+    local sr, cr = math.sin((rot.Roll or 0) * rad), math.cos((rot.Roll or 0) * rad)
+    local nx = sr * sp * cy - cr * sy
+    local ny = sr * sp * sy + cr * cy
+    local nz = -sr * cp
+    local scale = (sc and type(sc.Y) == "number") and sc.Y or 1
+    local fx = loc.X + nx * plateOut * scale
+    local fy = loc.Y + ny * plateOut * scale
+    local fz = loc.Z + nz * plateOut * scale
+    local facing = (cl.X - fx) * nx + (cl.Y - fy) * ny + (cl.Z - fz) * nz
+    local behind = facing <= 0
+    if behind ~= row.behind then
+        row.behind = behind
+        applyVisible(row)
+    end
+end
+
 local function refreshImage(row)
     if row.self or not valid(row.comp) or not row.mat or not valid(row.mat) then return end
     local now = os.clock()
@@ -943,7 +1040,7 @@ local function refreshImage(row)
             end
             if setOk and not row.shown then
                 row.shown = true
-                pcall(function() row.comp:SetHiddenInGame(false, true) end)
+                applyVisible(row)
                 log("picture on " .. tostring(row.id))
             end
         end
@@ -951,7 +1048,7 @@ local function refreshImage(row)
     -- No new frame for 3 seconds: the other player left or turned the camera off.
     if row.shown and row.lastFrameAt and now - row.lastFrameAt > 3 then
         row.shown = false
-        pcall(function() row.comp:SetHiddenInGame(true, true) end)
+        applyVisible(row)
         log("picture off " .. tostring(row.id))
     end
 end
@@ -1090,7 +1187,7 @@ log("share hook kind " .. hookKind)
 shareHooked = okHook
 log("share hook " .. tostring(okHook) .. " " .. tostring(errHook))
 
-log("FacePlate loaded build 46")
+log("FacePlate loaded build 50")
 
 local bootTicks = 0
 
@@ -1105,7 +1202,10 @@ LoopInGameThreadWithDelay(16, function()
             log("share frame")
         end
         for _, row in pairs(plates) do
-            if type(row) == "table" then pcall(refreshImage, row) end
+            if type(row) == "table" then
+                pcall(refreshImage, row)
+                pcall(gateBehind, row)
+            end
         end
         pcall(tickShape)
         if keyFailed and not plates.arrowBound then

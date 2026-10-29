@@ -162,3 +162,11 @@ Kaalo asked to drop the screen overlay: the webcam is now drawn by the engine on
 - Build 46: plate up a little (`PLATE_UP`), diamond unchanged, hex grows down to the stomach (`HEX_X`, `HEX_TALL`); the full frame is stretched over the taller hex and UVs blend with the morph. Not yet confirmed in game.
 - Nathan's PC has a Claude session (Remote Control, "Nathan's PC: The Other Side Session"). Send it exact old/new Lua text to apply itself instead of re-sending files; TosFace/page changes still need the zip.
 - Sound reader: `TosReader.exe` plus the overlay `OtherSideSound.exe` must both run. On Kaalo's PC scheduled tasks `TosReaderOnce` and `TosSoundOverlayOnce` start them in session 7 (a plain `start` from the shell is killed). Neither was running when the sound overlay was "invisible".
+
+## Build 47-50 (2026-10-29)
+
+- Hex keeps its shape: it is the old hex scaled up evenly (`HEX_SCALE = HEX_TALL / 22`, `HEX_HALFW`), 39 tall to reach the stomach, wider as it gets taller, so the picture is not stretched. Diamond unchanged. Plate floats `plateOut` (default 14, was 18) in front of the face; `facing.txt` word `out12` etc. tunes it live.
+- Face tracking on the diamond (M2A `diamond_tracking.dart`): TosFace tracks the OTHER player's face in their camera frames (`face.js` samples the remote video, `FaceTrack.Publish` writes `track.txt` "dx pan" in 1280-wide feed px beside `main.lua`); Lua `trackedDiamond` slides the diamond window over fixed footage (UV follows the moved vertex) and pans the footage, clamped inside the frame. Hex ignores it (blend).
+- The black back of the plate is hidden: `gateBehind` hides the whole plate when `(camera - face centre) . plate +Y <= 0`; `applyVisible` combines it with the 3 s no-frame hide.
+- Sound reader: the friend zip now ships the sound overlay (`overlay\`, trimmed copy of `D:\Tools\tos-reader\overlay`) with a safe config from `face/friend/overlay-config.mjs` (feed `../soundfeed.txt`, Device auto, Speak/SetDefaultMic/UseKokoro/Whisper off). `Start Other Side Faces.cmd` starts reader + face + overlay. PowerShell 5.1 cannot parse the overlay config (keys `BOOM`/`Boom` differ only by case), so edit it with node.
+- When editing Lua or JSON through shell strings, backslashes get eaten (`"\track.txt"` became a tab). Use the editor tool, and check `grep -n '"[^"]*\[a-z]'`.

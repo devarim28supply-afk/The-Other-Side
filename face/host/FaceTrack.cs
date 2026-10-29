@@ -144,6 +144,7 @@ static class FaceTrack
         }
         var n = Interlocked.Increment(ref results);
         Apply(rawX, frame.Width, mirror);
+        Publish();
         if (n == 1 || n % 50 == 0)
             Note(rawX.HasValue ? "face" : "no face");
     }
@@ -178,6 +179,25 @@ static class FaceTrack
             videoPanX = null;
             faceLostSince = null;
         }
+    }
+
+    static string lastPublished = "";
+
+    // The game reads track.txt beside the FacePlate script: "dx pan" in feed pixels.
+    static void Publish()
+    {
+        float dx, pan;
+        lock (Gate)
+        {
+            dx = diamondDx ?? 0f;
+            pan = videoPanX ?? 0f;
+        }
+        var inv = System.Globalization.CultureInfo.InvariantCulture;
+        var text = dx.ToString("0.0", inv) + " " + pan.ToString("0.0", inv);
+        if (text == lastPublished) return;
+        lastPublished = text;
+        try { File.WriteAllText(Path.Combine(ShareHexForm.PlateDir(), "track.txt"), text); }
+        catch { }
     }
 
     static float Deadzone(float proposed, float? held, float dead)

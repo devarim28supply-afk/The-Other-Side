@@ -394,7 +394,9 @@ if (location.hash === "#preview") {
   let trackBusy = false;
   const sampleFace = () => {
     try {
-      const watched = watchedEl;
+      // The other player's camera, same pick as the frame the game draws.
+      const others = [...videos.values()].filter((row) => !state.selfId || row.tosId !== state.selfId);
+      const watched = others.length ? others[0].el : null;
       if (!trackBusy && trackCtx && watched && watched.readyState >= 2 && watched.videoWidth > 0) {
         const tw = Math.min(640, watched.videoWidth);
         const th = Math.max(1, Math.round(watched.videoHeight * tw / watched.videoWidth));

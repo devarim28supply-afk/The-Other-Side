@@ -26,11 +26,28 @@ New-Item -ItemType Directory -Force "$pkg\game-mod\FacePlate\Scripts" | Out-Null
 Copy-Item "$repo\ue4ss\FacePlate\Scripts\main.lua" "$pkg\game-mod\FacePlate\Scripts\main.lua"
 Copy-Item "$PSScriptRoot\Start Other Side Faces.cmd", "$PSScriptRoot\README.txt", "$PSScriptRoot\How to install.txt", "$PSScriptRoot\Install FacePlate.cmd", "$PSScriptRoot\Install FacePlate.ps1" $pkg
 
+# The sound overlay (the visible part of the sound reader). Kaalo's working copy,
+# without his private data, with a config that is safe on another PC: no speech,
+# no change to the default microphone, the default output device, and the feed the
+# reader in this package writes (..\soundfeed.txt, one level above overlay\).
+$overlaySrc = 'D:\Tools\tos-reader\overlay'
+if (-not (Test-Path "$overlaySrc\OtherSideSound.exe")) { throw 'sound overlay not found' }
+Write-Host 'Copying the sound overlay...'
+Copy-Item $overlaySrc "$pkg\overlay" -Recurse -Force
+foreach ($drop in 'samples', 'helper', 'phrases\cache', 'runtimes\android', 'runtimes\ios', 'runtimes\linux-arm64',
+    'runtimes\linux-x64', 'runtimes\osx-arm64', 'runtimes\osx-x64', 'runtimes\win-arm64', 'runtimes\win-x86') {
+    Remove-Item "$pkg\overlay\$drop" -Recurse -Force -ErrorAction SilentlyContinue
+}
+Remove-Item "$pkg\overlay\log.txt", "$pkg\overlay\*.pdb", "$pkg\overlay\*.lib" -Force -ErrorAction SilentlyContinue
+New-Item -ItemType Directory -Force "$pkg\overlay\samples", "$pkg\overlay\phrases\cache" | Out-Null
+node "$PSScriptRoot\overlay-config.mjs" "$overlaySrc\config.json" "$pkg\overlay\config.json"
+if ($LASTEXITCODE) { throw 'overlay config failed' }
+
 $opencv = Get-ChildItem "$pkg\face" -Recurse -Filter OpenCvSharpExtern.dll -ErrorAction SilentlyContinue
 $model = Join-Path $pkg 'face\models\face_detection_yunet_2023mar.onnx'
 if (-not $opencv) { throw 'OpenCvSharp native library missing from the face window' }
 if (-not (Test-Path $model)) { throw 'face model missing from the face window' }
-if (-not (Select-String -Path "$pkg\face\www\index.html" -Pattern 'face.js?v=18' -SimpleMatch -Quiet)) {
+if (-not (Select-String -Path "$pkg\face\www\index.html" -Pattern 'face.js?v=19' -SimpleMatch -Quiet)) {
     throw 'face page is not the current script'
 }
 
