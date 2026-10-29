@@ -1,0 +1,4 @@
+node_modules/
+.env.local
+host/bin/
+host/obj/

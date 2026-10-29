@@ -1,0 +1,9 @@
+{
+  "name": "tos-face",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "livekit-client": "^2.23.0",
+    "livekit-server-sdk": "^2.17.0"
+  }
+}

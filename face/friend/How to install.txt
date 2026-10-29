@@ -1,0 +1,42 @@
+How to install Other Side faces
+================================
+
+This folder is for a friend. You see each other's webcam.
+His camera sits on his character. Yours sits on you.
+Your own camera does not appear on your screen.
+It does not replace the game. Talking still uses the game's own voice.
+
+What you need
+- The Other Side already installed from Steam
+- A webcam
+- Windows 10 or 11
+
+Install
+1. Quit The Other Side completely. A running game will not pick up the new script.
+2. Unzip OtherSideFaces.zip.
+3. You get one folder named OtherSideFaces. Put it anywhere, such as the Desktop.
+   Leave the files inside it where they are. Do not drag this folder into Steam.
+4. Double-click Install FacePlate.cmd and wait until it says FacePlate is installed.
+5. Start The Other Side.
+6. Double-click Start Other Side Faces.cmd.
+7. If Windows asks, allow the camera.
+
+Play
+8. Get into the truck or a round together.
+9. You see his camera on his character. He sees yours on you.
+   The diamond follows that face. The hex shows the whole camera.
+   If nobody else is in front of you, the picture stays off.
+10. Right Arrow changes the shape.
+    Tap: hex for 20 seconds, then back to the diamond.
+    Hold for 1 second: the hex stays.
+    Tap while it is locked: back to the diamond.
+
+Quit
+End TosFace in Task Manager. The picture window has no close button.
+You can also close the minimized reader window named "Other Side Faces reader".
+
+If the start script says the WebView2 runtime is missing, install Microsoft
+Edge WebView2 (Evergreen), then run the start script again.
+
+The room pass in this folder lasts 30 days from the day the zip was made.
+After that, ask for a new zip.
