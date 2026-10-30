@@ -40,6 +40,11 @@ foreach ($drop in 'samples', 'helper', 'phrases\cache', 'runtimes\android', 'run
 }
 Remove-Item "$pkg\overlay\log.txt", "$pkg\overlay\*.pdb", "$pkg\overlay\*.lib" -Force -ErrorAction SilentlyContinue
 New-Item -ItemType Directory -Force "$pkg\overlay\samples", "$pkg\overlay\phrases\cache" | Out-Null
+foreach ($data in 'ghost_lines.json', 'evidence_clips.txt') {
+    $from = "D:\Tools\tos-sound-overlay\captions\$data"
+    if (-not (Test-Path $from)) { throw "sound overlay data missing: $data" }
+    Copy-Item $from "$pkg\overlay\$data"
+}
 node "$PSScriptRoot\overlay-config.mjs" "$overlaySrc\config.json" "$pkg\overlay\config.json"
 if ($LASTEXITCODE) { throw 'overlay config failed' }
 
@@ -47,7 +52,7 @@ $opencv = Get-ChildItem "$pkg\face" -Recurse -Filter OpenCvSharpExtern.dll -Erro
 $model = Join-Path $pkg 'face\models\face_detection_yunet_2023mar.onnx'
 if (-not $opencv) { throw 'OpenCvSharp native library missing from the face window' }
 if (-not (Test-Path $model)) { throw 'face model missing from the face window' }
-if (-not (Select-String -Path "$pkg\face\www\index.html" -Pattern 'face.js?v=19' -SimpleMatch -Quiet)) {
+if (-not (Select-String -Path "$pkg\face\www\index.html" -Pattern 'face.js?v=22' -SimpleMatch -Quiet)) {
     throw 'face page is not the current script'
 }
 

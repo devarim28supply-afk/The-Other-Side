@@ -170,3 +170,11 @@ Kaalo asked to drop the screen overlay: the webcam is now drawn by the engine on
 - The black back of the plate is hidden: `gateBehind` hides the whole plate when `(camera - face centre) . plate +Y <= 0`; `applyVisible` combines it with the 3 s no-frame hide.
 - Sound reader: the friend zip now ships the sound overlay (`overlay\`, trimmed copy of `D:\Tools\tos-reader\overlay`) with a safe config from `face/friend/overlay-config.mjs` (feed `../soundfeed.txt`, Device auto, Speak/SetDefaultMic/UseKokoro/Whisper off). `Start Other Side Faces.cmd` starts reader + face + overlay. PowerShell 5.1 cannot parse the overlay config (keys `BOOM`/`Boom` differ only by case), so edit it with node.
 - When editing Lua or JSON through shell strings, backslashes get eaten (`"\track.txt"` became a tab). Use the editor tool, and check `grep -n '"[^"]*\[a-z]'`.
+
+## Build 51-52: Up and Left Arrow cameras
+
+- **Up Arrow (build 51):** both players' hex cameras slide in from the right edge, upper right, stacked (mine on top, theirs below), 5 s, then out. Lua writes `slide_self.txt` (new number per press); the page publishes it as LiveKit attribute `slide`; the other host writes `slide_remote.txt` (`/slide?v=`). `face/host/SlideHud.cs` slides on either file changing. Needs `local.jpg` (`/frame?id=local`, my own camera).
+- **Left Arrow (build 52):** my own hex camera, long and wide (96% of the screen width, aspect 1.9), 6 s, my screen only. Lua writes `big_self.txt`; `face/host/BigHud.cs` draws it; pressing again closes early.
+- Camera pictures are cropped to the hex shape, never stretched. `face.js?v=22`, `local.jpg` is 640x360.
+- Friend zip now carries `overlay\ghost_lines.json` and `overlay\evidence_clips.txt`, with `WhisperScript` set to `captions_server.py` (relative), so Nathan's overlay loads the ghost lines.
+- Never run `Get-Process dotnet | Stop-Process` here: it took the reader and sound overlay down with it. Restart them with `TosReaderOnce` and `TosSoundOverlayOnce`.

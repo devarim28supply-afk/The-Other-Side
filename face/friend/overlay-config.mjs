@@ -5,6 +5,8 @@ const [src, dst] = process.argv.slice(2);
 const cfg = JSON.parse(fs.readFileSync(src, "utf8"));
 Object.assign(cfg, {
   GameFeedPath: "../soundfeed.txt",
+  // The overlay reads ghost_lines.json and evidence_clips.txt from this file's folder.
+  WhisperScript: "captions_server.py",
   Device: "auto",
   Speak: false,
   UseKokoro: false,

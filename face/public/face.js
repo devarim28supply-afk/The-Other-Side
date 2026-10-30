@@ -165,11 +165,15 @@ async function connect() {
   }
 }
 
+// Another program (OBS, Discord) can hold the webcam. Keep trying until it is free: every
+// second for the first minute, then every 10 s, so we do not fight OBS for the camera or
+// fill the log. The status text is the same every try, so face.log gets it once.
 async function openCamera(joined) {
-  for (let i = 0; i < 40; i++) {
+  for (let i = 0; ; i++) {
     if (!room || room !== joined) return;
+    let video = null;
     try {
-      const video = await createLocalVideoTrack({
+      video = await createLocalVideoTrack({
         resolution: { width: 640, height: 360, frameRate: 24 },
       });
       localEl = video.attach();
@@ -186,8 +190,17 @@ async function openCamera(joined) {
     } catch (err) {
       // Keep the real reason. "camera busy" alone hid why no track was published.
       const why = err instanceof Error ? err.name + ": " + err.message : String(err);
-      setStatus("camera busy (" + i + ") " + why);
-      await new Promise((r) => setTimeout(r, 1000));
+      // A failed publish must not leave the camera open for the next try.
+      try { video?.stop(); } catch { /* already stopped */ }
+      if (localEl) {
+        localEl.remove();
+        localEl = null;
+      }
+      // Only the error name goes in the status: the message alternates between
+      // "Device in use" and "Could not start video source" and would defeat the log dedupe.
+      setStatus("camera busy " + (err instanceof Error ? err.name : "error"));
+      if (i === 0) console.warn("camera: " + why);
+      await new Promise((r) => setTimeout(r, i < 60 ? 1000 : 10000));
     }
   }
 }
@@ -221,6 +234,32 @@ async function syncShape() {
     remoteShape = theirs;
     remoteShapeAt = now;
     fetch("/shape?v=" + theirs, { method: "POST" }).catch(() => { remoteShape = ""; });
+  }
+}
+
+// Up Arrow slide: my game writes a new number to slide_self.txt on each press. It
+// goes out as the `slide` attribute; the other player's number comes back to my
+// host as slide_remote.txt. Either file changing slides both hexes in.
+let sentSlide = "";
+let remoteSlide = "";
+
+async function syncSlide() {
+  if (!room) return;
+  try {
+    const res = await fetch("/api/slide", { cache: "no-store" });
+    const mine = (await res.text()).trim();
+    if (mine && mine !== sentSlide) {
+      sentSlide = mine;
+      room.localParticipant.setAttributes({ slide: mine }).catch(() => { sentSlide = ""; });
+    }
+  } catch { /* the host is restarting */ }
+  for (const p of room.remoteParticipants.values()) {
+    const s = p.attributes?.slide;
+    if (s && s !== remoteSlide) {
+      remoteSlide = s;
+      fetch("/slide?v=" + encodeURIComponent(s), { method: "POST" }).catch(() => { remoteSlide = ""; });
+      break;
+    }
   }
 }
 
@@ -275,6 +314,7 @@ if (location.hash === "#preview") {
   feed();
   requestAnimationFrame(place);
   setInterval(syncShape, 250);
+  setInterval(syncSlide, 250);
   setTimeout(() => connect(), 300);
   const view = document.createElement("canvas");
   view.style.cssText = "position:absolute;inset:0;width:100%;height:100%";
@@ -368,8 +408,8 @@ if (location.hash === "#preview") {
   canvas.height = 180;
   const ctx = canvas.getContext("2d");
   const mine = document.createElement("canvas");
-  mine.width = 320;
-  mine.height = 180;
+  mine.width = 640;
+  mine.height = 360;
   const mineCtx = mine.getContext("2d");
   const post = (target, id) => {
     target.toBlob((blob) => {
@@ -383,6 +423,11 @@ if (location.hash === "#preview") {
     if (vid && vid.readyState >= 2 && vid.videoWidth > 0) {
       ctx.drawImage(vid, 0, 0, canvas.width, canvas.height);
       post(canvas, "remote");
+    }
+    // My own camera, for my side of the Up Arrow slide.
+    if (localEl && localEl.readyState >= 2 && localEl.videoWidth > 0) {
+      mineCtx.drawImage(localEl, 0, 0, mine.width, mine.height);
+      post(mine, "local");
     }
     setTimeout(dump, 100);
   };

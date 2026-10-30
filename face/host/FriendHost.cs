@@ -84,6 +84,44 @@ static class FriendHost
                 Write(stream, "text/plain", mine);
                 return;
             }
+            if (path == "/api/slide")
+            {
+                // My last Up Arrow press, written by the game. The page publishes it.
+                var mine = "";
+                try
+                {
+                    var f = Path.Combine(ShareHexForm.PlateDir(), "slide_self.txt");
+                    if (File.Exists(f)) mine = File.ReadAllText(f).Trim();
+                }
+                catch { }
+                Write(stream, "text/plain", mine);
+                return;
+            }
+            if (path == "/slide" && parts[0] == "POST")
+            {
+                // The other player's Up Arrow press, for the slide window to see.
+                var v = QueryFlag(rawPath, "v");
+                if (v.Length == 0 || v.Length > 40 || !v.All(c => char.IsAsciiLetterOrDigit(c) || c == '-'))
+                {
+                    Write(stream, "text/plain", "bad slide", 404);
+                    return;
+                }
+                try
+                {
+                    var dir = ShareHexForm.PlateDir();
+                    Directory.CreateDirectory(dir);
+                    var finalPath = Path.Combine(dir, "slide_remote.txt");
+                    var temp = finalPath + "." + Guid.NewGuid().ToString("N") + ".tmp";
+                    File.WriteAllText(temp, v);
+                    lock (FrameGate) File.Move(temp, finalPath, true);
+                    Write(stream, "text/plain", "ok");
+                }
+                catch
+                {
+                    Write(stream, "text/plain", "busy", 503);
+                }
+                return;
+            }
             if (path == "/shape" && parts[0] == "POST")
             {
                 // The other player's shape, for the game to read.
@@ -199,7 +237,7 @@ static class FriendHost
             var bits = pair.Split('=', 2);
             if (bits.Length == 2 && bits[0] == "id") id = Uri.UnescapeDataString(bits[1]);
         }
-        if (id != "remote")
+        if (id != "remote" && id != "local")
         {
             Write(stream, "text/plain", "bad id", 404);
             return;

@@ -31,6 +31,8 @@ internal static class Program
         readonly bool preview;
         readonly OverlayForm overlay;
         readonly ShapeHud? hud;
+        readonly SlideHud? slide;
+        readonly BigHud? big;
         readonly Label status = new() { Left = 12, Top = 96, Width = 360, Height = 64, Font = new Font("Segoe UI", 11f) };
         readonly Button hexBtn = new() { Left = 12, Top = 12, Width = 170, Height = 44, Text = "Hex", Font = new Font("Segoe UI", 14f), FlatStyle = FlatStyle.Flat };
         readonly Button diamondBtn = new() { Left = 192, Top = 12, Width = 170, Height = 44, Text = "Diamond", Font = new Font("Segoe UI", 14f), FlatStyle = FlatStyle.Flat };
@@ -50,6 +52,8 @@ internal static class Program
             overlay = new OverlayForm(preview);
             // The only thing drawn on screen is a small yellow shape when you press Right Arrow.
             if (!preview) hud = new ShapeHud();
+            if (!preview) slide = new SlideHud();
+            if (!preview) big = new BigHud();
             // No screen overlay. The picture is a mesh in the game (FacePlate Lua).
             // This process only brings the other camera in and writes remote.jpg.
             if (preview)

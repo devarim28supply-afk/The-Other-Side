@@ -705,8 +705,55 @@ local function tapArrow()
     end
 end
 
+-- Up Arrow: both players' hex cameras slide in from the right screen edge for a
+-- few seconds. The press is written to slide_self.txt as a new number; TosFace
+-- sends it to the other player and both TosFace windows draw the slide.
+local upWasDown = false
+local slideCount = 0
+
+local function keyDown(name)
+    local pc = UEHelpers.GetPlayerController()
+    if not valid(pc) then return nil end
+    local ok, res = pcall(function() return pc:IsInputKeyDown({ KeyName = FName(name) }) end)
+    if not ok then return nil end
+    return res == true
+end
+
+-- Left Arrow: my own hex camera, big in the middle of my screen (big_self.txt).
+-- It stays on my screen only; TosFace draws it.
+local leftWasDown = false
+local bigCount = 0
+
+local function pressFile(name, count)
+    local f = io.open((modDir or ".") .. "\\" .. name, "w")
+    if f then
+        f:write(tostring(os.time()) .. "-" .. tostring(count))
+        f:close()
+    end
+end
+
+local function tickSlide()
+    local down = keyDown("Up")
+    if down ~= nil then
+        if down and not upWasDown then
+            slideCount = slideCount + 1
+            pressFile("slide_self.txt", slideCount)
+        end
+        upWasDown = down
+    end
+    local left = keyDown("Left")
+    if left ~= nil then
+        if left and not leftWasDown then
+            bigCount = bigCount + 1
+            pressFile("big_self.txt", bigCount)
+        end
+        leftWasDown = left
+    end
+end
+
 local function tickShape()
     local now = os.clock()
+    tickSlide()
     local down = arrowDown()
     if down ~= nil then
         if down and not keyWasDown then
@@ -1187,7 +1234,7 @@ log("share hook kind " .. hookKind)
 shareHooked = okHook
 log("share hook " .. tostring(okHook) .. " " .. tostring(errHook))
 
-log("FacePlate loaded build 50")
+log("FacePlate loaded build 52")
 
 local bootTicks = 0
 
