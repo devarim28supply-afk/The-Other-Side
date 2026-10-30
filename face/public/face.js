@@ -174,7 +174,7 @@ async function openCamera(joined) {
     let video = null;
     try {
       video = await createLocalVideoTrack({
-        resolution: { width: 640, height: 360, frameRate: 24 },
+        resolution: { width: 1280, height: 720, frameRate: 30 },
       });
       localEl = video.attach();
       localEl.autoplay = true;
@@ -404,32 +404,42 @@ if (location.hash === "#preview") {
   };
   requestAnimationFrame(paint);
   const canvas = document.createElement("canvas");
-  canvas.width = 320;
-  canvas.height = 180;
+  // 720p frames at 30 per second for the head plate, 720p at about 10 per second for my
+  // own hexes. A frame is skipped while the last one of the same kind is still being sent.
+  canvas.width = 1280;
+  canvas.height = 720;
   const ctx = canvas.getContext("2d");
   const mine = document.createElement("canvas");
-  mine.width = 640;
-  mine.height = 360;
+  mine.width = 1280;
+  mine.height = 720;
   const mineCtx = mine.getContext("2d");
+  const sending = new Set();
   const post = (target, id) => {
+    if (sending.has(id)) return;
+    sending.add(id);
     target.toBlob((blob) => {
-      if (blob) fetch("/frame?id=" + encodeURIComponent(id), { method: "POST", body: blob });
-    }, "image/jpeg", 0.72);
+      if (!blob) { sending.delete(id); return; }
+      fetch("/frame?id=" + encodeURIComponent(id), { method: "POST", body: blob })
+        .catch(() => {})
+        .finally(() => sending.delete(id));
+    }, "image/jpeg", 0.8);
   };
   // The game draws this frame on the other player's head plate (FacePlate Lua).
+  let dumpCount = 0;
   const dump = () => {
+    dumpCount++;
     const remotes = [...videos.values()].filter((row) => !state.selfId || row.tosId !== state.selfId);
     const vid = remotes.length ? remotes[0].el : null;
     if (vid && vid.readyState >= 2 && vid.videoWidth > 0) {
       ctx.drawImage(vid, 0, 0, canvas.width, canvas.height);
       post(canvas, "remote");
     }
-    // My own camera, for my side of the Up Arrow slide.
-    if (localEl && localEl.readyState >= 2 && localEl.videoWidth > 0) {
+    // My own camera, for my side of the Up and Left Arrow hexes.
+    if (dumpCount % 3 === 0 && localEl && localEl.readyState >= 2 && localEl.videoWidth > 0) {
       mineCtx.drawImage(localEl, 0, 0, mine.width, mine.height);
       post(mine, "local");
     }
-    setTimeout(dump, 100);
+    setTimeout(dump, 33);
   };
   setTimeout(dump, 800);
   const trackCanvas = document.createElement("canvas");

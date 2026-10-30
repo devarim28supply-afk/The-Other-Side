@@ -4,18 +4,19 @@ using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
 
 // Left Arrow: my own hex camera, long and wide in the middle of the game window. It fades in,
-// stays 6 seconds, fades out. Left Arrow again while it is up closes it early. Only
-// on my screen: it follows big_self.txt, the file my game writes on the key press.
+// stays 6 seconds, fades out. Hold Left Arrow 0.5 s and it stays up (locked). A tap while
+// it is up closes it. Only on my screen: it follows big_self.txt, which my game writes
+// as "tap-..." or "lock-..." on the key.
 // Click-through, never takes focus, only drawn while the game window is up.
 sealed class BigHud : Form
 {
     const double FadeIn = 0.25;
     const double Hold = 6.0;
     const double FadeOut = 0.3;
-    // The plate's hex stretched sideways: about 96% of the width, at most 88% of the height.
+    // The plate's hex stretched sideways to the camera's own 16:9: up to 96% of the width, 94% of the height.
     const double WideFill = 0.96;
-    const double WideAspect = 1.9;
-    const double Fill = 0.88;
+    const double WideAspect = 16.0 / 9.0;
+    const double Fill = 0.94;
 
     readonly System.Windows.Forms.Timer timer = new() { Interval = 33 };
     string lastPress = "";
@@ -23,6 +24,7 @@ sealed class BigHud : Form
     DateTime lastFrame = DateTime.MinValue;
     DateTime startedAt = DateTime.MinValue;
     bool showing;
+    bool locked;
     DateTime nextPidScan = DateTime.MinValue;
     HashSet<uint> gamePids = new();
     IntPtr found;
@@ -56,25 +58,26 @@ sealed class BigHud : Form
     }
 
     // The first read only learns the starting value, so an old press never shows it.
-    bool Pressed()
+    // Returns "tap" or "lock" for a new key press, "" for nothing new.
+    string Pressed()
     {
         string text;
         try
         {
             var f = Path.Combine(ShareHexForm.PlateDir(), "big_self.txt");
-            if (!File.Exists(f)) return false;
+            if (!File.Exists(f)) return "";
             text = File.ReadAllText(f).Trim();
         }
-        catch { return false; }
-        if (text.Length == 0) return false;
+        catch { return ""; }
+        if (text.Length == 0) return "";
         if (lastPress.Length == 0)
         {
             lastPress = text;
-            return false;
+            return "";
         }
-        if (text == lastPress) return false;
+        if (text == lastPress) return "";
         lastPress = text;
-        return true;
+        return text.StartsWith("lock") ? "lock" : "tap";
     }
 
     void LoadFrame()
@@ -141,11 +144,30 @@ sealed class BigHud : Form
         if ((now - lastRead).TotalMilliseconds >= 100)
         {
             lastRead = now;
-            if (Pressed())
+            var press = Pressed();
+            if (press == "lock" && showing && locked)
             {
-                if (showing && (now - startedAt).TotalSeconds < FadeIn + Hold)
-                    // Pressed again while it is up: close it early.
+                // Already locked and the key was pressed again, even held a little long:
+                // that press closes it, it does not lock it a second time.
+                locked = false;
+                startedAt = now.AddSeconds(-(FadeIn + Hold));
+            }
+            else if (press == "lock")
+            {
+                // Held: it stays across the screen until the next press.
+                if (!showing) startedAt = now;
+                showing = true;
+                locked = true;
+                lastFrame = DateTime.MinValue;
+            }
+            else if (press == "tap")
+            {
+                if (showing && (locked || (now - startedAt).TotalSeconds < FadeIn + Hold))
+                {
+                    // Tapped while it is up: close it.
+                    locked = false;
                     startedAt = now.AddSeconds(-(FadeIn + Hold));
+                }
                 else
                 {
                     startedAt = now;
@@ -161,9 +183,12 @@ sealed class BigHud : Form
         }
         double t = (now - startedAt).TotalSeconds;
         double total = FadeIn + Hold + FadeOut;
+        // Locked: park at the end of the fade-in until a tap ends it.
+        if (locked && t >= FadeIn) t = FadeIn;
         if (t >= total || !GameClient(out var client))
         {
             showing = false;
+            locked = false;
             if (Visible) Hide();
             return;
         }
@@ -174,9 +199,15 @@ sealed class BigHud : Form
         }
         double a = t < FadeIn ? t / FadeIn : t < FadeIn + Hold ? 1 : 1 - (t - FadeIn - Hold) / FadeOut;
         a = Math.Clamp(a, 0, 1);
-        // Long and wide: almost the full width of the screen.
+        // Long and wide, the same shape as the camera picture (16:9), so none of it is cut
+        // off at the top or bottom. Almost the full width, or the full height if that is less.
         int w = (int)(client.Width * WideFill);
-        int h = Math.Min((int)(client.Height * Fill), (int)(w / WideAspect));
+        int h = (int)(w / WideAspect);
+        if (h > client.Height * Fill)
+        {
+            h = (int)(client.Height * Fill);
+            w = (int)(h * WideAspect);
+        }
         int left = client.Left + (client.Width - w) / 2;
         int top = client.Top + (client.Height - h) / 2;
         if (!Visible) Show();
@@ -187,7 +218,9 @@ sealed class BigHud : Form
     static PointF[] HexPoints(int w, int h, float inset)
     {
         float sc = 39f / 22f;
-        float[] z = { -8 * sc, 8 * sc, 14 * sc, 8 * sc, -8 * sc, -14 * sc };
+        // Top and bottom corners sit at 10.5 of the 14 half-width (the plate uses 8), so the
+        // left and right tips are blunter.
+        float[] z = { -10.5f * sc, 10.5f * sc, 14 * sc, 10.5f * sc, -10.5f * sc, -14 * sc };
         float[] x = { 11, 11, -8.5f, -28, -28, -8.5f };
         float kx = (w - 2 * inset) / (28f * sc);
         float ky = (h - 2 * inset) / 39f;

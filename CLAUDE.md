@@ -178,3 +178,11 @@ Kaalo asked to drop the screen overlay: the webcam is now drawn by the engine on
 - Camera pictures are cropped to the hex shape, never stretched. `face.js?v=22`, `local.jpg` is 640x360.
 - Friend zip now carries `overlay\ghost_lines.json` and `overlay\evidence_clips.txt`, with `WhisperScript` set to `captions_server.py` (relative), so Nathan's overlay loads the ghost lines.
 - Never run `Get-Process dotnet | Stop-Process` here: it took the reader and sound overlay down with it. Restart them with `TosReaderOnce` and `TosSoundOverlayOnce`.
+
+## Builds 53-57
+
+- **One wide hex everywhere (build 57):** the Left Arrow hex shape is the hex in the whole game: the camera's own 16:9 across the hex (no crop), top and bottom corners at 75% of the half width (blunt left and right tips). Same numbers in `main.lua` (`HEX_TALL`, `HEX_HALFW`), `BigHud.cs`, `SlideHud.cs`, `ShapeHud.cs`. Plate hex is 44 tall.
+- **Left Arrow (builds 53 and fix):** tap = my hex across the screen for 6 s; hold 0.5 s = locked; any press while locked (even held long) closes it, a tap while it is up closes it. Lua writes `big_self.txt` as `tap-...` or `lock-...`.
+- **Right Arrow:** hold 0.5 s locks the hex (was 1 s). Plate default distance 18.
+- **Picture rate (build 55):** camera 1280x720 at 30, head-plate frames 720p at 30 per second (`face.js?v=23`). `fps15` in `facing.txt` slows the plate live if the game stutters. Local frames for my own hexes are 720p at about 10 per second.
+- After killing TosFace, kill its leftover `msedgewebview2.exe` processes (command line contains TosFace) before starting it again, or the camera can come back as `NotFoundError`.

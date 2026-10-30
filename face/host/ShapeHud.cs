@@ -10,7 +10,7 @@ using System.Runtime.InteropServices;
 // takes focus, never shown while the game is not running.
 sealed class ShapeHud : Form
 {
-    const int Size_ = 260;
+    const int Size_ = 340;
     const double HoldFrom = 0.15;
     const double Morph = 0.4;
     const double Hold = 0.8;
@@ -178,9 +178,9 @@ sealed class ShapeHud : Form
     {
         float[] diaX = { 11, 11, 0, -11, -11, 0 };
         float[] hexX = { 11, 11, -8.5f, -28, -28, -8.5f };
-        // The hex is the old hex scaled up evenly (39 tall instead of 22), so it keeps its shape.
-        float sc = 39f / 22f;
-        float[] hexZ = { -8 * sc, 8 * sc, 14 * sc, 8 * sc, -8 * sc, -14 * sc };
+        // The wide hex everywhere in the game: 39 tall, the camera's 16:9 wide, blunt tips.
+        float hw = 39f * (16f / 9f) / 2f;
+        float[] hexZ = { -0.75f * hw, 0.75f * hw, hw, 0.75f * hw, -0.75f * hw, -hw };
         float dz = 11f / 1.45f;
         float[] diaZ = { 0, 0, dz, 0, 0, -dz };
         var pts = new PointF[6];
@@ -202,7 +202,7 @@ sealed class ShapeHud : Form
         {
             g.SmoothingMode = SmoothingMode.AntiAlias;
             g.Clear(Color.Transparent);
-            float k = 4.6f;
+            float k = 4.2f;
             var pts = Points(blend, k, Size_ / 2f, Size_ / 2f);
             using var fill = new SolidBrush(Color.FromArgb(255, 255, 214, 10));
             using var edge = new Pen(Color.FromArgb(255, 60, 48, 0), 3f) { LineJoin = LineJoin.Round };

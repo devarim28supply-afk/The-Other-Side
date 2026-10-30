@@ -52,7 +52,7 @@ $opencv = Get-ChildItem "$pkg\face" -Recurse -Filter OpenCvSharpExtern.dll -Erro
 $model = Join-Path $pkg 'face\models\face_detection_yunet_2023mar.onnx'
 if (-not $opencv) { throw 'OpenCvSharp native library missing from the face window' }
 if (-not (Test-Path $model)) { throw 'face model missing from the face window' }
-if (-not (Select-String -Path "$pkg\face\www\index.html" -Pattern 'face.js?v=22' -SimpleMatch -Quiet)) {
+if (-not (Select-String -Path "$pkg\face\www\index.html" -Pattern 'face.js?v=23' -SimpleMatch -Quiet)) {
     throw 'face page is not the current script'
 }
 

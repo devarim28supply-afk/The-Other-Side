@@ -13,8 +13,9 @@ sealed class SlideHud : Form
     const double SlideIn = 0.45;
     const double Hold = 5.0;
     const double SlideOut = 0.45;
-    const int HexW = 250;
-    const int HexH = 198;
+    // The same wide hex as everywhere: the camera's own 16:9, blunt left and right tips.
+    const int HexW = 320;
+    const int HexH = 180;
     const int Gap = 18;
     const int Margin = 22;
     const int TopMargin = 30;
@@ -207,17 +208,14 @@ sealed class SlideHud : Form
         return x * x * x;
     }
 
-    // Same six corners as the hex plate in the game (main.lua) and ShapeHud.
+    // Same six corners as the hex plate in the game (main.lua), BigHud and ShapeHud.
     static PointF[] HexPoints(float left, float top)
     {
-        float sc = 39f / 22f;
-        float[] z = { -8 * sc, 8 * sc, 14 * sc, 8 * sc, -8 * sc, -14 * sc };
-        float[] x = { 11, 11, -8.5f, -28, -28, -8.5f };
-        float kx = HexW / (28f * sc);
-        float ky = HexH / 39f;
+        float[] fx = { 0.125f, 0.875f, 1f, 0.875f, 0.125f, 0f };
+        float[] fy = { 0f, 0f, 0.5f, 1f, 1f, 0.5f };
         var pts = new PointF[6];
         for (int i = 0; i < 6; i++)
-            pts[i] = new PointF(left + HexW / 2f + z[i] * kx, top + (11 - x[i]) * ky);
+            pts[i] = new PointF(left + fx[i] * HexW, top + fy[i] * HexH);
         return pts;
     }
 

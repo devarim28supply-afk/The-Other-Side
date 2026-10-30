@@ -454,11 +454,16 @@ local FACE_X = { 11, 11, 0, -11, -11, 0 }
 -- points to the middle) and keeps its SHAPE: it is the old hex scaled up evenly,
 -- so it gets wider as it gets taller and the picture is not stretched.
 -- Plate units, scaled by FACE_S and the head-bone scale.
-local HEX_X = { 11, 11, -8.5, -28, -28, -8.5 }
-local HEX_TALL = 11 + 28
-local HEX_SCALE = HEX_TALL / 22
-local HEX_HALFW = 14 * HEX_SCALE
-local HEX_Z = { -8 * HEX_SCALE, 8 * HEX_SCALE, 14 * HEX_SCALE, 8 * HEX_SCALE, -8 * HEX_SCALE, -14 * HEX_SCALE }
+-- Kaalo 2026-10-29: a little bigger still, it did not reach the stomach. HEX_K scales
+-- the whole hex evenly with the top flats fixed at 11, so it grows down and out.
+-- Kaalo 2026-10-29: every hex in the game is the wide Left Arrow hex: the camera's own
+-- 16:9 across the whole hex (no crop, nothing stretched), top and bottom corners 75%
+-- of the half width so the left and right tips are blunt. Same numbers in
+-- BigHud.cs, SlideHud.cs and ShapeHud.cs.
+local HEX_TALL = 44
+local HEX_HALFW = HEX_TALL * (16 / 9) / 2
+local HEX_X = { 11, 11, 11 - HEX_TALL / 2, 11 - HEX_TALL, 11 - HEX_TALL, 11 - HEX_TALL / 2 }
+local HEX_Z = { -0.75 * HEX_HALFW, 0.75 * HEX_HALFW, HEX_HALFW, 0.75 * HEX_HALFW, -0.75 * HEX_HALFW, -HEX_HALFW }
 local PLATE_UP = 3
 local shapeBlend = 0
 -- Default (confirmed by Kaalo 2026-10-28): only the first winding, which faces
@@ -470,9 +475,12 @@ local shapeBlend = 0
 -- "sb" = second only, "nd" = normals point -Y. No file = "sa".
 local flipU, flipV = false, false
 local useA, useB, normalDown = true, false, false
--- Kaalo 2026-10-29: plate a little closer to the face (was 18).
-local PLATE_OUT_DEFAULT = 14
+-- Kaalo 2026-10-29: a little away from the face again (was 14, 18 before that).
+local PLATE_OUT_DEFAULT = 18
 local plateOut = PLATE_OUT_DEFAULT
+-- Picture rate on the head plate: 30 per second, 720p frames. "fps15" in facing.txt
+-- slows it live if the game stutters.
+local imageEvery = 1 / 30
 local facingAt = 0
 local facingText = nil
 
@@ -499,6 +507,11 @@ local function readFacing()
     local outText = text:match("out(%d+%.?%d*)")
     plateOut = outText and tonumber(outText) or PLATE_OUT_DEFAULT
     log("plate out " .. tostring(plateOut))
+    local fpsText = text:match("fps(%d+)")
+    local fps = fpsText and tonumber(fpsText) or 30
+    if fps < 1 then fps = 1 elseif fps > 60 then fps = 60 end
+    imageEvery = 1 / fps
+    log("plate picture " .. tostring(fps) .. " per second")
     log("facing mu=" .. tostring(flipU) .. " mv=" .. tostring(flipV) .. " A=" .. tostring(useA) .. " B=" .. tostring(useB) .. " nd=" .. tostring(normalDown))
     return true
 end
@@ -645,7 +658,7 @@ local function currentBlend()
 end
 
 -- Right Arrow. Tap: hex for 20 s, then diamond. A tap during those 20 s starts
--- them over. Hold 1 s: hex locks. Tap while locked: diamond.
+-- them over. Hold 0.5 s: hex locks. Tap while locked: diamond.
 local function arrowDown()
     local pc = UEHelpers.GetPlayerController()
     if not valid(pc) then return nil end
@@ -720,14 +733,17 @@ local function keyDown(name)
 end
 
 -- Left Arrow: my own hex camera, big in the middle of my screen (big_self.txt).
--- It stays on my screen only; TosFace draws it.
+-- Tap: shows it for a few seconds. Hold 0.5 s: it stays up (locked). Tap while it is
+-- up: it goes away. Stays on my screen only; TosFace draws it.
 local leftWasDown = false
+local leftDownAt = 0
+local leftLocked = false
 local bigCount = 0
 
-local function pressFile(name, count)
+local function pressFile(name, count, kind)
     local f = io.open((modDir or ".") .. "\\" .. name, "w")
     if f then
-        f:write(tostring(os.time()) .. "-" .. tostring(count))
+        f:write((kind and (kind .. "-") or "") .. tostring(os.time()) .. "-" .. tostring(count))
         f:close()
     end
 end
@@ -743,10 +759,21 @@ local function tickSlide()
     end
     local left = keyDown("Left")
     if left ~= nil then
+        local now = os.clock()
         if left and not leftWasDown then
-            bigCount = bigCount + 1
-            pressFile("big_self.txt", bigCount)
+            leftDownAt = now
+            leftLocked = false
         end
+        if left and not leftLocked and leftDownAt > 0 and now - leftDownAt >= 0.5 then
+            leftLocked = true
+            bigCount = bigCount + 1
+            pressFile("big_self.txt", bigCount, "lock")
+        end
+        if not left and leftWasDown and not leftLocked then
+            bigCount = bigCount + 1
+            pressFile("big_self.txt", bigCount, "tap")
+        end
+        if not left then leftDownAt = 0 end
         leftWasDown = left
     end
 end
@@ -760,7 +787,7 @@ local function tickShape()
             keyDownAt = now
             lockFired = false
         end
-        if down and not lockFired and keyDownAt > 0 and now - keyDownAt >= 1 then
+        if down and not lockFired and keyDownAt > 0 and now - keyDownAt >= 0.5 then
             lockFired = true
             hexLocked = true
             hexUntil = 0
@@ -1055,7 +1082,7 @@ local function refreshImage(row)
     if row.self or not valid(row.comp) or not row.mat or not valid(row.mat) then return end
     local now = os.clock()
     if row.nextImage and now < row.nextImage then return end
-    row.nextImage = now + 0.1
+    row.nextImage = now + imageEvery
     local path = (modDir or ".") .. "\\remote.jpg"
     local data = readBin(path)
     if data and data ~= row.lastData then
@@ -1234,7 +1261,7 @@ log("share hook kind " .. hookKind)
 shareHooked = okHook
 log("share hook " .. tostring(okHook) .. " " .. tostring(errHook))
 
-log("FacePlate loaded build 52")
+log("FacePlate loaded build 57")
 
 local bootTicks = 0
 
