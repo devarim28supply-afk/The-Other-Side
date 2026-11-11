@@ -19,7 +19,13 @@ dotnet publish "$repo\overlay\OtherSideSound.csproj" -c Release -r win-x64 --sel
 if ($LASTEXITCODE) { throw 'overlay publish failed' }
 
 New-Item -ItemType Directory -Force "$pkg\overlay\captions" | Out-Null
-Copy-Item "$repo\captions\ghost_lines.json", "$repo\captions\evidence_clips.txt" "$pkg\overlay\captions\"
+Copy-Item "$repo\captions\ghost_lines.json", "$repo\captions\evidence_clips.txt", "$repo\captions\captions_server.py" "$pkg\overlay\captions\"
+# Portable CPU Whisper for the live subtitles (built once in captions-engine: uv python + faster-whisper + small.en).
+# No game audio inside: the audio-evidence matcher (evidence.py + extracted clips) is left out, the server runs without it.
+$eng = Join-Path $outRoot 'captions-engine'
+if (-not (Test-Path "$eng\python\python.exe") -or -not (Test-Path "$eng\model\small.en\model.bin")) { throw 'captions-engine missing (python + model\small.en)' }
+Copy-Item "$eng\python" "$pkg\overlay\captions\python" -Recurse -Force
+Copy-Item "$eng\model" "$pkg\overlay\captions\model" -Recurse -Force
 & node "$PSScriptRoot\friend-config.js" 'D:\Tools\tos-sound-overlay\app\config.json' "$pkg\overlay\config.json"
 if ($LASTEXITCODE) { throw 'friend config failed' }
 

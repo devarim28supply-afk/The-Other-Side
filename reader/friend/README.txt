@@ -4,6 +4,8 @@ OTHER SIDE READER
 Shows the sounds of The Other Side on your screen: a ring around the crosshair with a dot in the
 exact direction of each sound (closer = bigger, a trail when it moves, up/down arrow for other floors),
 a short list of sounds with distance, and the ghost's spirit box answers as pink subtitles.
+Live subtitles show what is said in the game (ghost voice, spirit box, teammates), made on your PC
+(offline, no internet). Ghost lines from the game are shown with who says them.
 Only sounds you could hear from where you stand are shown. Your own footsteps and items are hidden.
 
 It reads the game from OUTSIDE, read-only. Nothing is installed into the game, nothing in the game
@@ -14,6 +16,8 @@ HOW TO USE
 2. Double-click "Start Other Side Reader.cmd".
 3. Start The Other Side (before or after, both work). Play in Windowed Fullscreen / Borderless.
 4. About 20 seconds after you are in a game, sounds start showing.
+5. Subtitles load a few seconds after the overlay starts (it uses your CPU a bit). They listen to your
+   default sound output, so the game must play on it. Your microphone is NOT used.
 
 KEYS
   F8        hide / show the overlay
